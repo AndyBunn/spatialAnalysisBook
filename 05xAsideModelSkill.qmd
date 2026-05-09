@@ -35,7 +35,7 @@ Before we get to numbers, let's talk about a plot. The most informative single d
 
 ![](assets/obs_vs_pred_explainer.svg) 
 
-Get in the habit of always making this plot. The summary statistics below are useful but they can mislead you in ways this plot makes immediately obvious. A model with a strong systematic bias, where it consistently predicts twice the true value for instance, can produce a respectable-looking $R^2$ depending on how you compute it. The observed-vs-predicted plot reveals that kind of problem at a glance. We will see many examples of it in the interpolation chapters.
+Get in the habit of making this plot whenever you make a model. Summary statistics like those below are useful but they can mislead you in ways this plot makes immediately obvious. A model with a strong systematic bias, where it consistently predicts twice the true value for instance, can produce a respectable-looking $R^2$ depending on how you compute it. The classic example of this is [Anscombe's quartet](https://en.wikipedia.org/wiki/Anscombe%27s_quartet), a set of four datasets constructed to make exactly this point: identical summary statistics can arise from completely different underlying structures, and the numbers alone will never tell you which one you have. Anscombe built it in 1973 specifically to push back against the then-common attitude that plots were unnecessary once you had the statistics. The observed-vs-predicted plot reveals that kind of problem at a glance. We will see many examples of it in the interpolation chapters.
 
 ### $R^2$
 
