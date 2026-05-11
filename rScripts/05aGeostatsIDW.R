@@ -1,6 +1,6 @@
 ## ----echo=FALSE, message=FALSE, warning=FALSE, results='hide'-----------------
 set.seed(184)
-knitr::purl("05aGeostatsIDW.qmd", output = "05aGeostatsIDW.R", documentation = 1)
+knitr::purl("05aGeostatsIDW.qmd", output = "rScripts/05aGeostatsIDW.R", documentation = 1)
 
 
 

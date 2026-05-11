@@ -2,7 +2,7 @@
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 set.seed(184)
-knitr::purl("05bGeostat2TPS.qmd", output = "05bGeostat2TPS.R", documentation = 1)
+knitr::purl("05bGeostat2TPS.qmd", output = "rScripts/05bGeostat2TPS.R", documentation = 1)
 ```
 
 
@@ -106,7 +106,7 @@ The result is the same thing you want from LOOCV: the $\lambda$ that minimizes p
 Now let's predict over the full grid and make a raster.
 
 ::: {.callout-note}
-Note that we're calling `predict()` again here which is the same generic function we used with `gstat` objects in the IDW module. It dispatches to a different method under the hood because `logLeadTPSmodel` is a `Tps` object rather than a `gstat` object, but the interface looks the same. That's generics doing their job.
+Note that we're calling `predict()` again here which is the same generic function we used with `gstat` objects in the IDW module. It dispatches to a different method under the hood because `logLeadTPSmodel` is a `Tps` object rather than a `gstat` object, but the interface looks the same. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](01xAsideMethodsAndGenerics.html).
 :::
 
 ```{r}

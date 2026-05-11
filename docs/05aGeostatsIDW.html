@@ -730,6 +730,19 @@ First 10 features:
 <h3 class="anchored" data-anchor-id="idw-1">IDW</h3>
 <p>So the idea here is that we will model a value for lead at each of the locations in <code>meuse_grid_sf</code>. Rather than do this by hand as we did above, we will use the very powerful <code>gstat</code> library.</p>
 <p>We can use the coordinates in <code>meuse_grid_sf</code> as the locations to predict using IDW. We don’t care about the data in <code>meuse_grid_sf</code> like soil type or distance to river. We just want the locations. To do this, we will use the <code>gstat</code> function which creates an object that holds all the information necessary for prediction. Here we tell <code>gstat</code> that we want an IDW model with a power of 2 using the <code>idp</code> parameter. The formula <code>logLead~1</code> tells <code>gstat</code> there are no covariates, just an intercept. The spatial weighting by distance is what makes this IDW – that’s handled by <code>idp</code>, not by the formula. This distinction will matter when we add covariates in regression kriging.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Note that we’re calling <code>predict()</code> here which is a generic function that will dispatch to a different method under the hood because <code>idw_p2_model</code> is a <code>gstats</code> object. That’s generics doing their job. Look back at the <a href="01xAsideMethodsAndGenerics.html">Understanding Methods and Generics in R aside</a>.</p>
+</div>
+</div>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>

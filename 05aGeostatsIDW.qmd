@@ -2,7 +2,7 @@
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 set.seed(184)
-knitr::purl("05aGeostatsIDW.qmd", output = "05aGeostatsIDW.R", documentation = 1)
+knitr::purl("05aGeostatsIDW.qmd", output = "rScripts/05aGeostatsIDW.R", documentation = 1)
 
 ```
 
@@ -212,6 +212,10 @@ meuse_grid_sf
 So the idea here is that we will model a value for lead at each of the locations in `meuse_grid_sf`. Rather than do this by hand as we did above, we will use the very powerful `gstat` library.
 
 We can use the coordinates in `meuse_grid_sf` as the locations to predict using IDW. We don't care about the data in `meuse_grid_sf` like soil type or distance to river. We just want the locations. To do this, we will use the `gstat` function which creates an object that holds all the information necessary for prediction. Here we tell `gstat` that we want an IDW model with a power of 2 using the `idp` parameter. The formula `logLead~1` tells `gstat` there are no covariates, just an intercept. The spatial weighting by distance is what makes this IDW -- that's handled by `idp`, not by the formula. This distinction will matter when we add covariates in regression kriging.
+
+::: {.callout-note}
+Note that we're calling `predict()` here which is a generic function that will dispatch to a different method under the hood because `idw_p2_model` is a `gstats` object. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](01xAsideMethodsAndGenerics.html).
+:::
 
 ```{r}
 idw_p2_model <- gstat(formula=logLead~1, 

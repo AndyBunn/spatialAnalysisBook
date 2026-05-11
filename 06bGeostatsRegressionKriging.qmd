@@ -1,9 +1,10 @@
 # Probabilistic Interpolation: Regression Kriging
 
-
-```{r,echo=FALSE}
+```{r,echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
 set.seed(733)
+knitr::purl("06bGeostatsRegressionKriging.qmd", output = "rScripts/06bGeostatsRegressionKriging.R", documentation = 1)
 ```
+
 
 ## Big Idea
 With kriging we used limited spatial data to make predictions (interpolation) over larger areas. Regression kriging is going to use the same theory but incorporate ancillary data to make better predictions.

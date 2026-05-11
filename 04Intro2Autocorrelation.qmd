@@ -2,7 +2,7 @@
 
 ```{r,echo=FALSE, include=FALSE}
 set.seed(1984)
-knitr::purl("04Intro2Autocorrelation.qmd", output = "04Intro2Autocorrelation.R", documentation = 1)
+knitr::purl("04Intro2Autocorrelation.qmd", output = "rScripts/04Intro2Autocorrelation.R", documentation = 1)
 
 ```
 
