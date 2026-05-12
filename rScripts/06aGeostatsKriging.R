@@ -85,26 +85,34 @@ d2s0 <- as.matrix(dist(cbind(c(foo$x,2),c(foo$y,4))))[1:5,6]
 
 
 ## ----echo=FALSE---------------------------------------------------------------
-g <- 0 + 13.5*d2s0
+sph_gamma <- function(d, psill=10, range=6) {
+  psill * (1.5*(d/range) - 0.5*(d/range)^3)
+}
+g <- sph_gamma(d2s0)
 
 
 ## ----echo=FALSE---------------------------------------------------------------
-d <- dist(cbind(foo$x,foo$y))
+d_mat <- as.matrix(dist(cbind(foo$x,foo$y)))
+G <- sph_gamma(d_mat)
+diag(G) <- 0
 
 
 ## ----echo=FALSE---------------------------------------------------------------
-G <- 0 + 13.5*d
-
-
-## ----echo=FALSE---------------------------------------------------------------
-#round(solve(G),3)
 lambda <- solve(G) %*% g
 zhat <- sum(lambda[,1] * foo$z)
 
 
+## ----echo=FALSE---------------------------------------------------------------
+0.2626*(100)+0.4985*(105)+0.2652*(105)-0.0165*(100)-0.0353*(115)
+
+
 ## -----------------------------------------------------------------------------
 leadVar <- variogram(logLead~1, meuse_sf)
+# with initial gueses at the parameters psill, range, and nugget
 leadModel <- vgm(psill=0.6, model="Sph", range=750, nugget=0.05)
+# or try to let the estimation happen without initial guesses -- same result
+leadModel <- vgm(model="Sph", nugget=TRUE)
+
 leadFit <- fit.variogram(object = leadVar, model = leadModel)
 leadGstat <- gstat(formula = logLead~1, locations = meuse_sf, 
                    model = leadFit)
@@ -164,8 +172,10 @@ leadKrigeLOOCV_sf <- krige.cv(formula = logLead~1,
                            locations = meuse_sf, 
                            model = leadFit, verbose = FALSE)
 leadKrigeLOOCV_sf
-# CV R2
-cor(leadKrigeLOOCV_sf$observed,leadKrigeLOOCV_sf$var1.pred)^2
+# CV R2 anbd RMSE
+rsq <- cor(leadKrigeLOOCV_sf$observed,leadKrigeLOOCV_sf$var1.pred)^2
+rmse <- sqrt(mean((leadKrigeLOOCV_sf$observed - leadKrigeLOOCV_sf$var1.pred)^2))
+c(rsq=rsq, rmse = rmse)
 
 
 ## -----------------------------------------------------------------------------
