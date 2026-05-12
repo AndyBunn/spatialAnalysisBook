@@ -21,7 +21,7 @@ library(gstat)
 library(PNWColors)
 ```
 
-We'll also mention the `caret` package [@R-caret] toward the end of this chapter. It is the standard workhorse for cross validation in R, but it has its own syntax that takes some getting used to. For now we will build things by hand so the mechanics are visible.
+We'll also mention the `caret` package [@R-caret] toward the end of this chapter. It is the standard workhorse for cross validation in R, but it has its own syntax that takes some getting used to. For now we will build things by hand so the mechanics are clear.
 
 ```{r, echo=FALSE}
 anem7 <- pnw_palette(name="Anemone", n=7, type="discrete")

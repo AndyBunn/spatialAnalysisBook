@@ -720,7 +720,8 @@ Pixel values
 <p><span class="math display">\[\hat{K}(r)=\frac{\lambda^{-1}}{n-1} \sum_{i \neq j} I(d_{ij}&lt;r)\]</span></p>
 <p>where <span class="math inline">\(d_{ij}\)</span> is the distance between points <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, <span class="math inline">\(n\)</span> is the number of points, <span class="math inline">\(r\)</span> is a radius, <span class="math inline">\(\lambda\)</span> is the mean density of points, and <span class="math inline">\(I\)</span> is the indicator (aka characteristic) function that has a value of one if its operand is true and zero otherwise. The <span class="math inline">\(K\)</span> function measures the number of events found up to a given distance (<span class="math inline">\(r\)</span>).</p>
 <p>Ripley’s K describes the point processes at many distance scales. This is an attractive property of the statistic because many environmental point patterns can cluster at one distance and become random or uniform at another.</p>
-<p>We can test <span class="math inline">\(\hat{K}\)</span> against CSR which has a value of <span class="math inline">\(K(r)=\pi r^2\)</span> for a homogeneous Poisson process. Furthermore, we can calculate an envelope of possible values of <span class="math inline">\(K(r)\)</span> in a Monte Carlo framework where the number of simulations specifies the significance level as <span class="math inline">\(\alpha = 2/(1 + n)\)</span> where <span class="math inline">\(n\)</span> is the number of simulations. If the observed function value lies outside the envelope we can reject the null hypothesis of CSR at the distance <span class="math inline">\(r\)</span>. With the default of 99 simulations you have <span class="math inline">\(\alpha = 2/(1+99) = 0.02\)</span>.</p>
+<p>We can test <span class="math inline">\(\hat{K}\)</span> against CSR which has a value of <span class="math inline">\(K(r)=\pi r^2\)</span> for a homogeneous Poisson process. We are going to do this with the <code>envelope</code> function.</p>
+<p>We can calculate an envelope of possible values of <span class="math inline">\(K(r)\)</span> in a Monte Carlo framework where the number of simulations specifies the significance level as <span class="math inline">\(\alpha = 2/(1 + n)\)</span> where <span class="math inline">\(n\)</span> is the number of simulations. If the observed function value lies outside the envelope we can reject the null hypothesis of CSR at the distance <span class="math inline">\(r\)</span>. With the default of 99 simulations you have <span class="math inline">\(\alpha = 2/(1+99) = 0.02\)</span>.</p>
 <p>A heads up though. That significance level is technically only valid if you pick a single value of <span class="math inline">\(r\)</span> before looking at the data and test only there. In practice nobody does that – you look at the whole curve. When you do that you are implicitly running many tests at once (one per value of <span class="math inline">\(r\)</span>), which is the same problem as running a bunch of t-tests without correcting for multiple comparisons. Your true <span class="math inline">\(\alpha\)</span> is higher than advertised. The fix is to use <code>global=TRUE</code> in the <code>envelope</code> call, which builds the envelope based on the maximum deviation of each simulated curve across all <span class="math inline">\(r\)</span> values rather than pointwise. This gives you a single honest test of the whole curve at <span class="math inline">\(\alpha = 1/(1 + n)\)</span> with the default <code>nrank=1</code>. For a deeper treatment see <span class="citation" data-cites="baddeley2014tests">Baddeley et al. (<a href="08PackagesUsed.html#ref-baddeley2014tests" role="doc-biblioref">2014</a>)</span> who go after this problem directly.</p>
 <p>And even if you do use <code>global=TRUE</code> and get a clean test, keep in mind that a p-value only tells you whether the pattern is distinguishable from CSR – not why. Two completely different processes can produce identical patterns, and a non-significant result doesn’t mean the process is random, just that you couldn’t detect structure with this data and this statistic. The goal is always to use pattern to think about process, not to collect p-values.</p>
 <p>The <code>envelope</code> function is chatty by default and prints out information on the simulations as it runs them. In the code chunk below I’ll quiet it down by setting the argument <code>verbose=FALSE</code>. If you leave it as the default value of <code>TRUE</code>, the markdown doc gets messy.</p>
@@ -784,7 +785,7 @@ Pixel values
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">envelope</span>(redwood, <span class="at">fun =</span> Kest, <span class="at">nsim =</span> <span class="dv">10</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">envelope</span>(redwood, <span class="at">fun =</span> Kest, <span class="at">nsim =</span> <span class="dv">100</span>,</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">verbose=</span><span class="cn">FALSE</span>, <span class="at">rmax=</span><span class="fl">0.5</span>),<span class="at">main=</span><span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
@@ -1182,32 +1183,32 @@ Fraction of frame area: 0.785</code></pre>
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>Dmat</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>          1        2        3        4        5         6         7        8
-1  0.000000 4.042249 5.151871 2.760467 6.666510 7.5008999 3.8480931 4.883414
-2  4.042249 0.000000 1.232544 1.329613 3.036986 5.0354400 1.7537952 1.866122
-3  5.151871 1.232544 0.000000 2.391818 2.841567 5.3563727 2.7973459 2.471249
-4  2.760467 1.329613 2.391818 0.000000 4.264086 5.8771898 2.0814470 2.755214
-5  6.666510 3.036986 2.841567 4.264086 0.000000 2.8113862 2.9189494 1.842881
-6  7.500900 5.035440 5.356373 5.877190 2.811386 0.0000000 3.8585149 3.182905
-7  3.848093 1.753795 2.797346 2.081447 2.918949 3.8585149 0.0000000 1.077004
-8  4.883414 1.866122 2.471249 2.755214 1.842881 3.1829050 1.0770040 0.000000
-9  1.530579 4.730324 5.943570 3.650087 6.851253 7.0858240 3.9341398 5.008443
-10 8.227390 5.858434 6.158515 6.689001 3.532465 0.8230520 4.6544658 4.005344
-11 2.924195 1.998062 3.208562 1.666349 3.835780 4.6631092 0.9339861 2.002224
-12 7.028896 5.049587 5.568488 5.708683 3.328806 0.9041729 3.6305504 3.193800
-          9       10        11        12
-1  1.530579 8.227390 2.9241948 7.0288958
-2  4.730324 5.858434 1.9980622 5.0495870
-3  5.943570 6.158515 3.2085617 5.5684878
-4  3.650087 6.689001 1.6663494 5.7086834
-5  6.851253 3.532465 3.8357798 3.3288056
-6  7.085824 0.823052 4.6631092 0.9041729
-7  3.934140 4.654466 0.9339861 3.6305504
-8  5.008443 4.005344 2.0022236 3.1938003
-9  0.000000 7.725241 3.0433123 6.4652619
-10 7.725241 0.000000 5.4320025 1.2744893
-11 3.043312 5.432002 0.0000000 4.3188335
-12 6.465262 1.274489 4.3188335 0.0000000</code></pre>
+<pre><code>          1         2        3        4         5         6        7        8
+1  0.000000 7.4889152 1.490719 6.969653  8.876317  1.940595 4.468430 4.965382
+2  7.488915 0.0000000 6.000930 1.896587  4.589813  8.116568 5.663756 8.593979
+3  1.490719 6.0009296 0.000000 5.567101  7.689722  2.622940 3.740736 5.129129
+4  6.969653 1.8965872 5.567101 0.000000  2.967437  8.025080 4.142791 7.054691
+5  8.876317 4.5898131 7.689722 2.967437  0.000000 10.300168 4.819425 7.147672
+6  1.940595 8.1165677 2.622940 8.025080 10.300168  0.000000 6.235881 6.896550
+7  4.468430 5.6637563 3.740736 4.142791  4.819425  6.235881 0.000000 2.935008
+8  4.965382 8.5939788 5.129129 7.054691  7.147672  6.896550 2.935008 0.000000
+9  3.315340 5.4725180 2.487947 4.292989  5.648626  5.011182 1.253332 3.405674
+10 6.862198 0.6267345 5.374209 1.753882  4.651590  7.507536 5.176294 8.092125
+11 5.591011 2.6179606 4.210991 1.388473  3.771457  6.723803 3.045906 5.976580
+12 5.183888 9.8669381 5.725384 8.404665  8.574655  7.014644 4.262086 1.428804
+          9        10       11       12
+1  3.315340 6.8621981 5.591011 5.183888
+2  5.472518 0.6267345 2.617961 9.866938
+3  2.487947 5.3742091 4.210991 5.725384
+4  4.292989 1.7538820 1.388473 8.404665
+5  5.648626 4.6515895 3.771457 8.574655
+6  5.011182 7.5075361 6.723803 7.014644
+7  1.253332 5.1762936 3.045906 4.262086
+8  3.405674 8.0921246 5.976580 1.428804
+9  0.000000 4.9072420 2.969118 4.494515
+10 4.907242 0.0000000 2.146920 9.338243
+11 2.969118 2.1469195 0.000000 7.262679
+12 4.494515 9.3382428 7.262679 0.000000</code></pre>
 </div>
 </div>
 <p>Now, extract all the elements by combining the upper and lower triangles of the matrix, i.e., all <code>d_{ij}</code> where <code>i!=j</code></p>
@@ -1218,25 +1219,28 @@ Fraction of frame area: 0.785</code></pre>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>Dvec</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>  [1] 4.0422488 5.1518709 1.2325435 2.7604666 1.3296135 2.3918180 6.6665100
-  [8] 3.0369862 2.8415668 4.2640855 7.5008999 5.0354400 5.3563727 5.8771898
- [15] 2.8113862 3.8480931 1.7537952 2.7973459 2.0814470 2.9189494 3.8585149
- [22] 4.8834145 1.8661216 2.4712488 2.7552138 1.8428810 3.1829050 1.0770040
- [29] 1.5305785 4.7303243 5.9435699 3.6500874 6.8512531 7.0858240 3.9341398
- [36] 5.0084434 8.2273902 5.8584336 6.1585145 6.6890008 3.5324652 0.8230520
- [43] 4.6544658 4.0053441 7.7252407 2.9241948 1.9980622 3.2085617 1.6663494
- [50] 3.8357798 4.6631092 0.9339861 2.0022236 3.0433123 5.4320025 7.0288958
- [57] 5.0495870 5.5684878 5.7086834 3.3288056 0.9041729 3.6305504 3.1938003
- [64] 6.4652619 1.2744893 4.3188335 4.0422488 5.1518709 2.7604666 6.6665100
- [71] 7.5008999 3.8480931 4.8834145 1.5305785 8.2273902 2.9241948 7.0288958
- [78] 1.2325435 1.3296135 3.0369862 5.0354400 1.7537952 1.8661216 4.7303243
- [85] 5.8584336 1.9980622 5.0495870 2.3918180 2.8415668 5.3563727 2.7973459
- [92] 2.4712488 5.9435699 6.1585145 3.2085617 5.5684878 4.2640855 5.8771898
- [99] 2.0814470 2.7552138 3.6500874 6.6890008 1.6663494 5.7086834 2.8113862
-[106] 2.9189494 1.8428810 6.8512531 3.5324652 3.8357798 3.3288056 3.8585149
-[113] 3.1829050 7.0858240 0.8230520 4.6631092 0.9041729 1.0770040 3.9341398
-[120] 4.6544658 0.9339861 3.6305504 5.0084434 4.0053441 2.0022236 3.1938003
-[127] 7.7252407 3.0433123 6.4652619 5.4320025 1.2744893 4.3188335</code></pre>
+<pre><code>  [1]  7.4889152  1.4907191  6.0009296  6.9696527  1.8965872  5.5671006
+  [7]  8.8763174  4.5898131  7.6897222  2.9674369  1.9405946  8.1165677
+ [13]  2.6229395  8.0250797 10.3001684  4.4684301  5.6637563  3.7407364
+ [19]  4.1427914  4.8194248  6.2358812  4.9653820  8.5939788  5.1291293
+ [25]  7.0546911  7.1476724  6.8965504  2.9350082  3.3153401  5.4725180
+ [31]  2.4879467  4.2929893  5.6486259  5.0111825  1.2533322  3.4056742
+ [37]  6.8621981  0.6267345  5.3742091  1.7538820  4.6515895  7.5075361
+ [43]  5.1762936  8.0921246  4.9072420  5.5910113  2.6179606  4.2109907
+ [49]  1.3884731  3.7714565  6.7238032  3.0459060  5.9765804  2.9691182
+ [55]  2.1469195  5.1838877  9.8669381  5.7253838  8.4046647  8.5746546
+ [61]  7.0146444  4.2620859  1.4288044  4.4945150  9.3382428  7.2626791
+ [67]  7.4889152  1.4907191  6.9696527  8.8763174  1.9405946  4.4684301
+ [73]  4.9653820  3.3153401  6.8621981  5.5910113  5.1838877  6.0009296
+ [79]  1.8965872  4.5898131  8.1165677  5.6637563  8.5939788  5.4725180
+ [85]  0.6267345  2.6179606  9.8669381  5.5671006  7.6897222  2.6229395
+ [91]  3.7407364  5.1291293  2.4879467  5.3742091  4.2109907  5.7253838
+ [97]  2.9674369  8.0250797  4.1427914  7.0546911  4.2929893  1.7538820
+[103]  1.3884731  8.4046647 10.3001684  4.8194248  7.1476724  5.6486259
+[109]  4.6515895  3.7714565  8.5746546  6.2358812  6.8965504  5.0111825
+[115]  7.5075361  6.7238032  7.0146444  2.9350082  1.2533322  5.1762936
+[121]  3.0459060  4.2620859  3.4056742  8.0921246  5.9765804  1.4288044
+[127]  4.9072420  2.9691182  4.4945150  2.1469195  9.3382428  7.2626791</code></pre>
 </div>
 </div>
 <p>Make vector of radii to look at K. Because the data range from 0 to 10 on both axes I’ll look at radii from 0 to 2.5.</p>

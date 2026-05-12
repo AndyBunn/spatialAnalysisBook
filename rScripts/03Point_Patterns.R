@@ -113,7 +113,7 @@ plot(beiK)
 
 
 ## -----------------------------------------------------------------------------
-plot(envelope(redwood, fun = Kest, nsim = 10,
+plot(envelope(redwood, fun = Kest, nsim = 100,
               verbose=FALSE, rmax=0.5),main="")
 
 
