@@ -11,6 +11,7 @@ Distance matrices show up everywhere in this course -- in point pattern analysis
 None of it is hard. But the details matter more here, because a lot of subtle bugs in spatial analysis can come from misunderstanding the structure of a distance matrix.
 
 ## Packages
+We'll use `tidyverse`[@R-tidyverse] and `sf`[@R-sf] for the usual data wrangling.
 
 ```{r, message=FALSE}
 library(tidyverse)

@@ -9,6 +9,8 @@ library(tmap)
 library(gstat)
 library(ncf)
 library(spdep)
+library(fields)
+library(plotly)
 
 
 ## -----------------------------------------------------------------------------

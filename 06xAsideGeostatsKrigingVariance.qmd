@@ -18,9 +18,8 @@ This example is adapted from Prof. Ashton Shortridge at MSU, who was kind enough
 
 What a cool guy.
 
-## The Setup
-
-We need a few packages and a toy dataset. Five points with known values (`z`) scattered in a 10x10 space, and we want to predict `z` at the location (5,5).
+## Packages
+We'll use `gstat`[@R-gstat] and `fields`[@R-fields] for the geostatistics, and `ggplot2` (via `tidyverse`[@R-tidyverse]) with `ggrepel`[@R-ggrepel] for plotting.
 
 ```{r, message=FALSE}
 library(gstat)
@@ -29,6 +28,9 @@ library(ggplot2)
 library(ggrepel)
 ```
 
+## The Setup
+
+We need a toy dataset. Five points with known values (`z`) scattered in a 10x10 space, and we want to predict `z` at the location (5,5).
 ```{r}
 dat <- data.frame(x = c(2,3,9,6,5), y = c(2,7,9,5,3), z = c(3,4,2,4,6))
 ```

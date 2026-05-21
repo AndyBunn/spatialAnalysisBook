@@ -406,7 +406,7 @@ window.Quarto = {
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="08PackagesUsed.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. And I’m going to plot in <code>ggplot</code> via <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="08PackagesUsed.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="08PackagesUsed.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="08PackagesUsed.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="08PackagesUsed.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>.</p>
+<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="08PackagesUsed.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. And I’m going to plot in <code>ggplot</code> via <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="08PackagesUsed.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="08PackagesUsed.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="08PackagesUsed.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="08PackagesUsed.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>. We’ll also use <code>automap</code><span class="citation" data-cites="R-automap">(<a href="08PackagesUsed.html#ref-R-automap" role="doc-biblioref">Hiemstra et al. 2008</a>)</span> for automatic variogram fitting.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -414,7 +414,8 @@ window.Quarto = {
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gstat)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyterra)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyterra)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(automap)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -1087,6 +1088,9 @@ Fortin, Marie-Josèe, Mark R. T. Dale, and Jay M. Ver Hoef. 2016. <span>“Spati
 </div>
 <div id="ref-R-tidyterra" class="csl-entry" role="listitem">
 Hernangómez, Diego. 2023. <span>“Using the <span class="nocase">tidyverse</span> with <span class="nocase">terra</span> Objects: The <span class="nocase">tidyterra</span> Package.”</span> <em>Journal of Open Source Software</em> 8 (91): 5751. <a href="https://doi.org/10.21105/joss.05751">https://doi.org/10.21105/joss.05751</a>.
+</div>
+<div id="ref-R-automap" class="csl-entry" role="listitem">
+Hiemstra, P. H., E. J. Pebesma, C. J. W. Twenh"ofel, and G. B. M. Heuvelink. 2008. <span>“Real-Time Automatic Interpolation of Ambient Gamma Dose Rates from the Dutch Radioactivity Monitoring Network.”</span> <em>Computers &amp; Geosciences</em>.
 </div>
 <div id="ref-R-terra" class="csl-entry" role="listitem">
 Hijmans, Robert J. 2026. <em>Terra: Spatial Data Analysis</em>. <a href="https://rspatial.org/">https://rspatial.org/</a>.

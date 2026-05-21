@@ -8,6 +8,7 @@ library(gstat)
 library(tidyverse)
 library(terra)
 library(tidyterra)
+library(automap)
 
 
 ## -----------------------------------------------------------------------------

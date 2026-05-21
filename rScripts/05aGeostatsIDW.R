@@ -8,6 +8,7 @@ library(sf)
 library(gstat)
 library(terra)
 library(tidyterra)
+library(tmap)
 
 
 ## -----------------------------------------------------------------------------

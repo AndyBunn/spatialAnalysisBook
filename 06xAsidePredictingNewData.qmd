@@ -3,6 +3,7 @@
 This is likely review for most of you, so roll your eyes as needed. The idea is simple: once you have a fitted model in R, you can use it to predict values for data the model has never seen. This comes up constantly in regression kriging, where you fit a model to your sample points and then predict across an entire grid. Let's walk through it.
 
 ## Packages
+We'll use `tidyverse`[@R-tidyverse] for data wrangling.
 
 ```{r, message=FALSE}
 library(tidyverse)

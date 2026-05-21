@@ -11,7 +11,7 @@ Plain kriging uses the spatial structure of the response variable itself to make
 @meng2013 provide a (mostly) readable description of regression kriging and compare it to the kind of interpolation approaches we've looked at already. Give it a heavy skim.
 
 ## Packages
-The `gstat` package is your friend. But we will need some of our recent collaborators as well including `terra` and `tidyterra`.
+The `gstat`[@R-gstat] package is your friend. But we will need some of our recent collaborators as well including `terra`[@R-terra] and `tidyterra`[@R-tidyterra], plus `sf`[@R-sf] and `tidyverse`[@R-tidyverse] for the usual data wrangling. We'll use `cowplot`[@R-cowplot] to arrange plots at the end.
 
 ```{r,message=FALSE, warning=FALSE}
 library(tidyverse)

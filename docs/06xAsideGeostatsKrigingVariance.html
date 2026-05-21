@@ -59,7 +59,26 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -333,6 +352,7 @@ window.Quarto = {
    
   <ul>
   <li><a href="#whats-going-on-here" id="toc-whats-going-on-here" class="nav-link active" data-scroll-target="#whats-going-on-here">What’s Going On Here</a></li>
+  <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#the-setup" id="toc-the-setup" class="nav-link" data-scroll-target="#the-setup">The Setup</a></li>
   <li><a href="#the-covariance-functions" id="toc-the-covariance-functions" class="nav-link" data-scroll-target="#the-covariance-functions">The Covariance Functions</a></li>
   <li><a href="#building-the-covariance-matrix-and-vector" id="toc-building-the-covariance-matrix-and-vector" class="nav-link" data-scroll-target="#building-the-covariance-matrix-and-vector">Building the Covariance Matrix and Vector</a></li>
@@ -376,9 +396,9 @@ window.Quarto = {
 </blockquote>
 <p>What a cool guy.</p>
 </section>
-<section id="the-setup" class="level2">
-<h2 class="anchored" data-anchor-id="the-setup">The Setup</h2>
-<p>We need a few packages and a toy dataset. Five points with known values (<code>z</code>) scattered in a 10x10 space, and we want to predict <code>z</code> at the location (5,5).</p>
+<section id="packages" class="level2">
+<h2 class="anchored" data-anchor-id="packages">Packages</h2>
+<p>We’ll use <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="08PackagesUsed.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> and <code>fields</code><span class="citation" data-cites="R-fields">(<a href="08PackagesUsed.html#ref-R-fields" role="doc-biblioref">Nychka et al. 2025</a>)</span> for the geostatistics, and <code>ggplot2</code> (via <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="08PackagesUsed.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span>) with <code>ggrepel</code><span class="citation" data-cites="R-ggrepel">(<a href="08PackagesUsed.html#ref-R-ggrepel" role="doc-biblioref">Slowikowski 2026</a>)</span> for plotting.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -388,6 +408,10 @@ window.Quarto = {
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggrepel)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+</section>
+<section id="the-setup" class="level2">
+<h2 class="anchored" data-anchor-id="the-setup">The Setup</h2>
+<p>We need a toy dataset. Five points with known values (<code>z</code>) scattered in a 10x10 space, and we want to predict <code>z</code> at the location (5,5).</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -625,6 +649,20 @@ window.Quarto = {
 <p>Notice that ordinary kriging gives slightly higher variance than simple kriging. That makes sense – OK has to estimate the mean from the data rather than assuming it’s known, so there’s an additional source of uncertainty baked into the prediction.</p>
 
 
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-R-fields" class="csl-entry" role="listitem">
+Nychka, Douglas, Reinhard Furrer, John Paige, et al. 2025. <em>Fields: Tools for Spatial Data</em>. <a href="https://github.com/dnychka/fieldsRPackage">https://github.com/dnychka/fieldsRPackage</a>.
+</div>
+<div id="ref-R-gstat" class="csl-entry" role="listitem">
+Pebesma, Edzer, and Benedikt Graeler. 2026. <em>Gstat: Spatial and Spatio-Temporal Geostatistical Modelling, Prediction and Simulation</em>. <a href="https://github.com/r-spatial/gstat/">https://github.com/r-spatial/gstat/</a>.
+</div>
+<div id="ref-R-ggrepel" class="csl-entry" role="listitem">
+Slowikowski, Kamil. 2026. <em>Ggrepel: Automatically Position Non-Overlapping Text Labels with Ggplot2</em>. <a href="https://ggrepel.slowkow.com/">https://ggrepel.slowkow.com/</a>.
+</div>
+<div id="ref-R-tidyverse" class="csl-entry" role="listitem">
+Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the Tidyverse</em>. <a href="https://tidyverse.tidyverse.org">https://tidyverse.tidyverse.org</a>.
+</div>
+</div>
 </section>
 
 </main> <!-- /main -->

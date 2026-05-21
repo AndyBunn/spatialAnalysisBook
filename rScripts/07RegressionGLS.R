@@ -128,12 +128,6 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 
 ## ----eval=FALSE,echo=FALSE----------------------------------------------------
 # 
-# library(nlme)
-# library(ncf)
-# library(sf)
-# library(tidyverse)
-# library(automap)
-# 
 # dat <- read.csv("birdDiv.csv")
 # 
 # glsNaive <- gls(birdDiv~plantDiv, dat)

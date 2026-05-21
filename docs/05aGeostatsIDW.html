@@ -407,7 +407,7 @@ window.Quarto = {
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="08PackagesUsed.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. And I’m going to plot in <code>ggplot</code> via <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="08PackagesUsed.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="08PackagesUsed.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="08PackagesUsed.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="08PackagesUsed.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>.</p>
+<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="08PackagesUsed.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. And I’m going to plot in <code>ggplot</code> via <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="08PackagesUsed.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="08PackagesUsed.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="08PackagesUsed.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="08PackagesUsed.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>. We’ll also pull in <code>tmap</code><span class="citation" data-cites="R-tmap">(<a href="08PackagesUsed.html#ref-R-tmap" role="doc-biblioref">Tennekes 2025</a>)</span> for a map or two.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -415,7 +415,8 @@ window.Quarto = {
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gstat)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyterra)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyterra)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -957,14 +958,14 @@ max value   :  6.444424 </code></pre>
 <span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>rsq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4448072</code></pre>
+<pre><code>[1] 0.3417452</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>rmse</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.5127379</code></pre>
+<pre><code>[1] 0.5433696</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -984,7 +985,7 @@ max value   :  6.444424 </code></pre>
 </div>
 </div>
 </div>
-<p>Oooof. Looking at that plot and the code we see now that the skill of the model is greatly decreased with R<span class="math inline">\(^2\)</span> = 0.445 and RMSE = 0.513. We can also see that the predicted values are less than the observed values for these points.</p>
+<p>Oooof. Looking at that plot and the code we see now that the skill of the model is greatly decreased with R<span class="math inline">\(^2\)</span> = 0.342 and RMSE = 0.543. We can also see that the predicted values are less than the observed values for these points.</p>
 <section id="null-model" class="level3">
 <h3 class="anchored" data-anchor-id="null-model">Null Model</h3>
 <p>How does that RMSE look against the simplest possible baseline, predicting the training mean everywhere?</p>
@@ -995,14 +996,14 @@ max value   :  6.444424 </code></pre>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>rmseNULL</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.6540551</code></pre>
+<pre><code>[1] 0.654935</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">-</span> (rmse <span class="sc">/</span> rmseNULL)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2160632</code></pre>
+<pre><code>[1] 0.1703457</code></pre>
 </div>
 </div>
 <p>For a full treatment of the null model and how to interpret these skill scores, see the <a href="05xAsideModelSkill.html">Model Skill and Cross Validation aside</a>.</p>
@@ -1053,14 +1054,14 @@ max value   :  6.444424 </code></pre>
 <span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>rsq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4196382</code></pre>
+<pre><code>[1] 0.3500546</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>rmse</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4935361</code></pre>
+<pre><code>[1] 0.5293168</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -1087,7 +1088,7 @@ max value   :  6.444424 </code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">-</span> (rmse <span class="sc">/</span> rmseNULL)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.2454213</code></pre>
+<pre><code>[1] 0.1918025</code></pre>
 </div>
 </div>
 <p>That’s a better model all around but not by much. Tuning <span class="math inline">\(p\)</span> only gets you so far with IDW – the method just isn’t well-suited to that sparse center of the study area, and no value of <span class="math inline">\(p\)</span> is going to fix thin data.</p>
@@ -1153,6 +1154,9 @@ Pebesma, Edzer. 2026. <em>Sf: Simple Features for r</em>. <a href="https://r-spa
 </div>
 <div id="ref-R-gstat" class="csl-entry" role="listitem">
 Pebesma, Edzer, and Benedikt Graeler. 2026. <em>Gstat: Spatial and Spatio-Temporal Geostatistical Modelling, Prediction and Simulation</em>. <a href="https://github.com/r-spatial/gstat/">https://github.com/r-spatial/gstat/</a>.
+</div>
+<div id="ref-R-tmap" class="csl-entry" role="listitem">
+Tennekes, Martijn. 2025. <em>Tmap: Thematic Maps</em>. <a href="https://github.com/r-tmap/tmap">https://github.com/r-tmap/tmap</a>.
 </div>
 <div id="ref-R-tidyverse" class="csl-entry" role="listitem">
 Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the Tidyverse</em>. <a href="https://tidyverse.tidyverse.org">https://tidyverse.tidyverse.org</a>.

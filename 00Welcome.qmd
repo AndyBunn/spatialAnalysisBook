@@ -123,12 +123,3 @@ When you make a Rmd file for your work, save it in the project's root directory.
    ├── pointPatternHomework.Rmd
    └── spatial-course.Rproj
    ```
-
-```{r}
-#| include: false
-knitr::write_bib(c(
-  .packages(), 'tidyverse', 'terra', 'sf', 'ggnewscale', 'tidyterra',
-  'spatstat', 'ncf', 'spdep', 'gstat', 'tmap', 'nlme', 'fields', 'ggrepel'),
-  'packages.bib')
-# quarto render
-```

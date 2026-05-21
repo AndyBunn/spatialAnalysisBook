@@ -19,6 +19,8 @@ Like IDW, TPS gives you a surface but no measure of uncertainty. That's still co
 
 The `fields` package [@R-fields] is your friend.
 
+The `fields`[@R-fields] package is the main package we'll use for thin-plate splines. We'll lean on our usual spatial toolkit as well: `tidyverse`[@R-tidyverse], `gstat`[@R-gstat], `sf`[@R-sf], `terra`[@R-terra], and `tidyterra`[@R-tidyterra].
+
 ```{r}
 #| warning: false
 #| message: false

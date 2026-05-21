@@ -13,6 +13,7 @@ A model can have a high $R^2$, low residuals, and an impressive-looking summary 
 **Model skill** is a term used to describe a model's ability to make accurate predictions on data it was not trained on. The metrics we'll develop here, $R^2$, RMSE, and MAE, are just numbers. What matters is whether they are computed on data the model was trained on (in-sample) or on data the model has never seen (out-of-sample). The second kind is model skill. This chapter is about how to measure it.
 
 ## Packages
+We'll use our usual spatial toolkit: `tidyverse`[@R-tidyverse], `sf`[@R-sf], and `gstat`[@R-gstat]. And `PNWColors`[@R-PNWColors] for color palettes that don't make your eyes bleed.
 
 ```{r, message=FALSE}
 library(tidyverse)

@@ -11,7 +11,7 @@ Standard OLS regression assumes that the errors are independent. With spatial da
 @keitt2002accounting is also worth a heavy skim. They don't use GLS in their approach but do show how spatial methods outperform standard methods in a few case studies. Focus on the implications rather than the methods in that paper. I worked with Tim Keitt when I was a masters student and my goodness, he is a smarty pants. It's worth reading anything he's written.
 
 ## Packages
-You'll want to install the packages below. We are going to fit a linear model using GLS as opposed to ordinary least squares and thus need `nlme`[@R-nlme] as well as some of our other spatial standards.
+You'll want to install the packages below. We are going to fit a linear model using GLS as opposed to ordinary least squares and thus need `nlme`[@R-nlme] as well as some of our other spatial standards: `gstat`[@R-gstat], `spdep`[@R-spdep], `ncf`[@R-ncf], and `automap`[@R-automap]. As always, `tidyverse`[@R-tidyverse] for data wrangling.
 
 ```{r, message=FALSE}
 library(automap)
@@ -235,12 +235,6 @@ The joy of simulated data is, of course, that we know the real answer going in. 
 The file `birdDiv.csv` has data on bird diversity and plant community diversity (unitless, with higher numbers indicating greater diversity) and coordinates for 64, 1-ha plots. Coordinates are UTM and thus in meters. Your work is to model bird diversity as a function of plant diversity with the expectation that higher plant diversity is associated with higher bird diversity. Watch those residuals and interpret carefully!
 
 ```{r,eval=FALSE,echo=FALSE}
-
-library(nlme)
-library(ncf)
-library(sf)
-library(tidyverse)
-library(automap)
 
 dat <- read.csv("birdDiv.csv")
 

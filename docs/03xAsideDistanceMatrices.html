@@ -59,7 +59,26 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -375,6 +394,7 @@ window.Quarto = {
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
+<p>We’ll use <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="08PackagesUsed.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> and <code>sf</code><span class="citation" data-cites="R-sf">(<a href="08PackagesUsed.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> for the usual data wrangling.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -777,6 +797,14 @@ Anacortes        28.3    65.5     63.6       0.0</code></pre>
 <p>The <code>fields::rdist()</code> function appears in the kriging aside and a few other places. It’s essentially <code>as.matrix(dist())</code> but faster for large <span class="math inline">\(n\)</span>, and it handles the two-set case like <code>st_distance()</code> does.</p>
 
 
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-R-sf" class="csl-entry" role="listitem">
+Pebesma, Edzer. 2026. <em>Sf: Simple Features for r</em>. <a href="https://r-spatial.github.io/sf/">https://r-spatial.github.io/sf/</a>.
+</div>
+<div id="ref-R-tidyverse" class="csl-entry" role="listitem">
+Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the Tidyverse</em>. <a href="https://tidyverse.tidyverse.org">https://tidyverse.tidyverse.org</a>.
+</div>
+</div>
 </section>
 
 </main> <!-- /main -->

@@ -59,7 +59,26 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -362,6 +381,7 @@ window.Quarto = {
 <p>This is likely review for most of you, so roll your eyes as needed. The idea is simple: once you have a fitted model in R, you can use it to predict values for data the model has never seen. This comes up constantly in regression kriging, where you fit a model to your sample points and then predict across an entire grid. Let’s walk through it.</p>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
+<p>We’ll use <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="08PackagesUsed.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for data wrangling.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -465,6 +485,11 @@ Note
 <p>This pattern – fit on sample data, predict onto a grid – is exactly what regression kriging does, with the added step of kriging the residuals on top of the OLS prediction.</p>
 
 
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-R-tidyverse" class="csl-entry" role="listitem">
+Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the Tidyverse</em>. <a href="https://tidyverse.tidyverse.org">https://tidyverse.tidyverse.org</a>.
+</div>
+</div>
 </section>
 
 </main> <!-- /main -->

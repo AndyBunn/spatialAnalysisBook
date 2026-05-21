@@ -15,7 +15,8 @@ Before diving in, make sure you're comfortable with distance matrices. If you ne
 :::
 
 ## Packages
-The packages we are going to use are below. 
+
+Ok. Quite a few new packages this time. We've got our standards like `sf`[@R-sf], `tidyverse`[@R-tidyverse] and the mapping package `tmap`[@R-tmap]. But we are going to pull in some of the heavy hitters in terms of spatial analysis `gstat`[@R-gstat], `ncf`[@R-ncf], and `spdep`[@R-spdep] as we get deeper into spatial tools. We'll also use `fields`[@R-fields] and `plotly`[@R-plotly] for visualization.
 
 ```{r, message=FALSE}
 library(sf)
@@ -24,9 +25,10 @@ library(tmap)
 library(gstat)
 library(ncf)
 library(spdep)
+library(fields)
+library(plotly)
 ```
 
-Ok. Quite a few new pacakges this time. We've got our standards like `sf`[@R-sf], `tidyverse`[@R-tidyverse] and the mapping package `tmap`[@R-tmap]. But we are going to pull in some of the heavy hitters in terms os spatial analysis `gstat`[@R-gstat], `ncf`[@R-ncf], and `spdep`[@R-spdep] as we get deeper into spatial tools.
 
 ## Preamble
 We covered point patterns already and that was fun and interesting in the kind of way studying logic is interesting. Quantifying spatial pattern by just looking at points alone is all well and good if you are counting trees -- and counting every tree. Recall that Ripley's K requires you to have a completely enumerated point pattern. Few environmental data sets I encounter are point patterns. Alas. But the huge amount of data in `spatstat` is making me feel lazy. I'll admit, revisiting `spatstat` got me thinking how cool point patterns are.

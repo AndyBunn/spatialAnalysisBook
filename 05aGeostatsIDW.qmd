@@ -11,8 +11,7 @@ Start with Hijmans's [Interpolation](https://rspatial.org/analysis/4-interpolati
 We often want to estimate phenomena at locations where we do not have measurements. Geostatistics is the field that we use to make (hopefully) accurate and reliable models of spatial data. We will use these models for prediction. We can use both deterministic and probabilistic models and this module will focus on deterministic methods.
 
 ## Packages
-The `gstat`[@R-gstat] package is your friend. And I'm going to plot in `ggplot` via `tidyverse`[@R-tidyverse] with `sf`[@R-sf], `terra`[@R-terra] and `tidyterra`[@R-tidyterra]. 
-
+The `gstat`[@R-gstat] package is your friend. And I'm going to plot in `ggplot` via `tidyverse`[@R-tidyverse] with `sf`[@R-sf], `terra`[@R-terra] and `tidyterra`[@R-tidyterra]. We'll also pull in `tmap`[@R-tmap] for a map or two.
 
 ```{r, message=FALSE}
 library(tidyverse)
@@ -20,6 +19,7 @@ library(sf)
 library(gstat)
 library(terra)
 library(tidyterra)
+library(tmap)
 ```
 
 
