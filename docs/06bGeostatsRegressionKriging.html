@@ -59,7 +59,26 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -375,8 +394,7 @@ window.Quarto = {
 </section>
 <section id="reading" class="level2">
 <h2 class="anchored" data-anchor-id="reading">Reading</h2>
-<p>Meng et al.&nbsp;(2013) provide a (mostly) readable description of regression kriging and compare it to the kind of interpolation approaches we’ve looked at already. Give it a heavy skim.</p>
-<p>Meng et al.&nbsp;(2013) Assessment of regression kriging for spatial interpolation – comparisons of seven GIS interpolation methods. Cartography and Geographic Information Science, 40:1, 28-39, doi: 10.1080/15230406.2013.762138.</p>
+<p><span class="citation" data-cites="meng2013">Meng et al. (<a href="08PackagesUsed.html#ref-meng2013" role="doc-biblioref">2013</a>)</span> provide a (mostly) readable description of regression kriging and compare it to the kind of interpolation approaches we’ve looked at already. Give it a heavy skim.</p>
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
@@ -388,7 +406,8 @@ window.Quarto = {
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyterra)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gstat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gstat)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
@@ -797,7 +816,7 @@ First 10 features:
 <span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill=</span><span class="st">"om (%)"</span>) <span class="sc">+</span></span>
 <span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text=</span><span class="fu">element_blank</span>(), <span class="at">axis.ticks=</span><span class="fu">element_blank</span>())</span>
 <span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>eq <span class="ot">&lt;-</span> <span class="fu">ggdraw</span>() <span class="sc">+</span> <span class="fu">draw_label</span>(<span class="st">"OLS trend  +  Kriged residuals  =  RK prediction"</span>, </span>
 <span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>                             <span class="at">fontface=</span><span class="st">"italic"</span>, <span class="at">size=</span><span class="dv">11</span>)</span>
 <span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a></span>
@@ -840,6 +859,11 @@ First 10 features:
 <p>Use <code>gstat.cv</code> to perform cross-validation on both the OLS-only model (<code>omGstat</code>) and the full RK model (<code>omGstat_w_variogram</code>). Compute RMSE and R<span class="math inline">\(^2\)</span> for each. Did RK improve the predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?</p>
 
 
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-meng2013" class="csl-entry" role="listitem">
+Meng, Qingmin, Zhijun Liu, and Bruce E. Borders. 2013. <span>“Assessment of Regression Kriging for Spatial Interpolation: Comparisons of Seven <span>GIS</span> Interpolation Methods.”</span> <em>Cartography and Geographic Information Science</em> 40 (1): 28–39. <a href="https://doi.org/10.1080/15230406.2013.762138">https://doi.org/10.1080/15230406.2013.762138</a>.
+</div>
+</div>
 </section>
 
 </main> <!-- /main -->

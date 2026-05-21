@@ -45,7 +45,8 @@ moran.test(epsilon, wList)
 ## -----------------------------------------------------------------------------
 # Generate x as noise.
 x <- rnorm(n)
-# Generate y as a function of x and epsilon (which is spatially autocorrelated)
+# Generate y as a function of x and epsilon 
+# (remember epsilon is spatially autocorrelated but we don't know that)
 B0 <- 3 # intercept
 B1 <- 0.5 # slope
 y <- B0 + B1*x + epsilon
@@ -57,7 +58,7 @@ dat <- data.frame(easting,northing,y,x)
 ## -----------------------------------------------------------------------------
 ggplot(data = dat, mapping = aes(x=easting,y=northing,
                                  size=x, fill=x)) + 
-  geom_point(shape=21) +scale_fill_viridis_c() +
+  geom_point(shape=21,alpha=0.7) +scale_fill_viridis_c() +
   guides(fill=guide_legend(), size = guide_legend()) +
   coord_fixed() +
   ggtitle("x")
@@ -66,10 +67,9 @@ ggplot(data = dat, mapping = aes(x=easting,y=northing,
 ## -----------------------------------------------------------------------------
 ggplot(data = dat, mapping = aes(x=easting,y=northing,
                                  size=y, fill=y)) +
-  geom_point(shape=21) + scale_fill_viridis_c() + 
+  geom_point(shape=21,alpha=0.7) + scale_fill_viridis_c() + 
   guides(fill=guide_legend(), size = guide_legend()) + 
   coord_fixed() + ggtitle("y")
-
 
 
 ## -----------------------------------------------------------------------------
@@ -79,7 +79,7 @@ summary(glsNaive)
 
 
 ## -----------------------------------------------------------------------------
-# Add residuals to dat -- think epsilon
+# Add residuals to dat
 dat$glsNaiveResids <- residuals(glsNaive,type="normalized")
 ggplot(data = dat, mapping = aes(x=easting,y=northing,
                                  size=glsNaiveResids, fill=glsNaiveResids)) +

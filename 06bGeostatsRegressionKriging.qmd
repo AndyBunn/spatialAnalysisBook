@@ -8,10 +8,7 @@ set.seed(733)
 Plain kriging uses the spatial structure of the response variable itself to make predictions. That works well, but it ignores something we often have access to: variables that are cheap to measure everywhere and that correlate with the thing we care about. Distance to a river, elevation, soil type, and land cover can all be derived from GIS or remote sensing data across an entire study area, even when your expensive response variable is only measured at a handful of sample points. Regression kriging (RK) combines a regression model using those covariates with kriging of the regression residuals, giving you better predictions than either approach alone.
 
 ## Reading
-Meng et al. (2013) provide a (mostly) readable description of regression kriging and compare it to the kind of interpolation approaches we've looked at already. Give it a heavy skim.
-
-Meng et al. (2013) Assessment of regression kriging for spatial interpolation -- comparisons of seven GIS interpolation methods. Cartography and Geographic Information Science, 40:1, 28-39, doi:
-10.1080/15230406.2013.762138.
+@meng2013 provide a (mostly) readable description of regression kriging and compare it to the kind of interpolation approaches we've looked at already. Give it a heavy skim.
 
 ## Packages
 The `gstat` package is your friend. But we will need some of our recent collaborators as well including `terra` and `tidyterra`.
@@ -22,6 +19,7 @@ library(sf)
 library(terra)
 library(tidyterra)
 library(gstat)
+library(cowplot)
 ```
 
 ## Overview of RK
@@ -215,7 +213,7 @@ p_rk <- ggplot() +
   labs(fill="om (%)") +
   theme(axis.text=element_blank(), axis.ticks=element_blank())
 
-library(cowplot)
+
 eq <- ggdraw() + draw_label("OLS trend  +  Kriged residuals  =  RK prediction", 
                              fontface="italic", size=11)
 

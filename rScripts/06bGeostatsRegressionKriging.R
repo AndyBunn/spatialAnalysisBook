@@ -8,6 +8,7 @@ library(sf)
 library(terra)
 library(tidyterra)
 library(gstat)
+library(cowplot)
 
 
 ## -----------------------------------------------------------------------------
@@ -138,7 +139,7 @@ p_rk <- ggplot() +
   labs(fill="om (%)") +
   theme(axis.text=element_blank(), axis.ticks=element_blank())
 
-library(cowplot)
+
 eq <- ggdraw() + draw_label("OLS trend  +  Kriged residuals  =  RK prediction", 
                              fontface="italic", size=11)
 
