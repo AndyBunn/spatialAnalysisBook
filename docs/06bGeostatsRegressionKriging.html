@@ -69,7 +69,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./07RegressionGLS.html" rel="next">
+<link href="./06xAsidePredictingNewData.html" rel="next">
 <link href="./06xAsideGeostatsKrigingVariance.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -287,6 +287,12 @@ window.Quarto = {
   <a href="./06bGeostatsRegressionKriging.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Probabilistic Interpolation: Regression Kriging</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06xAsidePredictingNewData.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Aside: Predicting New Data with a Fitted Model</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -330,7 +336,6 @@ window.Quarto = {
   <li><a href="#reading" id="toc-reading" class="nav-link" data-scroll-target="#reading">Reading</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#overview-of-rk" id="toc-overview-of-rk" class="nav-link" data-scroll-target="#overview-of-rk">Overview of RK</a></li>
-  <li><a href="#prediction-review-ols-regression-with-new-data" id="toc-prediction-review-ols-regression-with-new-data" class="nav-link" data-scroll-target="#prediction-review-ols-regression-with-new-data">Prediction Review: OLS Regression with New Data</a></li>
   <li><a href="#back-to-the-netherlands" id="toc-back-to-the-netherlands" class="nav-link" data-scroll-target="#back-to-the-netherlands">Back to the Netherlands</a>
   <ul>
   <li><a href="#the-data" id="toc-the-data" class="nav-link" data-scroll-target="#the-data">The Data</a></li>
@@ -366,7 +371,7 @@ window.Quarto = {
 
 <section id="big-idea" class="level2">
 <h2 class="anchored" data-anchor-id="big-idea">Big Idea</h2>
-<p>With kriging we used limited spatial data to make predictions (interpolation) over larger areas. Regression kriging is going to use the same theory but incorporate ancillary data to make better predictions.</p>
+<p>Plain kriging uses the spatial structure of the response variable itself to make predictions. That works well, but it ignores something we often have access to: variables that are cheap to measure everywhere and that correlate with the thing we care about. Distance to a river, elevation, soil type, and land cover can all be derived from GIS or remote sensing data across an entire study area, even when your expensive response variable is only measured at a handful of sample points. Regression kriging (RK) combines a regression model using those covariates with kriging of the regression residuals, giving you better predictions than either approach alone.</p>
 </section>
 <section id="reading" class="level2">
 <h2 class="anchored" data-anchor-id="reading">Reading</h2>
@@ -375,7 +380,7 @@ window.Quarto = {
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>The <code>gstat</code> package is your friend. But we will need some of our recent collaborators as well including <code>terra</code> and `tidyterra’.</p>
+<p>The <code>gstat</code> package is your friend. But we will need some of our recent collaborators as well including <code>terra</code> and <code>tidyterra</code>.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -389,55 +394,11 @@ window.Quarto = {
 </section>
 <section id="overview-of-rk" class="level2">
 <h2 class="anchored" data-anchor-id="overview-of-rk">Overview of RK</h2>
-<p>Regression kriging (RK) is a spatial interpolation technique (like IDW, thin-plate splines, and kriging) that allows for estimation of a variable across a spatial domain. Like the name suggests, RK combines regression and kriging. It is a probabilistic method and produces a variance surface like kriging.</p>
-<p>RK uses a regression of the dependent variable (<span class="math inline">\(y\)</span>) on predictor variables (<span class="math inline">\(x_1\)</span>,<span class="math inline">\(x_2\)</span>, etc.) with standard kriging of the errors on the regression. By fitting a variogram to the residuals of the model, predictors influence the kriging weights (recall <span class="math inline">\(\lambda\)</span> from the kriging module?). The advantage of RK over either kriging or regression is that it combines the use of spatial structure for prediction (as kriging does) with the addition of ancillary variables (like regression does). In other words, RK exploits the spatial correlation between variables for making predictions.</p>
-<p>RK is used more and more commonly as cheap and powerful covariates can be derived from remote sensing and GIS data. I’ll give some examples in the video.</p>
-</section>
-<section id="prediction-review-ols-regression-with-new-data" class="level2">
-<h2 class="anchored" data-anchor-id="prediction-review-ols-regression-with-new-data">Prediction Review: OLS Regression with New Data</h2>
-<p>This is likely serious review for all of you so roll your eyes as needed. But I just want to be sure we are on the same page. I want to make sure you are hip to the idea of passing new data (e.g., into a <code>predict</code> function) for extending a model (e.g., <code>lm</code>) to new data. We’ve done this already a few times, but it never hurts to get it again.</p>
-<p>Here we create a <code>data.frame</code> called <code>originalDat</code> with three variables: <code>x1</code> and <code>x2</code> are <code>n</code> draws from a normal distribution (<span class="math inline">\(N(0,1)\)</span>) and <code>y</code> is a function of <code>x1</code>and <code>x2</code> following a linear model with coefficients <code>b0</code>, <code>b1</code>, and <code>b2</code> plus some more noise (<code>epsilon</code>) (<span class="math inline">\(N(0,2)\)</span>).</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">50</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>b0 <span class="ot">&lt;-</span> <span class="dv">4</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>b1 <span class="ot">&lt;-</span> <span class="fl">0.6</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>b2 <span class="ot">&lt;-</span> <span class="dv">3</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>originalDat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x1=</span><span class="fu">rnorm</span>(n), <span class="at">x2=</span><span class="fu">rnorm</span>(n), <span class="at">epsilon =</span> <span class="fu">rnorm</span>(n,<span class="at">sd =</span> <span class="dv">2</span>))</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>originalDat<span class="sc">$</span>y <span class="ot">&lt;-</span> b0 <span class="sc">+</span> b1 <span class="sc">*</span> originalDat<span class="sc">$</span>x1 <span class="sc">+</span> b2 <span class="sc">*</span> originalDat<span class="sc">$</span>x2 <span class="sc">+</span> originalDat<span class="sc">$</span>epsilon</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-<p>We then fit a linear model (OLS) with <code>lm</code>:</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>lm1 <span class="ot">&lt;-</span> <span class="fu">lm</span>(y<span class="sc">~</span>x1 <span class="sc">+</span> x2,<span class="at">data =</span> originalDat)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(lm1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Call:
-lm(formula = y ~ x1 + x2, data = originalDat)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--3.9446 -1.4464 -0.3522  1.2004  4.5087 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)   3.5699     0.2841  12.567  &lt; 2e-16 ***
-x1            0.4794     0.2650   1.809   0.0768 .  
-x2            2.8109     0.3556   7.904 3.55e-10 ***
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-Residual standard error: 1.968 on 47 degrees of freedom
-Multiple R-squared:  0.5788,    Adjusted R-squared:  0.5609 
-F-statistic: 32.29 on 2 and 47 DF,  p-value: 1.497e-09</code></pre>
-</div>
-</div>
-<p>OK. We have one definitely helpful predictor, and one borderline predictor. Now let’s say we want to extend that model to predict a new data set. The object <code>lm1</code> is class <code>lm</code> and most every model class has a <code>predict</code> function, or a <code>newdata</code> argument to the original function, that allows you feed it new data.</p>
+<p>The basic idea is a two-step process. First, fit an OLS regression of your response variable on whatever covariates you have available at both your sample locations and your prediction grid. Second, take the residuals from that regression, fit a variogram to them, and krige those residuals across the prediction grid. The final RK prediction at any location is the OLS fitted value plus the kriged residual:</p>
+<p><span class="math display">\[\hat{Z}_{RK}(s_0) = \hat{Z}_{OLS}(s_0) + \hat{\varepsilon}(s_0)\]</span></p>
+<p>The OLS surface captures the broad, covariate-driven trend: organic matter is higher near the river, lower on certain soil types, and so on. In geostatistics, this large-scale spatially varying mean is called the trend, not a trend over time but a systematic variation across space driven by covariates. The kriged residual surface captures the local spatial deviations from that trend, the pockets where organic matter is a bit higher or lower than the covariates alone would predict, based on what we observe at nearby sample points. Adding them together gives a prediction that is informed by both the large-scale drivers and the local spatial structure.</p>
+<p>The residuals from the OLS model represent the spatial variation that the covariates couldn’t explain. If those residuals are spatially autocorrelated (and they often are), kriging can extract useful information from their spatial structure. In a standard OLS setting, autocorrelated residuals are a problem because they violate the independence assumption. In RK, they’re an opportunity.</p>
+<p>RK is used more and more commonly now that cheap and powerful covariates can be derived from remote sensing and GIS data. Elevation grids, land cover maps, distance-to-feature layers: if it predicts your response and you have it everywhere, it can go in the model.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -448,55 +409,20 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Review the <a href="01xAsideMethodsAndGenerics.html">Understanding Methods and Generics in R aside</a> if that is unclear. So let’s imagine we have a new data set with <code>x1</code> and <code>x2</code> but no <code>y</code>.</p>
+<p>If you want a refresher on how to fit an OLS model and then apply it to new data with <code>predict</code>, see the <a href="06xAsidePredictingNewData.html">Predicting New Data aside</a>. That pattern is the foundation of the RK workflow.</p>
 </div>
 </div>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>newDat <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x1=</span><span class="fu">rnorm</span>(n),<span class="at">x2=</span><span class="fu">rnorm</span>(n))</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(newDat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>          x1         x2
-1 -0.9107046  0.1053673
-2 -1.9548906 -0.2345276
-3 -0.5561183  0.1375432
-4 -0.7254766  0.3132995
-5 -0.5021313  1.1485350
-6  0.1749991  0.8071396</code></pre>
-</div>
-</div>
-<p>We can use <code>predict.lm</code> (we just need to type <code>predict</code> since the object we are feeding is class <code>lm</code>, R knows to use <code>predict.lm</code>) to model new estimates of <code>y</code> by pointing to <code>newDat</code> using the <code>newdata</code> argument. Note that I’m sticking the predicted values right into a new column <code>yhat</code>. Why the hat? Because it’s an estimate.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>newDat<span class="sc">$</span>yhat <span class="ot">&lt;-</span> <span class="fu">predict</span>(<span class="at">object =</span> lm1,<span class="at">newdata =</span> newDat)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(newDat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>          x1         x2     yhat
-1 -0.9107046  0.1053673 3.429497
-2 -1.9548906 -0.2345276 1.973452
-3 -0.5561183  0.1375432 3.689944
-4 -0.7254766  0.3132995 4.102786
-5 -0.5021313  1.1485350 6.557656
-6  0.1749991  0.8071396 5.922660</code></pre>
-</div>
-</div>
-<p>If we call <code>predict</code> without new data, the fits from the original model are returned. In the above <code>predict(lm1)</code>, <code>fitted(lm1)</code>, and <code>lm1$fitted.values</code> all do the same thing.</p>
-<p>I know that most of you are familiar with this. I just wanted to spell it all out.</p>
 </section>
 <section id="back-to-the-netherlands" class="level2">
 <h2 class="anchored" data-anchor-id="back-to-the-netherlands">Back to the Netherlands</h2>
-<p>Let’s look at a real-world example of RK using, you guessed it, the Meuse River data. I’m pretty sick of these data but they are familiar to us. We’ve used the data in <code>meuse.all</code> quite a bit and we’ve used <code>meuse.grid</code> as an empty grid to interpolate into. But <code>meuse.grid</code> has other data in it that we can use in a regression kriging approach.</p>
+<p>Let’s look at a real-world example of RK using, you guessed it, the Meuse River data. I’m pretty sick of these data but they are familiar to us. We’ve used <code>meuse.all</code> quite a bit and we’ve used <code>meuse.grid</code> as an empty grid to interpolate into. But <code>meuse.grid</code> has other variables in it that we haven’t used yet, and some of those overlap with <code>meuse.all</code>. That overlap is what makes RK possible here.</p>
 <section id="the-data" class="level3">
 <h3 class="anchored" data-anchor-id="the-data">The Data</h3>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(meuse.all)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(meuse.all)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(meuse.all)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(meuse.all)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>'data.frame':   164 obs. of  17 variables:
@@ -523,8 +449,8 @@ Note
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>meuse.grid <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/meuse.grid.Rds"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(meuse.grid)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>meuse.grid <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/meuse.grid.Rds"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(meuse.grid)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>'data.frame':   3103 obs. of  7 variables:
@@ -537,19 +463,19 @@ Note
  $ ffreq : Factor w/ 3 levels "1","2","3": 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
 </div>
 </div>
-<p>And, we know all too well by now that <code>meuse.grid</code> is a <code>data.frame</code> with 3103 points on a grid and 7 variables.</p>
-<p>However, we have three variables from <code>meuse.all</code> that overlap in <code>meuse.grid</code> and we haven’t used those much (or at all) in this class yet. Thus, if we create a model from <code>meuse.all</code> that includes <code>dist</code>, <code>soil</code>, or <code>ffreq</code> as predictors we could predict over <code>meuse.grid</code> without doing IDW or kriging. Those variables held in common between <code>meuse.all</code> and <code>meuse.grid</code> are, by the way, the distance to the river (normalized from 0 to 1), soil type (three classes), and the flooding frequency class (also three classes). See <code>?meuse.all</code> for details on the variables.</p>
-<p>Don’t worry, we will skip cadmium, zinc, and lead and work with modeling <code>om</code> which is percent organic matter in the soil. We will model <code>om</code> as a function of <code>dist</code> and <code>soil</code> and predict it over the entire study site. We will do this naively with ordinary least squares regression (OLS) and then again with RK.</p>
+<p>And <code>meuse.grid</code> is a <code>data.frame</code> with 3103 points on a grid and 7 variables.</p>
+<p>Three variables are shared between <code>meuse.all</code> and <code>meuse.grid</code>: distance to the river (normalized 0 to 1), soil type (three classes), and flooding frequency class (also three classes). Because we have these at every grid cell, we can build a regression model using them as predictors and then apply that model across the whole study area. See <code>?meuse.all</code> for details on the variables.</p>
+<p>We’ll skip cadmium, zinc, and lead this time and model <code>om</code>, percent organic matter in the soil, as a function of <code>dist</code> and <code>soil</code>. We’ll first do this naively with OLS alone, and then add the kriging step to get RK.</p>
 </section>
 <section id="make-data-as-sf-and-clean-it-up" class="level3">
 <h3 class="anchored" data-anchor-id="make-data-as-sf-and-clean-it-up">Make data as <code>sf</code> and clean it up</h3>
-<p>Fist we will make both data sets in <code>sf</code> objects.</p>
+<p>First we will make both data sets into <code>sf</code> objects.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(meuse.all,<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>,<span class="st">"y"</span>), <span class="at">crs=</span><span class="dv">28992</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(meuse.grid,<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>,<span class="st">"y"</span>), <span class="at">crs=</span><span class="dv">28992</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>meusePoints_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(meuse.all, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>,<span class="st">"y"</span>), <span class="at">crs=</span><span class="dv">28992</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(meuse.grid, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>,<span class="st">"y"</span>), <span class="at">crs=</span><span class="dv">28992</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>meusePoints_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 164 features and 15 fields
@@ -583,7 +509,7 @@ First 10 features:
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 3103 features and 5 fields
@@ -605,16 +531,16 @@ First 10 features:
 10      1      0 0.01222430    1     1 POINT (181100 333620)</code></pre>
 </div>
 </div>
-<p>One thing to note here is that the <code>dist.m</code> column in <code>meusePoints_sf</code> is the distance to the river in meters while <code>meuseGrid_sf</code> has distance to the river in relative units (scaled zero to one). To make life easier we will add the relative distances to the point data unsing the <code>dist</code> values from <code>meuseGrid_sf</code>.</p>
+<p>One thing to note here is that the <code>dist.m</code> column in <code>meusePoints_sf</code> is the distance to the river in meters while <code>meuseGrid_sf</code> has distance in relative units (scaled 0 to 1). To make life easier we will add the relative distances to the point data using the <code>dist</code> values from <code>meuseGrid_sf</code>.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get the relative distance from meuseGrid_sf and add it to meusePoints_sf</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_dist_sf <span class="ot">&lt;-</span> meuseGrid_sf <span class="sc">%&gt;%</span> <span class="fu">select</span>(dist)</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># join the two objects by the nearest point</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> <span class="fu">st_join</span>(meusePoints_sf,meuseGrid_dist_sf, <span class="at">join =</span> st_nearest_feature)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># note that we now have relative dist for each point now in the column `dist`</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>meusePoints_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get the relative distance from meuseGrid_sf and add it to meusePoints_sf</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_dist_sf <span class="ot">&lt;-</span> meuseGrid_sf <span class="sc">%&gt;%</span> <span class="fu">select</span>(dist)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># join the two objects by the nearest point</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> <span class="fu">st_join</span>(meusePoints_sf, meuseGrid_dist_sf, <span class="at">join =</span> st_nearest_feature)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># note that we now have relative dist for each point now in the column `dist`</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>meusePoints_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 164 features and 16 fields
@@ -647,38 +573,38 @@ First 10 features:
 10  FALSE        TRUE   FALSE 0.30970200 POINT (181232 333168)</code></pre>
 </div>
 </div>
-<p>We will go a step further and use the square root of the distance to the river as a predictor. This just helps us get a little more leverage on very short distances by stretching out the scale.</p>
+<p>We will go a step further and use the square root of the distance to the river as a predictor. This gives us a little more leverage on very short distances by stretching out that end of the scale.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> meusePoints_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">sqrt_dist =</span> <span class="fu">sqrt</span>(dist))</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf <span class="ot">&lt;-</span> meuseGrid_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">sqrt_dist =</span> <span class="fu">sqrt</span>(dist))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> meusePoints_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">sqrt_dist =</span> <span class="fu">sqrt</span>(dist))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf <span class="ot">&lt;-</span> meuseGrid_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">sqrt_dist =</span> <span class="fu">sqrt</span>(dist))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>Next, the column <code>om</code> in <code>meusePoints_sf</code> has two missing data points (<code>NA</code>) in it. I’m going to toss those rows to make things easier. Note the new number of rows in <code>meusePoints_sf</code> after you run this.</p>
+<p>The column <code>om</code> in <code>meusePoints_sf</code> has two missing values. I’m going to drop those rows to keep things clean. Note the new row count after you run this.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> meusePoints_sf <span class="sc">%&gt;%</span> <span class="fu">drop_na</span>(om)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> meusePoints_sf <span class="sc">%&gt;%</span> <span class="fu">drop_na</span>(om)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>And finally, we are going to be using the soil type as a predictor. That is a categorical variable so we need to change it to be a <code>factor</code>.</p>
+<p>And we need soil type as a <code>factor</code> since it’s categorical.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> meusePoints_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">soil =</span> <span class="fu">factor</span>(soil))</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf <span class="ot">&lt;-</span> meuseGrid_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">soil =</span> <span class="fu">factor</span>(soil))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>meusePoints_sf <span class="ot">&lt;-</span> meusePoints_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">soil =</span> <span class="fu">factor</span>(soil))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf <span class="ot">&lt;-</span> meuseGrid_sf <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">soil =</span> <span class="fu">factor</span>(soil))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
 <section id="ols" class="level3">
 <h3 class="anchored" data-anchor-id="ols">OLS</h3>
-<p>We will make a simple model of organic matter (<span class="math inline">\(y\)</span>) as a function of the square root of the distance to the river (<span class="math inline">\(x_1\)</span>) and soil type (<span class="math inline">\(x_2\)</span>): <span class="math inline">\(y=\beta_0 + \beta_1x_1+\beta_2x_2\)</span>. The parameters (<span class="math inline">\(\beta_{0,1,2}\)</span>) will be estimated with OLS. Here is the OLS model:</p>
+<p>We’ll start with a simple OLS model of organic matter (<span class="math inline">\(y\)</span>) as a function of the square root of distance to the river (<span class="math inline">\(x_1\)</span>) and soil type (<span class="math inline">\(x_2\)</span>): <span class="math inline">\(y=\beta_0 + \beta_1x_1+\beta_2x_2\)</span>, with parameters estimated by OLS.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>om_lm <span class="ot">&lt;-</span> <span class="fu">lm</span>(om<span class="sc">~</span>sqrt_dist<span class="sc">+</span>soil, <span class="at">data=</span>meusePoints_sf)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(om_lm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>om_lm <span class="ot">&lt;-</span> <span class="fu">lm</span>(om<span class="sc">~</span>sqrt_dist<span class="sc">+</span>soil, <span class="at">data=</span>meusePoints_sf)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(om_lm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -704,7 +630,7 @@ F-statistic: 51.12 on 3 and 158 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(om_lm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(om_lm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Analysis of Variance Table
@@ -718,13 +644,85 @@ Residuals 158 966.45    6.12
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
-<p>In our model, we see that both distance and soil types are good predictors of organic matter percent. Now, this might or might not be a good model. After you learn about the pitfalls of using OLS with spatial data you’ll be appalled that I’m running this model and not checking for spatial autocorrelation in the residuals or doing any other regression diagnostics. But suppress your horror for now. Because all I want to do here is show how I could (if I wanted to live in a state of ignorant bliss) predict this model across the landscape.</p>
+<p>Both distance and soil type are useful predictors of organic matter. Now, after you learn about the pitfalls of using OLS with spatial data you’ll be appalled that I’m running this model without checking for autocorrelation in the residuals. But suppress your horror for now, because all we want to do here is show what a purely regression-based prediction surface looks like before we improve on it. Note the below we do the prediction and then make a raster of the output using the function <code>sf_2_rast</code> from the prior weeks.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf<span class="sc">$</span>omHat <span class="ot">&lt;-</span> <span class="fu">predict</span>(om_lm, <span class="at">newdata=</span>meuseGrid_sf)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_sf</span>(<span class="at">data =</span> meuseGrid_sf,<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">color=</span>omHat))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf<span class="sc">$</span>omHat <span class="ot">&lt;-</span> <span class="fu">predict</span>(om_lm, <span class="at">newdata=</span>meuseGrid_sf)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>sf_2_rast <span class="ot">&lt;-</span> <span class="cf">function</span>(sfObject, <span class="at">variable2get =</span> <span class="dv">1</span>){</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  tmp <span class="ot">&lt;-</span> sfObject[,variable2get] <span class="sc">%&gt;%</span> <span class="fu">st_drop_geometry</span>()</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  dfObject <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">st_coordinates</span>(sfObject), <span class="at">z=</span>tmp)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  rastObject <span class="ot">&lt;-</span> <span class="fu">rast</span>(dfObject, <span class="at">crs=</span><span class="fu">crs</span>(sfObject))</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(rastObject)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>meuseGrid_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(meuseGrid_sf, <span class="at">variable2get =</span> <span class="st">"omHat"</span>)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_spatraster</span>(<span class="at">data =</span> meuseGrid_rast,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>                           <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omHat)) <span class="sc">+</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>() <span class="sc">+</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"omHat"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The prediction is reasonable, but the residuals are spatially autocorrelated: Moran’s I on a four-neighbor object is 0.23, significantly greater than zero. That matters, and we’ll come back to it in the GLS module.</p>
+</section>
+<section id="rk-application" class="level3">
+<h3 class="anchored" data-anchor-id="rk-application">RK Application</h3>
+<p>The OLS model used distance and soil type but ignored everything we know about the spatial structure of organic matter. We threw out the variogram. And we know from the Moran’s I above that the residuals are not spatially independent, meaning there is structure left over that the covariates didn’t capture. That leftover structure is exactly what kriging is designed to exploit.</p>
+<p>Let’s look at the variogram of <code>om</code> before conditioning on anything</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>omVar <span class="ot">&lt;-</span> <span class="fu">variogram</span>(om<span class="sc">~</span><span class="dv">1</span>, meusePoints_sf)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(omVar, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">cex=</span><span class="fl">1.5</span>, <span class="at">col=</span><span class="st">"black"</span>,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="fu">expression</span>(<span class="st">"Semivariance ("</span><span class="sc">*</span>gamma<span class="sc">*</span><span class="st">")"</span>),</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Distance (m)"</span>, <span class="at">main =</span> <span class="st">"% Soil Organic Matter"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now we set up a <code>gstat</code> object that includes the regression formula. When we call <code>variogram</code> on this object, we get the variogram of the OLS residuals, not of <code>om</code> itself. The residuals here are just the familiar <span class="math inline">\(e_i = om_i - \hat{om}_i\)</span> at each sample point: how much higher or lower is the observed organic matter than what distance and soil type alone would predict? We’re asking whether those leftover deviations have spatial structure, or whether they’re just noise. Compare the two variogram plots and you’ll notice the residual variogram has less total variance, which is the variance the covariates explained away. What remains still has spatial structure, which means kriging has something to work with.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>omGstat <span class="ot">&lt;-</span> <span class="fu">gstat</span>(<span class="at">id =</span> <span class="st">"omModel"</span>, <span class="at">formula =</span> om <span class="sc">~</span> sqrt_dist <span class="sc">+</span> soil, </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> meusePoints_sf)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>omGstat_obsVariogram <span class="ot">&lt;-</span> <span class="fu">variogram</span>(omGstat)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(omGstat_obsVariogram, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">cex=</span><span class="fl">1.5</span>, <span class="at">col=</span><span class="st">"black"</span>,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="fu">expression</span>(<span class="st">"Semivariance ("</span><span class="sc">*</span>gamma<span class="sc">*</span><span class="st">")"</span>),</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Distance (m)"</span>, <span class="at">main =</span> <span class="st">"Model Residuals"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The residual variogram isn’t dramatic, but the semivariance rises from a nugget of around four to a sill of around six. There is spatial structure in the residuals that we can use.</p>
+<p>We fit a theoretical model to it. I’ll use a Gaussian model here, though an exponential would also be defensible.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>omGau_variogramModel <span class="ot">&lt;-</span> <span class="fu">vgm</span>(<span class="at">psill =</span> <span class="dv">2</span>, <span class="at">model =</span> <span class="st">"Gau"</span>, <span class="at">range =</span> <span class="dv">500</span>, <span class="at">nugget =</span> <span class="dv">4</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>omGau_fittedVariogram <span class="ot">&lt;-</span> <span class="fu">fit.variogram</span>(<span class="at">object =</span> omGstat_obsVariogram, </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">model =</span> omGau_variogramModel)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(omGstat_obsVariogram, omGau_fittedVariogram, <span class="at">pch=</span><span class="dv">20</span>, <span class="at">cex=</span><span class="fl">1.5</span>, <span class="at">col=</span><span class="st">"black"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="fu">expression</span>(<span class="st">"Semivariance ("</span><span class="sc">*</span>gamma<span class="sc">*</span><span class="st">")"</span>),</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Distance (m)"</span>, <span class="at">main =</span> <span class="st">"Model Residuals"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -734,109 +732,21 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
 </div>
-<p>A few things. One this is a decent prediction. The model relatively skillful (but we should crossvalidate it) but the assumption about independence of the residuals is violated. E.g., Moran’s I on an eight-neighbor object is 0.23 which is significantly greater than zero. More on that in the next set of notes “GLS with Autocorrelated Residuals.” Oh, and that plot above is all points. We can make it a raster. Remember this handy function from the prior weeks that makes a <code>sf</code> point object into a <code>SpatRaster</code>?</p>
+<p>Now we update the <code>gstat</code> object with the fitted variogram model and predict across the grid. Under the hood, <code>predict</code> is doing three things at every grid cell. First, it evaluates the OLS model by plugging <code>sqrt_dist</code> and <code>soil</code> into <span class="math inline">\(\hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2\)</span> to get the covariate-driven trend at that location. Second, it kriging the residuals: it looks at the OLS residuals at the nearby sample points (<span class="math inline">\(e_i = om_i - \hat{om}_i\)</span>) and uses the fitted variogram to estimate what the residual would be at the prediction location. Third, it adds the two together. The first part handles the large-scale pattern that distance and soil type explain. The second part handles the local spatial deviations that the covariates missed.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>sf_2_rast <span class="ot">&lt;-</span><span class="cf">function</span>(sfObject,<span class="at">variable2get =</span> <span class="dv">1</span>){</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># coerce sf to a data.frame</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  tmp <span class="ot">&lt;-</span> sfObject[,variable2get] <span class="sc">%&gt;%</span> <span class="fu">st_drop_geometry</span>()</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  dfObject <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">st_coordinates</span>(sfObject),</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                         <span class="at">z=</span>tmp)</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># coerce data.frame to SpatRaster</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  rastObject <span class="ot">&lt;-</span> <span class="fu">rast</span>(dfObject,<span class="at">crs=</span><span class="fu">crs</span>(sfObject))</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(rastObject)</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>meuseGrid_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(meuseGrid_sf,<span class="at">variable2get =</span> <span class="st">"omHat"</span>)</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_spatraster</span>(<span class="at">data =</span> meuseGrid_rast,</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>                           <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omHat)) <span class="sc">+</span></span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>() <span class="sc">+</span></span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"omHat"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="rk-application" class="level3">
-<h3 class="anchored" data-anchor-id="rk-application">RK Application</h3>
-<p>As I imagine you have anticipated, the silliest thing in the model above is that we threw out all of the awesome data we have on spatial structure. All the information on how pairs of samples relate to each other in terms of semivariance has been cast aside. And we know that organic matter is autocorrelated. E.g.,:</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>omVar <span class="ot">&lt;-</span> <span class="fu">variogram</span>(om<span class="sc">~</span><span class="dv">1</span>, meusePoints_sf)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(omVar,<span class="at">pch=</span><span class="dv">20</span>,<span class="at">cex=</span><span class="fl">1.5</span>,<span class="at">col=</span><span class="st">"black"</span>,</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="fu">expression</span>(<span class="st">"Semivariance ("</span><span class="sc">*</span>gamma<span class="sc">*</span><span class="st">")"</span>),</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Distance (m)"</span>, <span class="at">main =</span> <span class="st">"% Soil Organic Matter"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>With kriging, we would interpolate a surface based just on a theoretical variogram we would fit to those data. But we have all the data on distance and soil type that we used in the OLS model above. We can combine these approaches with RK.</p>
-<p>We will set up a <code>gstat</code> object with the linear regression model. When we plot the variogram we are seeing the residuals from that regression. They have some spatial structure. In OLS that is bad (violates independence). For RK, this is good! It means we can use that structure to improve the prediction.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>omGstat <span class="ot">&lt;-</span> <span class="fu">gstat</span>(<span class="at">id =</span> <span class="st">"omModel"</span>, <span class="at">formula =</span> om <span class="sc">~</span> sqrt_dist <span class="sc">+</span> soil, </span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> meusePoints_sf)</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>omGstat_obsVariogram <span class="ot">&lt;-</span> <span class="fu">variogram</span>(omGstat)</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(omGstat_obsVariogram,<span class="at">pch=</span><span class="dv">20</span>,<span class="at">cex=</span><span class="fl">1.5</span>,<span class="at">col=</span><span class="st">"black"</span>,</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="fu">expression</span>(<span class="st">"Semivariance ("</span><span class="sc">*</span>gamma<span class="sc">*</span><span class="st">")"</span>),</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Distance (m)"</span>, <span class="at">main =</span> <span class="st">"Model Residuals"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Ok. Let’s look at this. It’s not a severe variogram. But you can see that the semivariance goes from a nugget of about four to a sill of about six. I.e., there is spatial structure in this model that we can leverage and that should improve our predictions.</p>
-<p>Thus, let’s fit a theoretical model to the <code>omGstat_obsVariogram</code> variogram. I’ll use a Gaussian model but you could make a good case here for an Exponential model.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>omGau_fittedVariogram <span class="ot">&lt;-</span> <span class="fu">fit.variogram</span>(omGstat_obsVariogram, <span class="fu">vgm</span>(<span class="at">psill =</span> <span class="dv">6</span>, <span class="at">model =</span> <span class="st">"Gau"</span>, <span class="at">range =</span> <span class="dv">500</span>, <span class="at">nugget =</span> <span class="dv">4</span>))</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(omGstat_obsVariogram, omGau_fittedVariogram,<span class="at">pch=</span><span class="dv">20</span>,<span class="at">cex=</span><span class="fl">1.5</span>,<span class="at">col=</span><span class="st">"black"</span>,</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="fu">expression</span>(<span class="st">"Semivariance ("</span><span class="sc">*</span>gamma<span class="sc">*</span><span class="st">")"</span>),</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"Distance (m)"</span>, <span class="at">main =</span> <span class="st">"Model Residuals"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Now we can update the <code>gstat</code> object with that variogram model. And use it to make a prediction.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update the gstat object with the variogram:</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>omGstat_w_variogram <span class="ot">&lt;-</span> <span class="fu">gstat</span>(omGstat, <span class="at">id=</span><span class="st">"omModel"</span>, <span class="at">model=</span>omGau_fittedVariogram)</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co"># And predict</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>omHat_sf <span class="ot">&lt;-</span> <span class="fu">predict</span>(omGstat_w_variogram, <span class="at">newdata =</span> meuseGrid_sf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update the gstat object with the variogram:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>omGstat_w_variogram <span class="ot">&lt;-</span> <span class="fu">gstat</span>(omGstat, <span class="at">id=</span><span class="st">"omModel"</span>, <span class="at">model=</span>omGau_fittedVariogram)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># And predict</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>omHat_sf <span class="ot">&lt;-</span> <span class="fu">predict</span>(omGstat_w_variogram, <span class="at">newdata =</span> meuseGrid_sf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[using universal kriging]</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>omHat_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>omHat_sf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Simple feature collection with 3103 features and 2 fields
@@ -846,81 +756,88 @@ Bounding box:  xmin: 178460 ymin: 329620 xmax: 181540 ymax: 333740
 Projected CRS: Amersfoort / RD New
 First 10 features:
    omModel.pred omModel.var              geometry
-1      14.33925    5.370485 POINT (181180 333740)
-2      14.38783    5.207100 POINT (181140 333700)
+1      14.33925    5.370484 POINT (181180 333740)
+2      14.38783    5.207101 POINT (181140 333700)
 3      13.21201    5.157301 POINT (181180 333700)
 4      12.16400    5.172975 POINT (181220 333700)
-5      14.40786    5.072085 POINT (181100 333660)
-6      13.24575    5.008216 POINT (181140 333660)
-7      12.37960    5.012550 POINT (181180 333660)
-8      11.85536    5.056316 POINT (181220 333660)
-9      13.99688    4.937390 POINT (181060 333620)
-10     13.24907    4.889661 POINT (181100 333620)</code></pre>
+5      14.40785    5.072086 POINT (181100 333660)
+6      13.24575    5.008217 POINT (181140 333660)
+7      12.37959    5.012552 POINT (181180 333660)
+8      11.85536    5.056317 POINT (181220 333660)
+9      13.99687    4.937392 POINT (181060 333620)
+10     13.24906    4.889664 POINT (181100 333620)</code></pre>
 </div>
 </div>
-<p>We have made a new object <code>omHat_sf</code> that has the predictions and the variance from the RK. It’s an <code>sf</code> object (because <code>meuseGridSF</code> is also <code>sf</code>). Let’s make them into <code>SpatRasers</code> to make the plots prettier.</p>
+<p>To make this concrete, let’s look at all three surfaces: the OLS trend, the kriged residuals, and the final RK prediction that combines them. We have <code>omHat</code> from the OLS step already. We can recover the kriged residual surface by subtracting it from the RK prediction.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>omHat_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(omHat_sf,<span class="at">variable2get =</span> <span class="st">"omModel.pred"</span>)</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>omHat_rast</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>class       : SpatRaster 
-size        : 104, 78, 1  (nrow, ncol, nlyr)
-resolution  : 40, 40  (x, y)
-extent      : 178440, 181560, 329600, 333760  (xmin, xmax, ymin, ymax)
-coord. ref. : Amersfoort / RD New (EPSG:28992) 
-source(s)   : memory
-name        : omModel.pred 
-min value   :     1.891323 
-max value   :    14.407855 </code></pre>
-</div>
-</div>
-<p>And plot:</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> </span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_spatraster</span>(<span class="at">data =</span> omHat_rast,</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omModel.pred)) <span class="sc">+</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>() <span class="sc">+</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"Organic Matter (%)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>And variance around the predictions:</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>omHatVar_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(omHat_sf,<span class="at">variable2get =</span> <span class="st">"omModel.var"</span>)</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># take the square root of variance to create standard deviation (units match then)</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>omHatVar_rast <span class="ot">&lt;-</span> omHatVar_rast <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">omModel.var.sqrt =</span> <span class="fu">sqrt</span>(omModel.var))</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_spatraster</span>(<span class="at">data =</span> omHatVar_rast,</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omModel.var.sqrt)) <span class="sc">+</span></span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>() <span class="sc">+</span></span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"Organic Matter Variance (%)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>omHat_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(omHat_sf, <span class="at">variable2get =</span> <span class="st">"omModel.pred"</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co"># kriged residual surface = RK prediction minus OLS trend</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>omHat_sf<span class="sc">$</span>krigedResid <span class="ot">&lt;-</span> omHat_sf<span class="sc">$</span>omModel.pred <span class="sc">-</span> meuseGrid_sf<span class="sc">$</span>omHat</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>omResid_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(omHat_sf, <span class="at">variable2get =</span> <span class="st">"krigedResid"</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>p_ols <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_spatraster</span>(<span class="at">data =</span> meuseGrid_rast, <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omHat)) <span class="sc">+</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>(<span class="at">limits=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">18</span>)) <span class="sc">+</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"OLS trend"</span>, <span class="at">fill=</span><span class="st">"om (%)"</span>) <span class="sc">+</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text=</span><span class="fu">element_blank</span>(), <span class="at">axis.ticks=</span><span class="fu">element_blank</span>())</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>p_resid <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_spatraster</span>(<span class="at">data =</span> omResid_rast, <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>krigedResid)) <span class="sc">+</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>(<span class="at">low=</span><span class="st">"blue"</span>, <span class="at">mid=</span><span class="st">"white"</span>, <span class="at">high=</span><span class="st">"red"</span>, </span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>                     <span class="at">midpoint=</span><span class="dv">0</span>, <span class="at">na.value=</span><span class="st">"transparent"</span>) <span class="sc">+</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"Kriged residuals"</span>, <span class="at">fill=</span><span class="st">"resid"</span>) <span class="sc">+</span></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text=</span><span class="fu">element_blank</span>(), <span class="at">axis.ticks=</span><span class="fu">element_blank</span>())</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>p_rk <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_spatraster</span>(<span class="at">data =</span> omHat_rast, <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omModel.pred)) <span class="sc">+</span></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>(<span class="at">limits=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">18</span>)) <span class="sc">+</span></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill=</span><span class="st">"om (%)"</span>) <span class="sc">+</span></span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text=</span><span class="fu">element_blank</span>(), <span class="at">axis.ticks=</span><span class="fu">element_blank</span>())</span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>eq <span class="ot">&lt;-</span> <span class="fu">ggdraw</span>() <span class="sc">+</span> <span class="fu">draw_label</span>(<span class="st">"OLS trend  +  Kriged residuals  =  RK prediction"</span>, </span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>                             <span class="at">fontface=</span><span class="st">"italic"</span>, <span class="at">size=</span><span class="dv">11</span>)</span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>top_row <span class="ot">&lt;-</span> <span class="fu">plot_grid</span>(p_ols, p_resid, <span class="at">ncol=</span><span class="dv">2</span>)</span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_grid</span>(top_row, eq, p_rk, <span class="at">nrow=</span><span class="dv">3</span>, <span class="at">rel_heights=</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.1</span>, <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>The RK approach looks quite a bit different than the OLS prediction. Now our job is to look at the differences carefully and assess skill.</p>
+<p>The OLS surface is smooth: it varies only with distance and soil type. The kriged residual surface shows local corrections, positive where nearby samples were higher than the OLS predicted and negative where they were lower. The RK surface is the sum, which has the broad shape of the OLS prediction but with local detail added by the kriged residuals.</p>
+<p>And the variance surface around the RK predictions:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>omHatVar_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(omHat_sf, <span class="at">variable2get =</span> <span class="st">"omModel.var"</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>omHatVar_rast <span class="ot">&lt;-</span> omHatVar_rast <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">omModel.var.sqrt =</span> <span class="fu">sqrt</span>(omModel.var))</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_spatraster</span>(<span class="at">data =</span> omHatVar_rast,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omModel.var.sqrt)) <span class="sc">+</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>() <span class="sc">+</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"Organic Matter SD (%)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="06bGeostatsRegressionKriging_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Compare the RK prediction surface to the OLS surface above. The overall patterns driven by distance and soil type are still there, because those came from the regression, but the spatial detail is richer because the kriged residuals filled in structure the covariates missed. Whether the added complexity translates to better predictive skill is a question for cross-validation.</p>
 </section>
 </section>
 <section id="your-work" class="level2">
 <h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
-<p>None. This is kind of an add on to introduce you to RK. But you should be able to apply by following the workflow above. I suggest taking some time to figure out how to use <code>gstat.cv</code> and perform k-fold cross validation on the <code>omGstat_w_variogram</code> object and object with just the linear model (<code>omGstat</code>). Compare the skill of a k-fold cross validated OLS model and the k-fold cross validated RK model. Use R<span class="math inline">\(^2\)</span> and RMSE as your measures of skill. Did the RK approach improve the predictions?</p>
+<p>Use <code>gstat.cv</code> to perform cross-validation on both the OLS-only model (<code>omGstat</code>) and the full RK model (<code>omGstat_w_variogram</code>). Compute RMSE and R<span class="math inline">\(^2\)</span> for each. Did RK improve the predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?</p>
 
 
 </section>
@@ -1333,8 +1250,8 @@ max value   :    14.407855 </code></pre>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./07RegressionGLS.html" class="pagination-link" aria-label="Regression: GLS with Autocorrelated Residuals">
-        <span class="nav-page-text"><span class="chapter-title">Regression: GLS with Autocorrelated Residuals</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./06xAsidePredictingNewData.html" class="pagination-link" aria-label="Aside: Predicting New Data with a Fitted Model">
+        <span class="nav-page-text">Aside: Predicting New Data with a Fitted Model</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

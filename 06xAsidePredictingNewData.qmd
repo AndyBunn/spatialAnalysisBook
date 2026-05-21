@@ -1,0 +1,54 @@
+# Aside: Predicting New Data with a Fitted Model  {- .aside-chapter}
+
+This is likely review for most of you, so roll your eyes as needed. The idea is simple: once you have a fitted model in R, you can use it to predict values for data the model has never seen. This comes up constantly in regression kriging, where you fit a model to your sample points and then predict across an entire grid. Let's walk through it.
+
+## Packages
+
+```{r, message=FALSE}
+library(tidyverse)
+```
+
+## A Simulated Example
+
+Here we create a `data.frame` called `originalDat` with three variables: `x1` and `x2` are `n` draws from a normal distribution ($N(0,1)$) and `y` is a function of `x1` and `x2` following a linear model with coefficients `b0`, `b1`, and `b2` plus some noise (`epsilon`) drawn from $N(0,2)$.
+
+```{r}
+set.seed(42)
+n <- 50
+b0 <- 4
+b1 <- 0.6
+b2 <- 3
+originalDat <- data.frame(x1=rnorm(n), x2=rnorm(n), epsilon = rnorm(n,sd = 2))
+originalDat$y <- b0 + b1 * originalDat$x1 + b2 * originalDat$x2 + originalDat$epsilon
+```
+
+We fit a linear model with `lm`:
+
+```{r}
+lm1 <- lm(y~x1 + x2, data = originalDat)
+summary(lm1)
+```
+
+We have one clearly useful predictor and one borderline one. Now, say we want to extend that model to a new data set. The object `lm1` is class `lm`, and most model classes in R have a `predict` function that accepts a `newdata` argument for exactly this purpose.
+
+::: {.callout-note}
+See the [Understanding Methods and Generics in R aside](01xAsideMethodsAndGenerics.html) if the idea of a generic `predict` function dispatching to `predict.lm` is unclear.
+:::
+
+Let's imagine a new data set with `x1` and `x2` but no observed `y`:
+
+```{r}
+newDat <- data.frame(x1=rnorm(n), x2=rnorm(n))
+head(newDat)
+```
+
+We pass `newDat` to `predict` via the `newdata` argument. The predicted values go into a new column `yhat` -- the hat signaling that these are estimates, not observations.
+
+```{r}
+newDat$yhat <- predict(object = lm1, newdata = newDat)
+head(newDat)
+```
+
+If you call `predict` without supplying `newdata`, it returns the fitted values from the original data. In other words, `predict(lm1)`, `fitted(lm1)`, and `lm1$fitted.values` all return the same thing.
+
+This pattern -- fit on sample data, predict onto a grid -- is exactly what regression kriging does, with the added step of kriging the residuals on top of the OLS prediction.

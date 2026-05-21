@@ -35,6 +35,7 @@ book:
         - 06aGeostatsKriging.qmd
         - 06xAsideGeostatsKrigingVariance.qmd
         - 06bGeostatsRegressionKriging.qmd
+        - 06xAsidePredictingNewData.qmd
     - part: "Regression"
       chapters:
         - 07RegressionGLS.qmd

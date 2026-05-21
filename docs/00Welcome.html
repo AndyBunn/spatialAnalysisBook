@@ -258,6 +258,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <a href="./06bGeostatsRegressionKriging.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Probabilistic Interpolation: Regression Kriging</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06xAsidePredictingNewData.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Aside: Predicting New Data with a Fitted Model</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -379,10 +385,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><em>Aside: Kriging Variance By Hand</em> – Cracks open the <code>gstat</code> black box. We calculate kriging weights and prediction variance using matrix algebra on a toy dataset and check our work against the package.</li>
 </ul></li>
-<li><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when you have covariates that explain part of the spatial pattern.</li>
-</ul>
-<p><strong>Regression</strong> closes the loop. When your regression residuals have spatial structure, OLS isn’t the right tool.</p>
+<li><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when you have covariates that explain part of the spatial pattern.
 <ul>
+<li><em>Aside: Predicting New Data with a Fitted Model</em> – A refresher on using <code>predict</code> on new data. <strong>Regression</strong> closes the loop. When your regression residuals have spatial structure, OLS isn’t the right tool.</li>
+</ul></li>
 <li><strong>GLS with Autocorrelated Residuals</strong> – What to do when your regression residuals have spatial structure. Spoiler: you use GLS, and it works.
 <ul>
 <li><em>Aside: OLS via Algebra and Matrices</em> – Derives the OLS solution algebraically and in matrix form, then implements both in R. Background that makes the GLS chapter make more sense.</li>
