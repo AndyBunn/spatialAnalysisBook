@@ -336,30 +336,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Most environmental data are spatial data. Temperature varies across a landscape. Species are not distributed at random. Pollution doesn’t stop at a property boundary. Soil characteristics, wildfire risk, habitat quality: all of these vary in space, and that variation is not noise. It has structure. The goal of spatial analysis is to describe that structure, understand it, and use it.</p>
-<p>That last part matters. If you treat observations as independent when they’re not, you might have your statistics go wrong. Standard errors too small, p-values too optimistic, predictions that don’t hold up. Spatial analysis gives you the tools to do it right.</p>
-<p>But getting the statistics right is only part of the point. Spatial pattern is information. Where something is happening, and where it isn’t, tells you something about the processes driving it. Learning to read that structure makes you better at the fundamental job of environmental science: figuring out why things are the way they are.</p>
-<p>The goal of this course is to build a working toolkit for spatial analysis in environmental science. By the end, you’ll know how to describe spatial patterns, test whether they’re real, interpolate across space, and account for spatial dependence in regression models. These are not exotic methods. They are basic competency for anyone working with environmental data.</p>
+<p>Species don’t distribute themselves at random. Wildfire risk is not uniform across a landscape. Lead contamination in urban soils clusters near old roads and demolished buildings. Precipitation gradients drive vegetation boundaries that don’t care about county lines. In each case, where something is happening is part of the story. Usually a big part.</p>
+<p>The underlying idea has a name. Tobler’s First Law of Geography states that everything is related to everything else, but near things are more related than distant things. That’s it. It sounds obvious until you realize how much standard statistical practice ignores it.</p>
+<p>If you treat spatially dependent observations as independent, your standard errors will be too small, your p-values too optimistic, and your predictions won’t hold up. This isn’t a minor technical complaint. It’s a systematic bias, and it runs through a lot of published environmental science.</p>
+<p>The tools to do this right have existed for decades. What’s changed is that they are now accessible – implemented in open, well-documented software, with enough worked examples that you don’t need a geostatistics PhD to use them correctly. There’s no longer a good reason to leave spatial structure on the table.</p>
+<p>Spatial pattern is also information in its own right. Where something is happening, and where it isn’t, tells you something about the processes driving it. Learning to read that structure is part of the fundamental job of environmental science: figuring out why things are the way they are.</p>
 <section id="this-is-not-a-textbook" class="level2">
 <h2 class="anchored" data-anchor-id="this-is-not-a-textbook">This Is Not a Textbook</h2>
-<p>These are the course notes and not a textbook. They are more like a field guide written by someone who has gotten lost in these woods before and wants to help you find your way through.</p>
-<p>The notes are hands-on by design. You will write code, look at data, make maps, fit models, and interpret results. Each section builds on what came before. The math shows up when it needs to, but the emphasis throughout is on doing spatial analysis and understanding what you’re doing – not on deriving things for their own sake.</p>
-<p>I’ll point you to textbooks and papers along the way. Read them. They complement what we’re doing here and will matter when you’re working on your own data and I’m not around to ask.</p>
-<p>These notes are a living document. They change based on what works, what doesn’t, and what you ask about in class. If something is wrong or unclear, tell me.</p>
+<p>These are notes and tutorials for working with data. Think of them less like a textbook and more like notes left by someone who has gotten lost in these same woods and wants to help you find your way through.</p>
+<p>They are hands-on by design. You will write code, look at data, make maps, fit models, and interpret results. Each section builds on what came before. The math shows up when it needs to, but the emphasis throughout is on doing spatial analysis and understanding what you’re doing – not on deriving things for their own sake.</p>
 </section>
 <section id="how-these-notes-are-laid-out" class="level2">
 <h2 class="anchored" data-anchor-id="how-these-notes-are-laid-out">How These Notes Are Laid Out</h2>
-<p>Most of the chapters follow a natural progression, each one builds on the last. But scattered through the notes you’ll find <strong>Asides</strong> which are side quests that dig into something that doesn’t quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters flow better.</p>
-<p>The Asides are linked from the chapters that depend on them, and skipping one will likely leave you confused when that chapter references it. They are separate from the main chapters not because they are less important, but because pulling them out keeps the main flow readable. When you hit a link to an Aside, it’s worth following it.</p>
+<p>Most chapters follow a natural progression, each building on the last. Scattered through the notes you’ll find <strong>Asides</strong> – side quests that dig into something that doesn’t quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.</p>
+<p>The Asides are linked from the chapters that depend on them. Skipping one will likely leave you confused when that chapter references it. They are separate from the main chapters not because they are less important, but because pulling them out keeps the main flow readable. When you hit a link to an Aside, follow it.</p>
 </section>
 <section id="whats-in-these-notes" class="level2">
 <h2 class="anchored" data-anchor-id="whats-in-these-notes">What’s in These Notes</h2>
 <p>The notes are organized into four parts. Each builds on the one before it.</p>
-<p><strong>Foundations</strong> gets you set up and oriented. Before any analysis can happen, you need to be comfortable handling spatial data in R – the data structures, the vocabulary, and the tools. The Mt. Baker chapter is where you get your hands on real raster and vector data for the first time.</p>
+<p><strong>Foundations</strong> gets you set up and oriented. You need to be comfortable handling spatial data in R before any analysis can happen – the data structures, the vocabulary, the tools. The Mt. Baker chapter is where you get your hands on real raster and vector data for the first time.</p>
 <ul>
 <li><strong>Getting Your Bearings</strong> – The tools and vocabulary we’ll use throughout. Start here.
 <ul>
-<li><em>Aside: Methods and Generics in R</em> – A look under the hood at how R uses generic functions. Helps explain why <code>plot()</code> and <code>summary()</code> behave differently depending on what you give them.</li>
+<li><em>Aside: Methods and Generics in R</em> – A look under the hood at how R uses generic functions. Explains why <code>plot()</code> and <code>summary()</code> behave differently depending on what you hand them.</li>
 </ul></li>
 <li><strong>Mt Baker Map</strong> – A practical introduction to raster and vector spatial data in R, using elevation and infrastructure data from a local ski area.</li>
 </ul>
@@ -367,7 +366,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><strong>Point Patterns</strong> – How to quantify whether points in space are randomly distributed, clustered, or repulsed, using kernel density estimation and Ripley’s K.
 <ul>
-<li><em>Aside: Distance Matrices</em> – A detour into how distances between points are computed and stored. This comes up enough in spatial analysis that it’s worth understanding before you need it.</li>
+<li><em>Aside: Distance Matrices</em> – A detour into how distances between points are computed and stored. This comes up enough that it’s worth understanding before you need it.</li>
 </ul></li>
 <li><strong>Spatial Autocorrelation</strong> – How to measure and describe spatial structure in a continuous variable using variograms, Moran’s I, and correlograms.
 <ul>
@@ -378,17 +377,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><strong>Inverse Distance Weighting</strong> – Predicting values at unsampled locations using a deterministic, distance-weighted approach. Simple, intuitive, and a good place to start.
 <ul>
-<li><strong>Aside: Model Skill and Cross Validation</strong> – A model that fits your data well is not necessarily a model that predicts well. This aside covers how to tell the difference, and how to measure it, before we start building interpolation models that depend on getting this right.</li>
+<li><em>Aside: Model Skill and Cross Validation</em> – A model that fits your data well is not necessarily a model that predicts well. This aside covers how to tell the difference before we start building interpolation models that depend on getting this right.</li>
 </ul></li>
 <li><strong>Thin-Plate Splines</strong> – A smooth, flexible interpolation method that minimizes curvature across the surface.</li>
-<li><strong>Kriging</strong> – Kriging uses the spatial structure of the data to predict unknown values and – unlike IDW – gives you a real measure of uncertainty.
+<li><strong>Kriging</strong> – Uses the spatial structure of the data to predict unknown values and, unlike IDW, gives you a real measure of uncertainty.
 <ul>
 <li><em>Aside: Kriging Variance By Hand</em> – Cracks open the <code>gstat</code> black box. We calculate kriging weights and prediction variance using matrix algebra on a toy dataset and check our work against the package.</li>
 </ul></li>
-<li><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when you have covariates that explain part of the spatial pattern.
+<li><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when covariates explain part of the spatial pattern.
 <ul>
-<li><em>Aside: Predicting New Data with a Fitted Model</em> – A refresher on using <code>predict</code> on new data. <strong>Regression</strong> closes the loop. When your regression residuals have spatial structure, OLS isn’t the right tool.</li>
+<li><em>Aside: Predicting New Data with a Fitted Model</em> – A refresher on using <code>predict</code> on new data.</li>
 </ul></li>
+</ul>
+<p><strong>Regression</strong> closes the loop. When your regression residuals have spatial structure, OLS isn’t the right tool.</p>
+<ul>
 <li><strong>GLS with Autocorrelated Residuals</strong> – What to do when your regression residuals have spatial structure. Spoiler: you use GLS, and it works.
 <ul>
 <li><em>Aside: OLS via Algebra and Matrices</em> – Derives the OLS solution algebraically and in matrix form, then implements both in R. Background that makes the GLS chapter make more sense.</li>
@@ -397,55 +399,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="go-do-great-things" class="level2">
 <h2 class="anchored" data-anchor-id="go-do-great-things">Go Do Great Things</h2>
-<p>You are going to learn to see the world spatially. That sounds dramatic, but I mean it practically: by the end of this course you will be able to look at a dataset, ask where things are happening and why, and have real tools to answer those questions. That is not a small thing.</p>
+<p>You are going to learn to see the world spatially. I mean that practically, not dramatically. By the end you will be able to look at a dataset, ask where things are happening and why, and have real tools to answer those questions.</p>
 <p>The people who do this work well are not necessarily the ones who find it easiest. They’re the ones who run the code when it breaks, read the error messages, ask questions, and keep going. That’s it. That’s the whole secret.</p>
 <p>So: set up your project, download the data, and let’s get to work.</p>
 </section>
 <section id="technical-setup" class="level2">
 <h2 class="anchored" data-anchor-id="technical-setup">Technical Setup</h2>
-<p>This document was written in Markdown using using <a href="https://quarto.org">quarto</a> and built with <strong>R version 4.5.2</strong>. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. You can update your packages by running:</p>
+<p>This document was written in Markdown using <a href="https://quarto.org">Quarto</a> and built with <strong>R version 4.5.2</strong>. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. Update them by running:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">update.packages</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Run that now.</strong> And anytime it occurs to you. It’s always a good idea to be up to date with your packages.</p>
+<p><strong>Run that now.</strong> And anytime it occurs to you.</p>
 <section id="project-structure" class="level3">
 <h3 class="anchored" data-anchor-id="project-structure">Project Structure</h3>
-<p>To follow along with the examples, you’ll want a working RStudio project.</p>
+<p>To follow along, you’ll want a working RStudio project.</p>
 <ol type="1">
 <li><p><strong>Create a new RStudio project</strong><br>
-Go to <strong>File → New Project → New Directory → New Project</strong>. Give it a name (for example <code>spatial-course</code>) and choose where to save it.</p></li>
+Go to <strong>File → New Project → New Directory → New Project</strong>. Give it a name (something like <code>spatial-course</code>) and choose where to save it.</p></li>
 <li><p><strong>Download the <code>data/</code> folder</strong><br>
-The datasets used in the examples are available in the <code>data/</code> folder of the course repository. Download that folder and place it inside your project directory.</p></li>
-</ol>
-<p>You can <a href="https://github.com/AndyBunn/spatialNotes/releases/download/data-latest/data.zip">download the data directly</a> from the GitHub <a href="https://github.com/AndyBunn/spatialNotes">repo</a>. Here is hard link to it:</p>
+The datasets used in the examples are in the <code>data/</code> folder of the course repository. Download that folder and place it inside your project directory.</p>
+<p>You can <a href="https://github.com/AndyBunn/spatialNotes/releases/download/data-latest/data.zip">download the data directly</a> from the GitHub <a href="https://github.com/AndyBunn/spatialNotes">repo</a>:</p>
 <pre><code>https://github.com/AndyBunn/spatialNotes/releases/download/data-latest/data.zip</code></pre>
-<p>Once it’s unzipped your folder structure should look something like this:</p>
+<p>Once it’s unzipped, your folder structure should look something like this:</p>
 <pre><code>spatial-course/
 ├── data/
 │   ├── birdRichnessMexico.rds
 │   ├── mtbDEM.tif
 │   └── ...
-└── spatial-course.Rproj</code></pre>
-<ol start="3" type="1">
-<li><strong>Refer to data files using relative paths</strong></li>
-</ol>
-<p>In your code, use paths like <code>"data/birdRichnessMexico.rds"</code> rather than full file paths. This keeps the code portable and ensures it will run on different machines without modification. E.g.,</p>
+└── spatial-course.Rproj</code></pre></li>
+<li><p><strong>Use relative paths in your code</strong><br>
+Use paths like <code>"data/birdRichnessMexico.rds"</code> rather than full file paths. This keeps the code portable – it will run on any machine without modification.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>birdRichness <span class="ot">&lt;-</span>  <span class="fu">readRDS</span>(<span class="st">"data/birdRichnessMexico.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>birdRichness <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/birdRichnessMexico.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-</div>
-<ol start="4" type="1">
-<li><strong>Save your Rmd files in the project root</strong></li>
-</ol>
-<p>When you make a Rmd file for your work, save it in the project’s root directory. For instance if you have the first two assignments saved in files called “MtBakerHomework.Rmd” and “pointPatternHomework.Rmd,” your file and folder structure might look something like this:</p>
+</div></li>
+<li><p><strong>Save your <code>.qmd</code> or <code>.Rmd</code> files in the project root</strong><br>
+When you make a file for working through a chapter, save it in the project’s root directory. Quarto (<code>.qmd</code>) and R Markdown (<code>.Rmd</code>) files are close cousins – the syntax is nearly identical and either will work fine here. After finishing the point pattern chapter, your structure might look like this:</p>
 <pre><code>spatial-course/
 ├── data/
 │   ├── birdRichnessMexico.rds
 │   ├── mtbDEM.tif
 │   └── ...
-├── MtBakerHomework.Rmd
-├── pointPatternHomework.Rmd
-└── spatial-course.Rproj</code></pre>
+├── pointPatternWork.qmd
+└── spatial-course.Rproj</code></pre></li>
+</ol>
 
 
 </section>
