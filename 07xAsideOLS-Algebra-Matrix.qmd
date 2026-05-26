@@ -60,11 +60,16 @@ Minimizing the SSE in matrix form:
 
 $$SSE = (\mathbf{y} - \mathbf{X} \boldsymbol{\beta})^T (\mathbf{y} - \mathbf{X} \boldsymbol{\beta})$$
 
-Taking the derivative with respect to $\boldsymbol{\beta}$ and setting it to zero gives the matrix normal equations, and solving for $\boldsymbol{\beta}$:
+Taking the derivative with respect to $\boldsymbol{\beta}$ and setting it to zero gives the matrix normal equations:
+
+$$\mathbf{X}^T \mathbf{X} \hat{\boldsymbol{\beta}} = \mathbf{X}^T \mathbf{y}$$
+
+This is a system of linear equations in $\hat{\boldsymbol{\beta}}$. Solving it by multiplying both sides by $(\mathbf{X}^T \mathbf{X})^{-1}$ gives:
 
 $$\hat{\boldsymbol{\beta}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{y}$$
 
 That formula is the OLS solution. Everything that comes after it in the R code below is just implementing that one equation.
+
 
 ## Implementation in R
 
@@ -122,4 +127,4 @@ cbind(OLS = beta_ols, GLS = beta_gls)
 
 Same numbers.
 
-One practical note worth keeping in mind. In real spatial analysis we do not know $\boldsymbol{\Sigma}$ ahead of time -- we have to estimate its parameters (range, sill, nugget) from the data. That estimation uses restricted maximum likelihood (REML), which is what `gls()` is doing when you pass it a `corSpatial` object. The $\hat{\boldsymbol{\beta}}_{GLS}$ formula above still applies; it just uses an estimated $\hat{\boldsymbol{\Sigma}}$ in place of the true one.
+One practical note worth keeping in mind. In real spatial analysis we do not know $\boldsymbol{\Sigma}$ ahead of time. We have to estimate its parameters (range, sill, nugget) from the data. That estimation uses maximum likelihood, which you have probably seen before: find the parameter values that make your observed data as probable as possible. The wrinkle with variance parameters is that plain ML is biased which means it tends to underestimate variance because it does not account for the degrees of freedom used up by estimating the fixed effects. REML (restricted maximum likelihood) fixes this by maximizing a likelihood that has been conditioned on the fixed effects first, which removes that bias and gives better estimates of the spatial covariance structure. That is why `gls()` uses REML by default. The $\hat{\boldsymbol{\beta}}_{GLS}$ formula above still applies; it just uses the estimated $\hat{\boldsymbol{\Sigma}}$ in place of the true one. The cost of REML is that you cannot compare models with different fixed effects using likelihood ratio tests -- for that you need to refit with `method="ML"`. The GLS chapter has more on when that matters.

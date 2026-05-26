@@ -235,13 +235,18 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./04Intro2Autocorrelation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Spatial Autocorrelation</span></a>
+  <a href="./04aIntro2Autocorrelation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Global Spatial Autocorrelation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./04xAsideCorrelationVersusRegression.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Aside: Correlation is not Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04bLISA.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Local Spatial Autocorrelation</span></a>
   </div>
 </li>
       </ul>
@@ -415,7 +420,9 @@ window.Quarto = {
 <p>where <span class="math inline">\(\mathbf{y}\)</span> is an <span class="math inline">\(n \times 1\)</span> vector of the response, <span class="math inline">\(\mathbf{X}\)</span> is an <span class="math inline">\(n \times p\)</span> matrix of predictors (with a column of ones prepended for the intercept), <span class="math inline">\(\boldsymbol{\beta}\)</span> is a <span class="math inline">\(p \times 1\)</span> vector of coefficients, and <span class="math inline">\(\boldsymbol{\epsilon}\)</span> is an <span class="math inline">\(n \times 1\)</span> vector of errors.</p>
 <p>Minimizing the SSE in matrix form:</p>
 <p><span class="math display">\[SSE = (\mathbf{y} - \mathbf{X} \boldsymbol{\beta})^T (\mathbf{y} - \mathbf{X} \boldsymbol{\beta})\]</span></p>
-<p>Taking the derivative with respect to <span class="math inline">\(\boldsymbol{\beta}\)</span> and setting it to zero gives the matrix normal equations, and solving for <span class="math inline">\(\boldsymbol{\beta}\)</span>:</p>
+<p>Taking the derivative with respect to <span class="math inline">\(\boldsymbol{\beta}\)</span> and setting it to zero gives the matrix normal equations:</p>
+<p><span class="math display">\[\mathbf{X}^T \mathbf{X} \hat{\boldsymbol{\beta}} = \mathbf{X}^T \mathbf{y}\]</span></p>
+<p>This is a system of linear equations in <span class="math inline">\(\hat{\boldsymbol{\beta}}\)</span>. Solving it by multiplying both sides by <span class="math inline">\((\mathbf{X}^T \mathbf{X})^{-1}\)</span> gives:</p>
 <p><span class="math display">\[\hat{\boldsymbol{\beta}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{y}\]</span></p>
 <p>That formula is the OLS solution. Everything that comes after it in the R code below is just implementing that one equation.</p>
 </section>
@@ -486,7 +493,7 @@ window.Quarto = {
 </div>
 </div>
 <p>Same numbers.</p>
-<p>One practical note worth keeping in mind. In real spatial analysis we do not know <span class="math inline">\(\boldsymbol{\Sigma}\)</span> ahead of time – we have to estimate its parameters (range, sill, nugget) from the data. That estimation uses restricted maximum likelihood (REML), which is what <code>gls()</code> is doing when you pass it a <code>corSpatial</code> object. The <span class="math inline">\(\hat{\boldsymbol{\beta}}_{GLS}\)</span> formula above still applies; it just uses an estimated <span class="math inline">\(\hat{\boldsymbol{\Sigma}}\)</span> in place of the true one.</p>
+<p>One practical note worth keeping in mind. In real spatial analysis we do not know <span class="math inline">\(\boldsymbol{\Sigma}\)</span> ahead of time. We have to estimate its parameters (range, sill, nugget) from the data. That estimation uses maximum likelihood, which you have probably seen before: find the parameter values that make your observed data as probable as possible. The wrinkle with variance parameters is that plain ML is biased which means it tends to underestimate variance because it does not account for the degrees of freedom used up by estimating the fixed effects. REML (restricted maximum likelihood) fixes this by maximizing a likelihood that has been conditioned on the fixed effects first, which removes that bias and gives better estimates of the spatial covariance structure. That is why <code>gls()</code> uses REML by default. The <span class="math inline">\(\hat{\boldsymbol{\beta}}_{GLS}\)</span> formula above still applies; it just uses the estimated <span class="math inline">\(\hat{\boldsymbol{\Sigma}}\)</span> in place of the true one. The cost of REML is that you cannot compare models with different fixed effects using likelihood ratio tests – for that you need to refit with <code>method="ML"</code>. The GLS chapter has more on when that matters.</p>
 
 
 </section>

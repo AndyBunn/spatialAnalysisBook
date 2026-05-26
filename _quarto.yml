@@ -25,8 +25,9 @@ book:
       chapters:
         - 03Point_Patterns.qmd
         - 03xAsideDistanceMatrices.qmd
-        - 04Intro2Autocorrelation.qmd
+        - 04aIntro2Autocorrelation.qmd
         - 04xAsideCorrelationVersusRegression.qmd
+        - 04bLISA.qmd
     - part: "Interpolation & Geostatistics"
       chapters:
         - 05aGeostatsIDW.qmd

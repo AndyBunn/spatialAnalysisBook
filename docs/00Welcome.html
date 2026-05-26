@@ -206,13 +206,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./04Intro2Autocorrelation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Spatial Autocorrelation</span></a>
+  <a href="./04aIntro2Autocorrelation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Global Spatial Autocorrelation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./04xAsideCorrelationVersusRegression.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Aside: Correlation is not Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04bLISA.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Local Spatial Autocorrelation</span></a>
   </div>
 </li>
       </ul>
@@ -364,27 +369,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Point Patterns &amp; Autocorrelation</strong> is where the analysis starts. We ask the most basic spatial question – are things randomly distributed, or is there structure? – and then move on to measuring spatial dependence in continuous variables.</p>
 <ul>
-<li><strong>Point Patterns</strong> – How to quantify whether points in space are randomly distributed, clustered, or repulsed, using kernel density estimation and Ripley’s K.
+<li><p><strong>Point Patterns</strong> – How to quantify whether points in space are randomly distributed, clustered, or repulsed, using kernel density estimation and Ripley’s K.</p>
 <ul>
 <li><em>Aside: Distance Matrices</em> – A detour into how distances between points are computed and stored. This comes up enough that it’s worth understanding before you need it.</li>
 </ul></li>
-<li><strong>Spatial Autocorrelation</strong> – How to measure and describe spatial structure in a continuous variable using variograms, Moran’s I, and correlograms.
+<li><p><strong>Global Spatial Autocorrelation</strong> – How to measure and describe spatial structure in a continuous variable using variograms, Moran’s I, and correlograms.</p>
 <ul>
 <li><em>Aside: Correlation and Regression Are Not the Same Thing</em> – These two ideas get conflated constantly. This aside untangles them before we lean on regression in later chapters.</li>
 </ul></li>
-</ul>
-<p><strong>Interpolation &amp; Geostatistics</strong> is about prediction. We have measurements at some locations and want to estimate values at others. We start with deterministic methods and work up to kriging, which is the probabilistic workhorse of geostatistics.</p>
-<ul>
-<li><strong>Inverse Distance Weighting</strong> – Predicting values at unsampled locations using a deterministic, distance-weighted approach. Simple, intuitive, and a good place to start.
+<li><p><strong>Local Spatial Autocorrelation</strong> – Global Moran’s I tells you whether spatial structure exists. LISA tells you where. We decompose the global statistic into location-specific values and map the hot spots, cold spots, and spatial outliers. <strong>Interpolation &amp; Geostatistics</strong> is about prediction. We have measurements at some locations and want to estimate values at others. We start with deterministic methods and work up to kriging, which is the probabilistic workhorse of geostatistics.</p></li>
+<li><p><strong>Inverse Distance Weighting</strong> – Predicting values at unsampled locations using a deterministic, distance-weighted approach. Simple, intuitive, and a good place to start.</p>
 <ul>
 <li><em>Aside: Model Skill and Cross Validation</em> – A model that fits your data well is not necessarily a model that predicts well. This aside covers how to tell the difference before we start building interpolation models that depend on getting this right.</li>
 </ul></li>
-<li><strong>Thin-Plate Splines</strong> – A smooth, flexible interpolation method that minimizes curvature across the surface.</li>
-<li><strong>Kriging</strong> – Uses the spatial structure of the data to predict unknown values and, unlike IDW, gives you a real measure of uncertainty.
+<li><p><strong>Thin-Plate Splines</strong> – A smooth, flexible interpolation method that minimizes curvature across the surface.</p></li>
+<li><p><strong>Kriging</strong> – Uses the spatial structure of the data to predict unknown values and, unlike IDW, gives you a real measure of uncertainty.</p>
 <ul>
 <li><em>Aside: Kriging Variance By Hand</em> – Cracks open the <code>gstat</code> black box. We calculate kriging weights and prediction variance using matrix algebra on a toy dataset and check our work against the package.</li>
 </ul></li>
-<li><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when covariates explain part of the spatial pattern.
+<li><p><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when covariates explain part of the spatial pattern.</p>
 <ul>
 <li><em>Aside: Predicting New Data with a Fitted Model</em> – A refresher on using <code>predict</code> on new data.</li>
 </ul></li>
@@ -396,6 +399,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><em>Aside: OLS via Algebra and Matrices</em> – Derives the OLS solution algebraically and in matrix form, then implements both in R. Background that makes the GLS chapter make more sense.</li>
 </ul></li>
 </ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Points and grids, not polygons
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>One thing you will not find in these notes is areal data analysis. Watersheds, land cover polygons, census tracts, habitat patches: that world has its own analytical framework, its own vocabulary, and its own rabbit holes, and going there turns a spatial analysis course into a GIS course fast. The methods here are built around point observations and continuous raster surfaces, which is where most field-based environmental and ecological data lives anyway.</p>
+</div>
+</div>
 </section>
 <section id="go-do-great-things" class="level2">
 <h2 class="anchored" data-anchor-id="go-do-great-things">Go Do Great Things</h2>

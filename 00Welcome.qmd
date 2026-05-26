@@ -76,12 +76,14 @@ and then move on to measuring spatial dependence in continuous variables.
     - *Aside: Distance Matrices* -- A detour into how distances between points are
       computed and stored. This comes up enough that it's worth understanding before
       you need it.
-- **Spatial Autocorrelation** -- How to measure and describe spatial structure in a
+- **Global Spatial Autocorrelation** -- How to measure and describe spatial structure in a
   continuous variable using variograms, Moran's I, and correlograms.
     - *Aside: Correlation and Regression Are Not the Same Thing* -- These two ideas
-      get conflated constantly. This aside untangles them before we lean on regression
-      in later chapters.
-
+      get conflated constantly. This aside untangles them before we lean on regression in later chapters.
+- **Local Spatial Autocorrelation** -- Global Moran's I tells you whether 
+  spatial structure exists. LISA tells you where. We decompose the global 
+  statistic into location-specific values and map the hot spots, cold spots, 
+  and spatial outliers.
 **Interpolation & Geostatistics** is about prediction. We have measurements at some
 locations and want to estimate values at others. We start with deterministic methods
 and work up to kriging, which is the probabilistic workhorse of geostatistics.
@@ -112,6 +114,13 @@ OLS isn't the right tool.
     - *Aside: OLS via Algebra and Matrices* -- Derives the OLS solution algebraically
       and in matrix form, then implements both in R. Background that makes the GLS
       chapter make more sense.
+
+::: {.callout-note}
+## Points and grids, not polygons
+
+One thing you will not find in these notes is areal data analysis. Watersheds, land cover polygons, census tracts, habitat patches: that world has its own analytical framework, its own vocabulary, and its own rabbit holes, and going there turns a spatial analysis course into a GIS course fast. The methods here are built around point observations and continuous raster surfaces, which is where most field-based environmental and ecological data lives anyway.
+
+:::
 
 ## Go Do Great Things
 
