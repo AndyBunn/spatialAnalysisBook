@@ -423,9 +423,9 @@ window.Quarto = {
 <p>In general, here is a good approach when dealing with spatial data in a regression.</p>
 <ol type="1">
 <li><p>Start by assuming iid (e.g., doing an ordinary least squares regression).</p></li>
-<li><p>Look at the spatial structure of the residuals with Moran’s I.</p></li>
-<li><p>If the residuals look clean then carry on. Note that it’s OK for <span class="math inline">\(y\)</span> or <span class="math inline">\(x\)</span> to be autocorrelated, what matters is the residuals. If the residuals have spatial structure, quantify it using Moran’s I. Spatial structure might or might not be a problem. But if your life/thesis/soul depends on having a clean model you’ll want to deal with it.</p></li>
-<li><p>Fit a variogram to the residuals. We can use this information to fit a GLS model where we specify the spatial structure in the error term using a variogram model fit from the semivariance on the residuals.</p></li>
+<li><p>Test the OLS residuals for spatial autocorrelation using Moran’s I. This is a go/no-go decision: if the test is not significant, the residuals are consistent with independence and you can stop here – OLS is fine. Note that it’s OK for <span class="math inline">\(y\)</span> or <span class="math inline">\(x\)</span> to be autocorrelated; what matters is the residuals.</p></li>
+<li><p>If Moran’s I is significant, fit a variogram to the residuals. Moran’s I tells you that autocorrelation exists; the variogram tells you what its structure looks like – the range, the sill, the nugget. You need that to specify the correlation structure for GLS.</p></li>
+<li><p>Fit a GLS model with a spatial correlation structure based on the variogram model.</p></li>
 </ol>
 </section>
 <section id="gls-and-ols" class="level2">
@@ -620,22 +620,59 @@ Degrees of freedom: 75 total; 73 residual</code></pre>
 </div>
 </div>
 </div>
-<p>The residuals of this model are autocorrelated at short distances and we have violated the assumption of independent residuals. But do not despair. We will use a GLS model that allows us to specify a spatial correlation structure for the residuals and perform hypothesis testing in the presence of spatial structure. Doing so will give us new and improved estimates of the parameters. We will thus sleep well knowing in our hearts that we have done good.</p>
+<p>The correlogram shows clear positive autocorrelation at short distances. Now for the go/no-go decision: we’ll use Moran’s I to get a formal test. If this is not significant, we stop here and use OLS. If it is, we proceed to characterize the structure with a variogram and fit a GLS model.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">moran.test</span>(dat<span class="sc">$</span>glsNaiveResids, wList)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Moran I test under randomisation
+
+data:  dat$glsNaiveResids  
+weights: wList    
+
+Moran I statistic standard deviate = 8.1206, p-value = 2.32e-16
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation          Variance 
+      0.695087343      -0.013513514       0.007614331 </code></pre>
+</div>
+</div>
+<p>Significant. We proceed.</p>
 <p>We need to determine an appropriate theoretical model for the spatial structure of the residuals and pass that to <code>gls</code>. Before we do, it is worth thinking about what happens under the hood. GLS builds a variance-covariance matrix <span class="math inline">\(\Sigma\)</span> for the residuals, where each off-diagonal entry <span class="math inline">\(\Sigma_{ij}\)</span> is a function of the distance between locations <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> – with the functional form coming from the correlation structure you specify. Then it estimates both the regression coefficients and the correlation parameters (the range, nugget, and partial sill) together by maximizing the likelihood. The estimator is <span class="math inline">\(\hat\beta = (X^T \Sigma^{-1} X)^{-1} X^T \Sigma^{-1} y\)</span>, which you can compare to the OLS version <span class="math inline">\((X^T X)^{-1} X^T y\)</span>: OLS weights every observation equally, GLS weights by the inverse of the covariance structure. The default method in <code>gls</code> is REML, which gives better estimates of the variance parameters than plain ML, at the cost of not being able to compare models with different fixed effects via likelihood ratio tests. You generally want REML for estimation and ML if you need to compare fixed effects with <code>anova</code>.</p>
-<p>In <code>nlme</code>, correlation structures are represented by a family of objects that all inherit from a parent class called <code>corStruct</code>. Think of <code>corStruct</code> as the generic container: it tells <code>gls</code> “here is the shape of the correlation among the residuals.” The spatial flavor of this is <code>corSpatial</code>, which takes a <code>form</code> argument specifying your coordinate columns, a <code>nugget</code> flag, and a <code>type</code> argument for the model family. When you write <code>corSpatial(form=~easting+northing, nugget=TRUE, type="spherical")</code> you are building one of these objects. There are also convenience wrappers <code>corSpher</code>, <code>corGaus</code>, and <code>corExp</code> that are just shorthand for <code>corSpatial</code> with a fixed <code>type</code>. The reason the class hierarchy is worth knowing is that <code>gls</code> accepts any <code>corStruct</code> in its <code>correlation</code> argument, not just spatial ones – <code>corAR1</code> for time series autocorrelation works the same way, for instance.</p>
+<p>In <code>nlme</code>, correlation structures are represented by a family of objects that all inherit from a parent class called <code>corStruct</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>ML vs.&nbsp;REML
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Both ML (maximum likelihood) and REML (restricted maximum likelihood) estimate model parameters by maximizing a likelihood function, but they differ in what that function is.</p>
+<p>ML maximizes the likelihood of the data given all the parameters at once – including both the fixed effects (<span class="math inline">\(\beta\)</span>) and the variance parameters (range, sill, nugget). The problem is that this treats the fixed effects as known when estimating the variance, which causes the variance estimates to be systematically too small, in the same way that dividing by <span class="math inline">\(n\)</span> rather than <span class="math inline">\(n-1\)</span> when computing a sample variance gives a biased result.</p>
+<p>REML corrects for this by maximizing a likelihood that has been transformed to remove the fixed effects first. This gives unbiased estimates of the variance parameters. The cost is that the REML likelihood depends on the fixed effects structure, so you cannot use a likelihood ratio test to compare two REML models with different fixed effects – the likelihoods are not comparable in that case.</p>
+<p>The practical rule: use REML (the default in <code>gls</code>) for your final model and for comparing models with different covariance structures. Switch to <code>method="ML"</code> only if you need to compare models with different fixed effects using <code>anova</code>.</p>
+</div>
+</div>
+<p>Think of <code>corStruct</code> as the generic container: it tells <code>gls</code> “here is the shape of the correlation among the residuals.” The spatial flavor of this is <code>corSpatial</code>, which takes a <code>form</code> argument specifying your coordinate columns, a <code>nugget</code> flag, and a <code>type</code> argument for the model family. When you write <code>corSpatial(form=~easting+northing, nugget=TRUE, type="spherical")</code> you are building one of these objects. There are also convenience wrappers <code>corSpher</code>, <code>corGaus</code>, and <code>corExp</code> that are just shorthand for <code>corSpatial</code> with a fixed <code>type</code>. The reason the class hierarchy is worth knowing is that <code>gls</code> accepts any <code>corStruct</code> in its <code>correlation</code> argument, not just spatial ones – <code>corAR1</code> for time series autocorrelation works the same way, for instance.</p>
 <p>The families available in <code>gls</code> roughly match the theoretical variogram models we used with kriging: spherical, exponential, Gaussian, and so on. So, let’s fit a variogram to the residuals and see which model fits best.</p>
 <p>Here we’ll cheat a little and use <code>autofitVariogram</code> to get a model suggestion rather than go through the fitting process by hand with <code>variogram</code>, <code>vgm</code>, and <code>fit.variogram</code> from <code>gstat</code>.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>datSF <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span> <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"easting"</span>,<span class="st">"northing"</span>))</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A variogram of the residuals</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">autofitVariogram</span>(glsNaiveResids<span class="sc">~</span><span class="dv">1</span>, <span class="at">input_data =</span> datSF, <span class="at">model =</span> <span class="fu">c</span>(<span class="st">"Gau"</span>,<span class="st">"Sph"</span>,<span class="st">"Exp"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>datSF <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span> <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"easting"</span>,<span class="st">"northing"</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A variogram of the residuals</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">autofitVariogram</span>(glsNaiveResids<span class="sc">~</span><span class="dv">1</span>, <span class="at">input_data =</span> datSF, <span class="at">model =</span> <span class="fu">c</span>(<span class="st">"Gau"</span>,<span class="st">"Sph"</span>,<span class="st">"Exp"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="07RegressionGLS_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="07RegressionGLS_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -645,9 +682,9 @@ Degrees of freedom: 75 total; 73 residual</code></pre>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>csSpatial <span class="ot">&lt;-</span> <span class="fu">corSpatial</span>(<span class="at">form=</span><span class="sc">~</span>easting<span class="sc">+</span>northing,<span class="at">nugget=</span><span class="cn">TRUE</span>, <span class="at">type =</span> <span class="st">"spherical"</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>glsUpdated <span class="ot">&lt;-</span> <span class="fu">update</span>(glsNaive,<span class="at">correlation=</span>csSpatial)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(glsUpdated)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>csSpatial <span class="ot">&lt;-</span> <span class="fu">corSpatial</span>(<span class="at">form=</span><span class="sc">~</span>easting<span class="sc">+</span>northing,<span class="at">nugget=</span><span class="cn">TRUE</span>, <span class="at">type =</span> <span class="st">"spherical"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>glsUpdated <span class="ot">&lt;-</span> <span class="fu">update</span>(glsNaive,<span class="at">correlation=</span>csSpatial)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(glsUpdated)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Generalized least squares fit by REML
@@ -697,20 +734,20 @@ Note
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add the residuals to the spatial dat object</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>glsResids <span class="ot">&lt;-</span> <span class="fu">residuals</span>(glsUpdated,<span class="at">type=</span><span class="st">"normalized"</span>)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Map the residuals from gls</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> dat, <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x=</span>easting,<span class="at">y=</span>northing,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">size=</span>glsResids, <span class="at">fill=</span>glsResids)) <span class="sc">+</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">shape=</span><span class="dv">21</span>) <span class="sc">+</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>() <span class="sc">+</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill=</span><span class="fu">guide_legend</span>(), <span class="at">size =</span> <span class="fu">guide_legend</span>()) <span class="sc">+</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_fixed</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add the residuals to the spatial dat object</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>dat<span class="sc">$</span>glsResids <span class="ot">&lt;-</span> <span class="fu">residuals</span>(glsUpdated,<span class="at">type=</span><span class="st">"normalized"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Map the residuals from gls</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> dat, <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x=</span>easting,<span class="at">y=</span>northing,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">size=</span>glsResids, <span class="at">fill=</span>glsResids)) <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">shape=</span><span class="dv">21</span>) <span class="sc">+</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>() <span class="sc">+</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill=</span><span class="fu">guide_legend</span>(), <span class="at">size =</span> <span class="fu">guide_legend</span>()) <span class="sc">+</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_fixed</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="07RegressionGLS_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="07RegressionGLS_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -719,14 +756,14 @@ Note
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>residsI <span class="ot">&lt;-</span> <span class="fu">spline.correlog</span>(<span class="at">x=</span>dat<span class="sc">$</span>easting, <span class="at">y=</span>dat<span class="sc">$</span>northing,</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">z=</span>dat<span class="sc">$</span>glsResids, <span class="at">resamp=</span><span class="dv">50</span>, <span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(residsI,<span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fu">max</span>(<span class="fu">dist</span>(points))<span class="sc">/</span><span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>residsI <span class="ot">&lt;-</span> <span class="fu">spline.correlog</span>(<span class="at">x=</span>dat<span class="sc">$</span>easting, <span class="at">y=</span>dat<span class="sc">$</span>northing,</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">z=</span>dat<span class="sc">$</span>glsResids, <span class="at">resamp=</span><span class="dv">50</span>, <span class="at">quiet=</span><span class="cn">TRUE</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(residsI,<span class="at">xlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="fu">max</span>(<span class="fu">dist</span>(points))<span class="sc">/</span><span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="07RegressionGLS_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="07RegressionGLS_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>

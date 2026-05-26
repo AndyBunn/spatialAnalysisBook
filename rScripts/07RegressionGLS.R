@@ -97,6 +97,10 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 
 
 ## -----------------------------------------------------------------------------
+moran.test(dat$glsNaiveResids, wList)
+
+
+## -----------------------------------------------------------------------------
 datSF <- dat %>% st_as_sf(coords = c("easting","northing"))
 # A variogram of the residuals
 plot(autofitVariogram(glsNaiveResids~1, input_data = datSF, model = c("Gau","Sph","Exp")))
@@ -128,7 +132,7 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 
 ## ----eval=FALSE,echo=FALSE----------------------------------------------------
 # 
-# dat <- read.csv("birdDiv.csv")
+# dat <- read.csv("../data/birdDiv.csv")
 # 
 # glsNaive <- gls(birdDiv~plantDiv, dat)
 # 
@@ -147,13 +151,6 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 #                                model = c("Gau","Exp","Sph"),
 #                                verbose = TRUE)
 # plot(aVariogram)
-# # what is the max distance to look at for autocorrelation?
-# # let's use 1/3 of the max point to point distance
-# max(dist(cbind(dat$UTME, y=dat$UTMN)))/3 # about 84km
-# 
-# plot(spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=84e03,
-#                      z=dat$glsNaiveResids, resamp=100, quiet=TRUE))
-# # def short distance ac
 # 
 # # try a bunch
 # csGaus <- corSpatial(form=~UTME+UTMN,nugget=TRUE,type="gaus")
@@ -198,6 +195,6 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 # 
 # par(mfcol=c(1,2))
 # plot(residsIglsGauResids,main="GLS w/ corGaus Good!")
-# plot(residsIglsSphResids,main="GLS w/ corSper Bad!")
+# plot(residsIglsSphResids,main="GLS w/ corSpher Bad!")
 # 
 
