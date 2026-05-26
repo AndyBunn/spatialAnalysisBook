@@ -39,7 +39,9 @@ epsilon <- scale(epsilon[,1])[,1]
 
 
 ## -----------------------------------------------------------------------------
-moran.test(epsilon, wList)
+epsilonCorrelog <- spline.correlog(x=easting, y=northing,
+                                   z=epsilon, resamp=50, quiet=TRUE)
+plot(epsilonCorrelog, xlim=c(0,max(dist(points))/3))
 
 
 ## -----------------------------------------------------------------------------
@@ -97,10 +99,6 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 
 
 ## -----------------------------------------------------------------------------
-moran.test(dat$glsNaiveResids, wList)
-
-
-## -----------------------------------------------------------------------------
 datSF <- dat %>% st_as_sf(coords = c("easting","northing"))
 # A variogram of the residuals
 plot(autofitVariogram(glsNaiveResids~1, input_data = datSF, model = c("Gau","Sph","Exp")))
@@ -131,8 +129,20 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 
 
 ## ----eval=FALSE,echo=FALSE----------------------------------------------------
-# 
+# library(tmap)
 # dat <- read.csv("../data/birdDiv.csv")
+# datSF <- dat %>% st_as_sf(coords=c("UTME","UTMN"),crs=32612) # 32612 or 26912
+# 
+# tmap_mode("view")
+# 
+# tm_shape(datSF) +
+#   tm_dots(size = 1, fill_alpha = 0.2, fill="red") +
+#   tm_basemap("OpenStreetMap") +
+#   tm_basemap("Esri.WorldImagery") +
+#   tm_basemap("Esri.WorldTopoMap") +
+#   tm_basemap("USGS.USImageryTopo")
+# 
+# 
 # 
 # glsNaive <- gls(birdDiv~plantDiv, dat)
 # 
@@ -141,7 +151,7 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 # dat$glsNaiveResids <- residuals(glsNaive,type="normalized")
 # 
 # residsIglsNaive <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
-#                             z=dat$glsNaiveResids, resamp=50, quiet=TRUE)
+#                                    z=dat$glsNaiveResids, resamp=50, quiet=TRUE)
 # plot(residsIglsNaive)
 # 
 # # note that you can choose what models you fit in autofit vgm
@@ -152,7 +162,20 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 #                                verbose = TRUE)
 # plot(aVariogram)
 # 
-# # try a bunch
+# 
+# csGaus <- corSpatial(form=~UTME+UTMN,nugget=TRUE,type="gaus")
+# glsGau <- update(glsNaive,correlation=csGaus)
+# dat$glsGauResids <- residuals(glsGau,type="normalized")
+# residsIglsGauResids <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
+#                                        z=dat$glsGauResids, resamp=50, quiet=TRUE)
+# plot(residsIglsGauResids)
+# 
+# summary(glsNaive)
+# summary(glsGau) # new inference!
+# 
+# 
+# 
+# # try a bunch go nuts...
 # csGaus <- corSpatial(form=~UTME+UTMN,nugget=TRUE,type="gaus")
 # csGausNoNugget <- corSpatial(form=~UTME+UTMN,nugget=FALSE,type="gaus")
 # 
@@ -174,27 +197,20 @@ plot(residsI,xlim=c(0,max(dist(points))/3))
 # 
 # AIC(glsNaive,glsGau,glsGauNoNug,glsSphNoNug,glsExpNoNug)
 # 
-# # why no work? There is no sill!
-# anova(glsNaive,glsGau)
-# plot(Variogram(glsGau))
-# plot(Variogram(glsGauNoNug))
-# plot(Variogram(glsSph))
-# plot(Variogram(glsSphNoNug))
-# plot(Variogram(glsExp))
-# plot(Variogram(glsExpNoNug))
-# 
 # 
 # dat$glsSphResids <- residuals(glsSph,type="normalized")
 # dat$glsGauResids <- residuals(glsGau,type="normalized")
 # 
 # 
 # residsIglsSphResids <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
-#                             z=dat$glsSphResids, resamp=50, quiet=TRUE)
+#                                        z=dat$glsSphResids, resamp=50, quiet=TRUE)
 # residsIglsGauResids <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
-#                             z=dat$glsGauResids, resamp=50, quiet=TRUE)
+#                                        z=dat$glsGauResids, resamp=50, quiet=TRUE)
 # 
 # par(mfcol=c(1,2))
 # plot(residsIglsGauResids,main="GLS w/ corGaus Good!")
 # plot(residsIglsSphResids,main="GLS w/ corSpher Bad!")
+# # could add exp here too
+# 
 # 
 

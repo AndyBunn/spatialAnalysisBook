@@ -37,9 +37,9 @@ In general, here is a good approach when dealing with spatial data in a regressi
 
 1. Start by assuming iid (e.g., doing an ordinary least squares regression).
 
-2. Test the OLS residuals for spatial autocorrelation using Moran's I. This is a go/no-go decision: if the test is not significant, the residuals are consistent with independence and you can stop here -- OLS is fine. Note that it's OK for $y$ or $x$ to be autocorrelated; what matters is the residuals.
+2. Plot a correlogram of the OLS residuals with a bootstrap confidence envelope. This is the go/no-go decision: if the correlogram stays inside the envelope, the residuals are consistent with independence and you can stop here -- OLS is fine. Note that it's OK for $y$ or $x$ to be autocorrelated; what matters is the residuals.
 
-3. If Moran's I is significant, fit a variogram to the residuals. Moran's I tells you that autocorrelation exists; the variogram tells you what its structure looks like -- the range, the sill, the nugget. You need that to specify the correlation structure for GLS.
+3. If the correlogram pops above the envelope at short distances, fit a variogram to the residuals. The correlogram tells you that autocorrelation exists; the variogram tells you what its structure looks like -- the range, the sill, the nugget. You need that to specify the correlation structure for GLS.
 
 4. Fit a GLS model with a spatial correlation structure based on the variogram model.
 
@@ -94,12 +94,14 @@ epsilon <- scale(epsilon[,1])[,1]
 OK, by great magic we now have a variable that is from random spatial points but has spatially autocorrelated values (that follow an IDW process). If you want, you can imagine that $\epsilon$ is a variable in nature that is spatially autocorrelated that we didn't measure (e.g., maybe soil moisture availability following the tree example above). How intense is the spatial autocorrelation?
 
 ```{r}
-moran.test(epsilon, wList)
+epsilonCorrelog <- spline.correlog(x=easting, y=northing,
+                                   z=epsilon, resamp=50, quiet=TRUE)
+plot(epsilonCorrelog, xlim=c(0,max(dist(points))/3))
 ```
 
 We are going to use $\epsilon$ as the error term in a model. I'll use the terms "errors" and "residuals" interchangeably throughout these notes.
 
-We'll now make `x` and then $y=\beta_0 + \beta_1(x) + \epsilon$. We will run a linear model and look at the residuals of that model using Moran's I.
+We'll now make `x` and then $y=\beta_0 + \beta_1(x) + \epsilon$. We will run a linear model and look at the residuals with a correlogram.
 
 ```{r}
 # Generate x as noise.
@@ -168,13 +170,7 @@ residsI <- spline.correlog(x=dat$easting, y=dat$northing,
 plot(residsI,xlim=c(0,max(dist(points))/3))
 ```
 
-The correlogram shows clear positive autocorrelation at short distances. Now for the go/no-go decision: we'll use Moran's I to get a formal test. If this is not significant, we stop here and use OLS. If it is, we proceed to characterize the structure with a variogram and fit a GLS model.
-
-```{r}
-moran.test(dat$glsNaiveResids, wList)
-```
-
-Significant. We proceed.
+The correlogram shows clear positive autocorrelation at short distances and the line pops well above the bootstrap envelope. That's the go/no-go: the envelope tells us this is not consistent with independent residuals, so we proceed to characterize the structure with a variogram and fit a GLS model. If the correlogram had stayed inside the envelope, we would stop here and use OLS.
 
 We need to determine an appropriate theoretical model for the spatial structure of the residuals and pass that to `gls`. Before we do, it is worth thinking about what happens under the hood. GLS builds a variance-covariance matrix $\Sigma$ for the residuals, where each off-diagonal entry $\Sigma_{ij}$ is a function of the distance between locations $i$ and $j$ -- with the functional form coming from the correlation structure you specify. Then it estimates both the regression coefficients and the correlation parameters (the range, nugget, and partial sill) together by maximizing the likelihood. The estimator is $\hat\beta = (X^T \Sigma^{-1} X)^{-1} X^T \Sigma^{-1} y$, which you can compare to the OLS version $(X^T X)^{-1} X^T y$: OLS weights every observation equally, GLS weights by the inverse of the covariance structure. The default method in `gls` is REML, which gives better estimates of the variance parameters than plain ML, at the cost of not being able to compare models with different fixed effects via likelihood ratio tests. You generally want REML for estimation and ML if you need to compare fixed effects with `anova`.
 
@@ -257,9 +253,9 @@ So what's the big deal? We started with a model that showed `x` as a significant
 
 2. The original function we used to make $y$ was $y=\beta_0 + \beta_1x + \epsilon$ where $\beta_0$ = `r B0` and $\beta_1$ = `r B1`. Both GLS models got the intercept right (`r round(coef(glsUpdated)[1],2)` for `glsUpdated` and `r round(coef(glsNaive)[1],2)` for `glsNaive`). But the GLS model with the correlated residuals does a better job of recovering the true slope (`r round(coef(glsUpdated)[2],2)` vs `r round(coef(glsNaive)[2],2)`).
 
-    You might notice that the naive slope (`r round(coef(glsNaive)[2],2)`) is further from the truth (0.5) than the GLS slope (`r round(coef(glsUpdated)[2],2)`). Earlier we said OLS is unbiased even with autocorrelated errors -- so why did the coefficient move? Unbiased means that if you ran this simulation thousands of times, the average OLS estimate would center on 0.5. GLS would also center on 0.5, but with less spread around it. That's what inefficiency means: not a systematic pull away from the truth, but more variability from sample to sample. In this particular random draw, OLS overshot and GLS happened to land closer. In a different draw it could go the other way. The advantage of GLS is not that it always wins in any single sample, but that its estimates are less variable across samples and, crucially, its standard errors are actually valid.
+You might notice that the naive slope (`r round(coef(glsNaive)[2],2)`) is further from the truth (0.5) than the GLS slope (`r round(coef(glsUpdated)[2],2)`). Earlier we said OLS is unbiased even with autocorrelated errors -- so why did the coefficient move? Unbiased means that if you ran this simulation thousands of times, the average OLS estimate would center on 0.5. GLS would also center on 0.5, but with less spread around it. That's what inefficiency means: not a systematic pull away from the truth, but more variability from sample to sample. In this particular random draw, OLS overshot and GLS happened to land closer. In a different draw it could go the other way. The advantage of GLS is not that it always wins in any single sample, but that its estimates are less variable across samples and, crucially, its standard errors are actually valid.
 
-    The scenario where OLS can be truly biased (not just inefficient) is worth flagging: if $x$ is correlated with the spatial structure of $\epsilon$, meaning an important spatially-structured variable was omitted from the model. In that case the spatial autocorrelation in the residuals is partly confounded with the effect of $x$ and OLS will systematically misestimate the slope. In our simulation $x$ is purely random noise with no spatial structure, so this doesn't apply. But in real data, where your predictor often covaries with geography, it can.
+The scenario where OLS can be truly biased (not just inefficient) is worth flagging: if $x$ is correlated with the spatial structure of $\epsilon$, meaning an important spatially-structured variable was omitted from the model. In that case the spatial autocorrelation in the residuals is partly confounded with the effect of $x$ and OLS will systematically misestimate the slope. In our simulation $x$ is purely random noise with no spatial structure, so this doesn't apply. But in real data, where your predictor often covaries with geography, it can.
 
 3. The standard error on $\beta_1$ is lower in the model with correlated residuals than in the naive model (`r round(summary(glsUpdated)$tTable[2,2],4)` vs `r round(summary(glsNaive)$tTable[2,2],4)`). This might seem backwards: you might expect that accounting for autocorrelation would widen the uncertainty rather than narrow it. The direction of the change actually depends on the spatial configuration of the data and the pattern of autocorrelation. What's happening here is that by correctly partitioning the variance into a regression component and a spatial correlation component, GLS estimates $\beta_1$ more efficiently. The naive OLS model was attributing some of the spatially structured noise to the slope, which inflated the apparent uncertainty. GLS separates those two sources and gets a cleaner estimate of each.
 
@@ -268,11 +264,35 @@ Finally, we did it right, and that should be satisfying. What would have happene
 ## Your work
 The joy of simulated data is, of course, that we know the real answer going in. We knew that $y=\beta_0 + \beta_1x + \epsilon$ and we knew that the residual term was spatially autocorrelated. Obviously, that's a luxury we don't have when making inference about data we collect.
 
-The file `birdDiv.csv` has data on bird diversity and plant community diversity (unitless, with higher numbers indicating greater diversity) and coordinates for 64, 1-ha plots. Coordinates are UTM and thus in meters. Your work is to model bird diversity as a function of plant diversity with the expectation that higher plant diversity is associated with higher bird diversity. Watch those residuals and interpret carefully!
+The file `birdDiv.csv` has data on bird diversity and plant community diversity and coordinates for 64, 1-ha plots across the Colorado Plateau and Mogollon Rim region of northern Arizona (roughly Flagstaff east to the New Mexico border). The coordinates are UTM Zone 12N, most likely NAD83 (EPSG:26912), and are in meters.
+
+A note on the diversity values: they are non-integer and range from 3.16 to 12.95 for birds and 3.70 to 8.14 for plants. These are not raw species counts. They are likely a diversity index -- Shannon, Fisher's alpha, or similar -- but the original source and exact units have been lost. Higher values indicate greater diversity in both cases, and the relative patterns across plots are interpretable even if the absolute values are not. 
+
+::: {.callout-warning}
+
+## A note on data provenance
+
+This dataset is a good reminder to document your data sources carefully and immediately. The coordinates, spatial extent, plot size, and biological variables here are all internally consistent and ecologically plausible, but the original source has been lost, making it impossible to properly cite, verify the methods, or understand the diversity metric. This happens more easily than you might think: a dataset downloaded for a class exercise, renamed, reformatted, and re-used a few years later can quickly become an orphan with no traceable origin. Get in the habit of keeping a README alongside any dataset you download, noting the source, date accessed, and any transformations you applied.
+
+:::
+
+Your work is to model bird diversity as a function of plant diversity with the expectation that higher plant diversity is associated with higher bird diversity. Watch those residuals and interpret carefully!
 
 ```{r,eval=FALSE,echo=FALSE}
-
+library(tmap)
 dat <- read.csv("data/birdDiv.csv")
+datSF <- dat %>% st_as_sf(coords=c("UTME","UTMN"),crs=32612) # 32612 or 26912
+
+tmap_mode("view")
+
+tm_shape(datSF) +
+  tm_dots(size = 1, fill_alpha = 0.2, fill="red") +
+  tm_basemap("OpenStreetMap") +
+  tm_basemap("Esri.WorldImagery") +
+  tm_basemap("Esri.WorldTopoMap") + 
+  tm_basemap("USGS.USImageryTopo")
+
+
 
 glsNaive <- gls(birdDiv~plantDiv, dat)
 
@@ -281,7 +301,7 @@ summary(glsNaive)
 dat$glsNaiveResids <- residuals(glsNaive,type="normalized")
 
 residsIglsNaive <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
-                            z=dat$glsNaiveResids, resamp=50, quiet=TRUE)
+                                   z=dat$glsNaiveResids, resamp=50, quiet=TRUE)
 plot(residsIglsNaive)
 
 # note that you can choose what models you fit in autofit vgm
@@ -292,7 +312,20 @@ aVariogram <- autofitVariogram(glsNaiveResids~1,
                                verbose = TRUE)
 plot(aVariogram)
 
-# try a bunch
+
+csGaus <- corSpatial(form=~UTME+UTMN,nugget=TRUE,type="gaus")
+glsGau <- update(glsNaive,correlation=csGaus)
+dat$glsGauResids <- residuals(glsGau,type="normalized")
+residsIglsGauResids <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
+                                       z=dat$glsGauResids, resamp=50, quiet=TRUE)
+plot(residsIglsGauResids)
+
+summary(glsNaive)
+summary(glsGau) # new inference!
+
+
+
+# try a bunch go nuts...
 csGaus <- corSpatial(form=~UTME+UTMN,nugget=TRUE,type="gaus")
 csGausNoNugget <- corSpatial(form=~UTME+UTMN,nugget=FALSE,type="gaus")
 
@@ -314,27 +347,20 @@ glsExpNoNug <- update(glsNaive,correlation=csExpNoNug)
 
 AIC(glsNaive,glsGau,glsGauNoNug,glsSphNoNug,glsExpNoNug)
 
-# why no work? There is no sill!
-anova(glsNaive,glsGau)
-plot(Variogram(glsGau))
-plot(Variogram(glsGauNoNug))
-plot(Variogram(glsSph))
-plot(Variogram(glsSphNoNug))
-plot(Variogram(glsExp))
-plot(Variogram(glsExpNoNug))
-
 
 dat$glsSphResids <- residuals(glsSph,type="normalized")
 dat$glsGauResids <- residuals(glsGau,type="normalized")
 
 
 residsIglsSphResids <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
-                            z=dat$glsSphResids, resamp=50, quiet=TRUE)
+                                       z=dat$glsSphResids, resamp=50, quiet=TRUE)
 residsIglsGauResids <- spline.correlog(x=dat$UTME, y=dat$UTMN,xmax=8e04,
-                            z=dat$glsGauResids, resamp=50, quiet=TRUE)
+                                       z=dat$glsGauResids, resamp=50, quiet=TRUE)
 
 par(mfcol=c(1,2))
 plot(residsIglsGauResids,main="GLS w/ corGaus Good!")
-plot(residsIglsSphResids,main="GLS w/ corSpher Bad!")
+plot(residsIglsSphResids,main="GLS w/ corSpher Bad!") 
+# could add exp here too
+
 
 ```
