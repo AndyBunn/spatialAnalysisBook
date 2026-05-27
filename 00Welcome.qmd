@@ -1,4 +1,6 @@
-# Why Spatial Analysis
+# Welcome and How to Get Setup
+
+## Why Spatial Analysis
 
 Species don't distribute themselves at random. Wildfire risk is not uniform across
 a landscape. Lead contamination in urban soils clusters near old roads and

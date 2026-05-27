@@ -8,7 +8,7 @@
 
 <meta name="description" content="Spatial analysis notes and exercises">
 
-<title>Why Spatial Analysis – Spatial Analysis for Environmental Science</title>
+<title>Welcome and How to Get Setup – Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -135,7 +135,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./00Welcome.html">Foundations</a></li><li class="breadcrumb-item"><a href="./00Welcome.html"><span class="chapter-title">Why Spatial Analysis</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./00Welcome.html">Foundations</a></li><li class="breadcrumb-item"><a href="./00Welcome.html"><span class="chapter-title">Welcome and How to Get Setup</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -163,7 +163,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./00Welcome.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Why Spatial Analysis</span></a>
+  <a href="./00Welcome.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Welcome and How to Get Setup</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -303,7 +303,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#this-is-not-a-textbook" id="toc-this-is-not-a-textbook" class="nav-link active" data-scroll-target="#this-is-not-a-textbook">This Is Not a Textbook</a></li>
+  <li><a href="#why-spatial-analysis" id="toc-why-spatial-analysis" class="nav-link active" data-scroll-target="#why-spatial-analysis">Why Spatial Analysis</a></li>
+  <li><a href="#this-is-not-a-textbook" id="toc-this-is-not-a-textbook" class="nav-link" data-scroll-target="#this-is-not-a-textbook">This Is Not a Textbook</a></li>
   <li><a href="#how-these-notes-are-laid-out" id="toc-how-these-notes-are-laid-out" class="nav-link" data-scroll-target="#how-these-notes-are-laid-out">How These Notes Are Laid Out</a></li>
   <li><a href="#whats-in-these-notes" id="toc-whats-in-these-notes" class="nav-link" data-scroll-target="#whats-in-these-notes">What’s in These Notes</a></li>
   <li><a href="#go-do-great-things" id="toc-go-do-great-things" class="nav-link" data-scroll-target="#go-do-great-things">Go Do Great Things</a></li>
@@ -317,9 +318,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./00Welcome.html">Foundations</a></li><li class="breadcrumb-item"><a href="./00Welcome.html"><span class="chapter-title">Why Spatial Analysis</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./00Welcome.html">Foundations</a></li><li class="breadcrumb-item"><a href="./00Welcome.html"><span class="chapter-title">Welcome and How to Get Setup</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">Why Spatial Analysis</span></h1>
+<h1 class="title"><span class="chapter-title">Welcome and How to Get Setup</span></h1>
 </div>
 
 
@@ -336,11 +337,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<section id="why-spatial-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="why-spatial-analysis">Why Spatial Analysis</h2>
 <p>Species don’t distribute themselves at random. Wildfire risk is not uniform across a landscape. Lead contamination in urban soils clusters near old roads and demolished buildings. Precipitation gradients drive vegetation boundaries that don’t care about county lines. In each case, where something is happening is part of the story.</p>
 <p>The underlying idea has a name. Tobler’s First Law of Geography states that everything is related to everything else, but near things are more related than distant things. It sounds obvious until you realize how much standard statistical practice ignores it.</p>
 <p>If you treat spatially dependent observations as independent, your standard errors will be too small, your p-values too optimistic, and your predictions won’t hold up. This isn’t a minor technical complaint. It’s a systematic bias, and it runs through a lot of published environmental science.</p>
 <p>The tools to do this right have existed for decades. What’s changed is that they are now accessible – implemented in open, well-documented software, with enough worked examples that you don’t need a geostatistics PhD to use them correctly. There’s no longer a good reason to leave spatial structure on the table.</p>
 <p>Spatial pattern is also information in its own right. Where something is happening, and where it isn’t, tells you something about the processes driving it. Learning to read that structure is part of the fundamental job of environmental science: figuring out why things are patterned the way they are.</p>
+</section>
 <section id="this-is-not-a-textbook" class="level2">
 <h2 class="anchored" data-anchor-id="this-is-not-a-textbook">This Is Not a Textbook</h2>
 <p>These are notes and tutorials for working with data. Think of them less like a textbook and more like notes left by someone who has gotten lost in these same woods and wants to help you find your way through.</p>
