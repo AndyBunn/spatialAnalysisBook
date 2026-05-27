@@ -54,18 +54,17 @@ out keeps the main flow readable. When you hit a link to an Aside, follow it.
 
 The notes are organized into four parts. Each builds on the one before it.
 
-**Foundations** gets you set up and oriented. You need to be comfortable handling
-spatial data in R before any analysis can happen -- the data structures, the
-vocabulary, the tools. The Mt. Baker chapter is where you get your hands on real
-raster and vector data for the first time.
+**Foundations** gets you oriented on the two data types that show up everywhere in
+these notes: point observations and raster surfaces. We aren't a GIS-in-R course,
+so we won't linger here long.
 
-- **Getting Your Bearings** -- The tools and vocabulary we'll use throughout.
-  Start here.
+- **Spatial Data: A Quick Orientation** -- A fast introduction to `sf` for point
+  data and `terra` for rasters. Enough to follow along with the rest of the book.
+  For the full treatment, see [Geocomputation with R](https://r.geocompx.org/) or
+  the [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/).
     - *Aside: Methods and Generics in R* -- A look under the hood at how R uses
       generic functions. Explains why `plot()` and `summary()` behave differently
       depending on what you hand them.
-- **Mt Baker Map** -- A practical introduction to raster and vector spatial data
-  in R, using elevation and infrastructure data from a local ski area.
 
 **Point Patterns & Autocorrelation** is where the analysis starts. We ask the most
 basic spatial question -- are things randomly distributed, or is there structure? --
@@ -171,7 +170,7 @@ To follow along, you'll want a working RStudio project.
     spatial-course/
     ├── data/
     │   ├── birdRichnessMexico.rds
-    │   ├── mtbDEM.tif
+    │   ├── prcpCA.rds
     │   └── ...
     └── spatial-course.Rproj
     ```
@@ -194,7 +193,7 @@ To follow along, you'll want a working RStudio project.
     spatial-course/
     ├── data/
     │   ├── birdRichnessMexico.rds
-    │   ├── mtbDEM.tif
+    │   ├── prcpCA.rds
     │   └── ...
     ├── pointPatternWork.qmd
     └── spatial-course.Rproj
