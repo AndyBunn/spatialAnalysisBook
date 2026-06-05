@@ -23,7 +23,7 @@ date: ""
     width: 100%;
     height: calc(100vh - 60px);
     position: relative;
-    background: #1e3028;
+    background: #2d4a3e;
     overflow: hidden;
     font-family: 'Source Code Pro', monospace;
     margin: 0;
@@ -41,12 +41,12 @@ date: ""
     inset: 0;
     background: linear-gradient(
       135deg,
-      #1e3028 0%,
-      #22382c 20%,
-      #254030 35%,
-      #1e3448 55%,
-      #182c42 75%,
-      #162438 100%
+      #2d4a3e 0%,
+      #324f42 20%,
+      #365844 35%,
+      #2d4858 55%,
+      #264050 75%,
+      #223848 100%
     );
   }
 
@@ -130,7 +130,7 @@ date: ""
     font-weight: 700;
     font-size: 58px;
     line-height: 1.05;
-    color: #f0ede6;
+    color: #f8f5ee;
     letter-spacing: -0.01em;
     margin-bottom: 6px;
   }
@@ -145,7 +145,7 @@ date: ""
     font-family: 'Playfair Display', serif;
     font-style: italic;
     font-size: 22px;
-    color: #8badb5;
+    color: #a8c8d0;
     margin-bottom: 28px;
     letter-spacing: 0.02em;
   }
@@ -161,12 +161,12 @@ date: ""
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.12em;
-    color: #6a9c8a;
-    border: 1px solid #2e6a54;
+    color: #8ec4b0;
+    border: 1px solid #4a9078;
     padding: 4px 10px;
     border-radius: 2px;
     text-transform: uppercase;
-    background: rgba(46, 204, 113, 0.04);
+    background: rgba(46, 204, 113, 0.08);
   }
 
   .right-panel {
@@ -195,7 +195,7 @@ date: ""
     font-family: 'Source Code Pro', monospace;
     font-size: 14px;
     letter-spacing: 0.12em;
-    color: #6a9c8a;
+    color: #8ec4b0;
     text-transform: uppercase;
   }
 </style>
@@ -277,12 +277,12 @@ date: ""
       Spatial <span class="accent-word">Analysis</span><br>
       for Environmental Science
     </div>
-    <div class="banner-subtitle">patterns, structure,   and prediction in space</div>
+    <div class="banner-subtitle">patterns, structure, and prediction in space</div>
     <div class="tags">
-      <span class="tag">Point Patterns</span>
-      <span class="tag">Autocorrelation</span>
-      <span class="tag">GLS</span>
-      <span class="tag">Geostatistics</span>
+      <span class="tag">Foundations</span>
+      <span class="tag">Point Patterns &amp; Autocorrelation</span>
+      <span class="tag">Interpolation &amp; Geostatistics</span>
+      <span class="tag">Regression</span>
     </div>
   </div>
 

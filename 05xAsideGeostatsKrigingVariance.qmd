@@ -18,6 +18,10 @@ This example is adapted from Prof. Ashton Shortridge at MSU, who was kind enough
 
 What a cool guy.
 
+## A Notational Switch
+
+One heads-up before we dive in. The main kriging chapter works in semivariance space: we build $\Gamma$ from $\hat{\gamma}(d)$ values and solve $\lambda = \Gamma^{-1}g$. This aside works in covariance space instead, building $\mathbf{K}$ from covariance values and solving $\mathbf{w} = \mathbf{K}^{-1}\mathbf{k}$. The two are related -- covariance is $C(d) = \sigma^2 - \gamma(d)$ -- so they carry the same information about spatial structure and produce the same weights. Covariance notation is more natural for the matrix algebra that follows, particularly for deriving the prediction variance. If you find yourself staring at $\mathbf{K}$ and wondering where $\Gamma$ went, that's why.
+
 ## Packages
 We'll use `gstat`[@R-gstat] and `fields`[@R-fields] for the geostatistics, and `ggplot2` (via `tidyverse`[@R-tidyverse]) with `ggrepel`[@R-ggrepel] for plotting.
 

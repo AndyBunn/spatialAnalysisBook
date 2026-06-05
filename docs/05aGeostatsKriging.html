@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.36">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -96,7 +96,7 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="site_libs/bootstrap/bootstrap-7f77c891be54f4a4e70d5699258b6bb7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
@@ -905,7 +905,11 @@ max value   :     0.6503917 </code></pre>
 </section>
 <section id="other-types-of-kriging" class="level2">
 <h2 class="anchored" data-anchor-id="other-types-of-kriging">Other Types of Kriging</h2>
-<p>We are just scratching the surface of what we can do with kriging. Think about what you might do in terms of interpolating in the presence of a trend? Or how to model anisotropy (see the <code>anis</code> argument to <code>vgm</code>). As with many topics in this class you could spend a whole quarter on kriging alone. Think of the pleasures invovled!</p>
+<p>Everything we have done in this chapter is ordinary kriging (OK), which is what <code>krige</code> does when you write <code>formula = logLead~1</code>. The <code>~1</code> means “intercept only” – no covariates, just estimate the mean from the data and let the variogram do the rest. It is the right default for most situations, but it is worth knowing what else is out there.</p>
+<p><strong>Simple kriging (SK)</strong> assumes the mean of the process is known rather than estimated from the data. In practice that assumption is almost never defensible, so SK sees limited use outside of simulation studies and textbooks. If you are curious how the math differs from OK, the <a href="05xAsideGeostatsKrigingVariance.html">Kriging Variance By Hand aside</a> works through both side by side. In <code>gstat</code> you get SK by passing <code>beta = mean(dat$z)</code> to <code>krige</code>.</p>
+<p><strong>Universal kriging (UK)</strong> and <strong>regression kriging (RK)</strong> both handle the situation where your response variable has a large-scale spatial trend driven by covariates, elevation gradients, distance-to-river effects, and so on. OK assumes the mean is constant across the study area (stationarity). If that assumption is badly violated, OK will struggle. UK folds the trend and the spatial structure into one system of equations. RK does it in two steps: fit an OLS regression on covariates first, then krige the residuals. The two approaches tend to give similar predictions in practice, but RK lets you inspect each step separately, which is usually worth the trouble. We cover RK in the next module. In <code>gstat</code>, UK looks like <code>formula = logLead~dist</code>, where <code>dist</code> is a covariate available at both your sample points and your prediction grid.</p>
+<p><strong>Anisotropic kriging</strong> relaxes the assumption that spatial correlation is the same in all directions. If your variable has stronger autocorrelation along a river valley than across it, for example, a standard isotropic variogram will misrepresent that structure. You can model anisotropy by fitting an elliptical rather than circular variogram, via the <code>anis</code> argument to <code>vgm</code>. It adds complexity and you need enough data to justify it, but for strongly directional processes it can matter.</p>
+<p>As with many topics in this class, you could spend a whole quarter on kriging alone. Think of the pleasures involved!</p>
 </section>
 <section id="cross-validation" class="level2">
 <h2 class="anchored" data-anchor-id="cross-validation">Cross Validation</h2>

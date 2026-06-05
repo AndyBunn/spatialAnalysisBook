@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.36">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -96,7 +96,7 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="site_libs/bootstrap/bootstrap-7f77c891be54f4a4e70d5699258b6bb7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
@@ -352,6 +352,7 @@ window.Quarto = {
    
   <ul>
   <li><a href="#whats-going-on-here" id="toc-whats-going-on-here" class="nav-link active" data-scroll-target="#whats-going-on-here">What’s Going On Here</a></li>
+  <li><a href="#a-notational-switch" id="toc-a-notational-switch" class="nav-link" data-scroll-target="#a-notational-switch">A Notational Switch</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#the-setup" id="toc-the-setup" class="nav-link" data-scroll-target="#the-setup">The Setup</a></li>
   <li><a href="#the-covariance-functions" id="toc-the-covariance-functions" class="nav-link" data-scroll-target="#the-covariance-functions">The Covariance Functions</a></li>
@@ -395,6 +396,10 @@ window.Quarto = {
 <p>“Unfortunately MSU, in its wisdom, decided to eliminate home pages…When I have time (hah!), I’d like to post the course stuff somewhere public. For now I’ll just pass along the updated manual kriging pages - feel free to use as you see fit.”</p>
 </blockquote>
 <p>What a cool guy.</p>
+</section>
+<section id="a-notational-switch" class="level2">
+<h2 class="anchored" data-anchor-id="a-notational-switch">A Notational Switch</h2>
+<p>One heads-up before we dive in. The main kriging chapter works in semivariance space: we build <span class="math inline">\(\Gamma\)</span> from <span class="math inline">\(\hat{\gamma}(d)\)</span> values and solve <span class="math inline">\(\lambda = \Gamma^{-1}g\)</span>. This aside works in covariance space instead, building <span class="math inline">\(\mathbf{K}\)</span> from covariance values and solving <span class="math inline">\(\mathbf{w} = \mathbf{K}^{-1}\mathbf{k}\)</span>. The two are related – covariance is <span class="math inline">\(C(d) = \sigma^2 - \gamma(d)\)</span> – so they carry the same information about spatial structure and produce the same weights. Covariance notation is more natural for the matrix algebra that follows, particularly for deriving the prediction variance. If you find yourself staring at <span class="math inline">\(\mathbf{K}\)</span> and wondering where <span class="math inline">\(\Gamma\)</span> went, that’s why.</p>
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
