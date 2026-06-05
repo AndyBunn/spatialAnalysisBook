@@ -1159,7 +1159,7 @@
     "href": "05aGeostatsKriging.html#other-types-of-kriging",
     "title": "Probabilistic Interpolation: Kriging",
     "section": "Other Types of Kriging",
-    "text": "Other Types of Kriging\nWe are just scratching the surface of what we can do with kriging. Think about what you might do in terms of interpolating in the presence of a trend? Or how to model anisotropy (see the anis argument to vgm). As with many topics in this class you could spend a whole quarter on kriging alone. Think of the pleasures invovled!",
+    "text": "Other Types of Kriging\nEverything we have done in this chapter is ordinary kriging (OK), which is what krige does when you write formula = logLead~1. The ~1 means “intercept only” – no covariates, just estimate the mean from the data and let the variogram do the rest. It is the right default for most situations, but it is worth knowing what else is out there.\nSimple kriging (SK) assumes the mean of the process is known rather than estimated from the data. In practice that assumption is almost never defensible, so SK sees limited use outside of simulation studies and textbooks. If you are curious how the math differs from OK, the Kriging Variance By Hand aside works through both side by side. In gstat you get SK by passing beta = mean(dat$z) to krige.\nUniversal kriging (UK) and regression kriging (RK) both handle the situation where your response variable has a large-scale spatial trend driven by covariates, elevation gradients, distance-to-river effects, and so on. OK assumes the mean is constant across the study area (stationarity). If that assumption is badly violated, OK will struggle. UK folds the trend and the spatial structure into one system of equations. RK does it in two steps: fit an OLS regression on covariates first, then krige the residuals. The two approaches tend to give similar predictions in practice, but RK lets you inspect each step separately, which is usually worth the trouble. We cover RK in the next module. In gstat, UK looks like formula = logLead~dist, where dist is a covariate available at both your sample points and your prediction grid.\nAnisotropic kriging relaxes the assumption that spatial correlation is the same in all directions. If your variable has stronger autocorrelation along a river valley than across it, for example, a standard isotropic variogram will misrepresent that structure. You can model anisotropy by fitting an elliptical rather than circular variogram, via the anis argument to vgm. It adds complexity and you need enough data to justify it, but for strongly directional processes it can matter.\nAs with many topics in this class, you could spend a whole quarter on kriging alone. Think of the pleasures involved!",
     "crumbs": [
       "Interpolation & Geostatistics",
       "<span class='chapter-number'>9</span>  <span class='chapter-title'>Probabilistic Interpolation: Kriging</span>"
@@ -1226,6 +1226,17 @@
     "title": "Aside: Kriging Variance By Hand",
     "section": "",
     "text": "“Unfortunately MSU, in its wisdom, decided to eliminate home pages…When I have time (hah!), I’d like to post the course stuff somewhere public. For now I’ll just pass along the updated manual kriging pages - feel free to use as you see fit.”",
+    "crumbs": [
+      "Interpolation & Geostatistics",
+      "Aside: Kriging Variance By Hand"
+    ]
+  },
+  {
+    "objectID": "05xAsideGeostatsKrigingVariance.html#a-notational-switch",
+    "href": "05xAsideGeostatsKrigingVariance.html#a-notational-switch",
+    "title": "Aside: Kriging Variance By Hand",
+    "section": "A Notational Switch",
+    "text": "A Notational Switch\nOne heads-up before we dive in. The main kriging chapter works in semivariance space: we build \\(\\Gamma\\) from \\(\\hat{\\gamma}(d)\\) values and solve \\(\\lambda = \\Gamma^{-1}g\\). This aside works in covariance space instead, building \\(\\mathbf{K}\\) from covariance values and solving \\(\\mathbf{w} = \\mathbf{K}^{-1}\\mathbf{k}\\). The two are related – covariance is \\(C(d) = \\sigma^2 - \\gamma(d)\\) – so they carry the same information about spatial structure and produce the same weights. Covariance notation is more natural for the matrix algebra that follows, particularly for deriving the prediction variance. If you find yourself staring at \\(\\mathbf{K}\\) and wondering where \\(\\Gamma\\) went, that’s why.",
     "crumbs": [
       "Interpolation & Geostatistics",
       "Aside: Kriging Variance By Hand"

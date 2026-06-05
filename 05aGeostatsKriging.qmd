@@ -361,7 +361,16 @@ In practice, a few things constrain which models are valid at all. The variogram
 Beyond that, choosing among the valid options comes down to looking at the empirical variogram, thinking about the physical process you're modeling, and comparing cross-validation skill. There is no one-size-fits-all approach.
 
 ## Other Types of Kriging
-We are just scratching the surface of what we can do with kriging. Think about what you might do in terms of interpolating in the presence of a trend? Or how to model anisotropy (see the `anis` argument to `vgm`). As with many topics in this class you could spend a whole quarter on kriging alone. Think of the pleasures invovled!
+
+Everything we have done in this chapter is ordinary kriging (OK), which is what `krige` does when you write `formula = logLead~1`. The `~1` means "intercept only" -- no covariates, just estimate the mean from the data and let the variogram do the rest. It is the right default for most situations, but it is worth knowing what else is out there.
+
+**Simple kriging (SK)** assumes the mean of the process is known rather than estimated from the data. In practice that assumption is almost never defensible, so SK sees limited use outside of simulation studies and textbooks. If you are curious how the math differs from OK, the [Kriging Variance By Hand aside](05xAsideGeostatsKrigingVariance.html) works through both side by side. In `gstat` you get SK by passing `beta = mean(dat$z)` to `krige`.
+
+**Universal kriging (UK)** and **regression kriging (RK)** both handle the situation where your response variable has a large-scale spatial trend driven by covariates, elevation gradients, distance-to-river effects, and so on. OK assumes the mean is constant across the study area (stationarity). If that assumption is badly violated, OK will struggle. UK folds the trend and the spatial structure into one system of equations. RK does it in two steps: fit an OLS regression on covariates first, then krige the residuals. The two approaches tend to give similar predictions in practice, but RK lets you inspect each step separately, which is usually worth the trouble. We cover RK in the next module. In `gstat`, UK looks like `formula = logLead~dist`, where `dist` is a covariate available at both your sample points and your prediction grid.
+
+**Anisotropic kriging** relaxes the assumption that spatial correlation is the same in all directions. If your variable has stronger autocorrelation along a river valley than across it, for example, a standard isotropic variogram will misrepresent that structure. You can model anisotropy by fitting an elliptical rather than circular variogram, via the `anis` argument to `vgm`. It adds complexity and you need enough data to justify it, but for strongly directional processes it can matter.
+
+As with many topics in this class, you could spend a whole quarter on kriging alone. Think of the pleasures involved!
 
 ## Cross Validation
 I showed an example of using the built in cross validation function at the end of the last module. We can do the same with kriging. Instead of a straight call to `krige` we can call `krige.cv` for either k-fold or leave-one-out cross validation (LOOCV). It defaults to LOOCV so the predicted values are from the time they were left out the model.
