@@ -15,32 +15,34 @@ book:
   chapters:
     - file: index.qmd
       text: "Cover"
+    - 00Preface.qmd
     - part: "Foundations"
       chapters:
-        - 00Welcome.qmd
-        - 01SpatialCrashCourse.qmd
-        - 01xAsideMethodsAndGenerics.qmd
+        - 01Welcome.qmd
+        - 02SpatialCrashCourse.qmd
+        - 02xAsideMethodsAndGenerics.qmd
     - part: "Point Patterns & Autocorrelation"
       chapters:
-        - 02Point_Patterns.qmd
-        - 02xAsideDistanceMatrices.qmd
-        - 03aIntro2Autocorrelation.qmd
-        - 03xAsideCorrelationVersusRegression.qmd
-        - 03bLISA.qmd
+        - 03Point_Patterns.qmd
+        - 03xAsideDistanceMatrices.qmd
+        - 04Intro2Autocorrelation.qmd
+        - 04xAsideCorrelationVersusRegression.qmd
+        - 05LISA.qmd
     - part: "Interpolation & Geostatistics"
       chapters:
-        - 04aGeostatsIDW.qmd
-        - 04xAsideModelSkill.qmd
-        - 04bGeostat2TPS.qmd
-        - 05aGeostatsKriging.qmd
-        - 05xAsideGeostatsKrigingVariance.qmd
-        - 05bGeostatsRegressionKriging.qmd
-        - 05xAsidePredictingNewData.qmd
+        - 06GeostatsIDW.qmd
+        - 06xAsideModelSkill.qmd
+        - 07Geostat2TPS.qmd
+        - 08GeostatsKriging.qmd
+        - 08xAsideGeostatsKrigingVariance.qmd
+        - 09GeostatsRegressionKriging.qmd
+        - 09xAsidePredictingNewData.qmd
     - part: "Regression"
       chapters:
-        - 06RegressionGLS.qmd
-        - 06xAsideOLS-Algebra-Matrix.qmd
-    - 07PackagesUsed.qmd
+        - 10RegressionGLS.qmd
+        - 10xAsideOLS-Algebra-Matrix.qmd
+        - 11SpatialRegressionSAR.qmd
+    - 12References.qmd
   repo-url: https://github.com/AndyBunn/spatialNotes
   repo-actions: [edit, issue]
 

@@ -1,0 +1,273 @@
+# Spatial Regression: Lag and Error Models
+
+```{r,echo=FALSE, include=FALSE}
+set.seed(2112)
+```
+
+## Big Idea
+
+The GLS chapter gave us one tool for handling spatially autocorrelated residuals: specify the correlation structure with a variogram and let GLS down-weight correlated observations. That works well. But there is a whole family of spatial regression models that take a different approach, and understanding them will round out your toolkit and sharpen your thinking about what spatial structure in a regression actually means.
+
+GLS models the error correlation structure using a variogram -- a continuous function of distance. The SAR (Simultaneous AutoRegressive) family instead uses an explicit spatial weights matrix: the same neighbor structure you built for Moran's I and LISA. Two SAR models matter most for applied environmental work. The spatial error model says that the errors -- the stuff your predictors don't explain -- are spatially correlated via a neighbor process. The spatial lag model says something more provocative: that the response variable at each location is directly influenced by the response at neighboring locations. These two models answer different questions, and it matters which one you fit.
+
+## Reading
+
+@dormann2007methods covers spatial error models and related approaches in section 3. You have already read the intro for the GLS chapter; go back and read sections 3.3 and 3.4 more carefully now. @bivand2008geostatistics chapter 9 covers the SAR model family in detail, including the `spatialreg` functions we use here. It is a technical chapter; skim for concepts and return to the details when you need them.
+
+::: {.callout-note}
+This module follows directly from the [Regression: GLS](10RegressionGLS.html) chapter and assumes you are comfortable with the OLS-to-GLS workflow there. The spatial weights machinery is the same as in the [LISA](05LISA.html) chapter.
+:::
+
+## Packages
+
+```{r, message=FALSE}
+library(spatialreg)
+library(spdep)
+library(sf)
+library(tidyverse)
+```
+
+`spatialreg` carries the main functions for fitting SAR models. It was spun off from `spdep` a few years ago, which means older code you find online might load these functions from `spdep` directly. If you see `spdep::lagsarlm()` in old tutorials, that is the same function. Load `spatialreg` explicitly.
+
+## Two Models, Two Questions
+
+Let's be concrete about what these models actually say.
+
+**Spatial error model (SEM):**
+
+$$y = X\beta + u, \quad u = \lambda W u + \varepsilon$$
+
+The residuals $u$ follow a spatial autoregressive process. A residual at location $i$ is a function of the residuals at its neighbors (via $\lambda W$) plus independent noise $\varepsilon$. The coefficient $\lambda$ (lambda) captures how strongly residuals are autocorrelated. The coefficients $\beta$ have the same interpretation as in OLS: a one-unit increase in $x$ is associated with a $\beta_1$ change in $y$, on average, holding everything else constant.
+
+Ecologically, the SEM is the right choice when space is a nuisance. Your predictors don't capture all the spatial structure in $y$, so the leftovers are autocorrelated. Classic example: you're modeling tree growth as a function of soil nitrogen, but soil moisture, microclimate, and a dozen other unmeasured things also drive growth and are themselves spatially structured. The SEM absorbs that shared unmeasured spatial structure into the error term and gives you clean, valid inference on the nitrogen-growth relationship.
+
+**Spatial lag model (SLM):**
+
+$$y = \rho W y + X\beta + \varepsilon$$
+
+Now the response variable $y$ at each location appears on both sides of the equation. It is a function of $y$ at neighboring locations (via the spatial lag $Wy$), plus your predictors $X$ and independent noise $\varepsilon$. The coefficient $\rho$ (rho) captures how strongly $y$ at one location is pulled toward $y$ at its neighbors.
+
+This is a fundamentally different claim from the SEM. The SLM says there is a real spatial spillover process: $y$ at one location genuinely influences $y$ at neighboring locations. Classic examples are disease spread (infection rate in one area influences neighboring areas), invasive species dispersal (abundance at one site drives colonization of nearby sites), or any system where diffusion, movement, or social contagion is part of the process. If the biology or ecology predicts that kind of mechanism, the lag model is the one to reach for.
+
+One important caution: **the $\beta$ coefficients from the SLM are not total marginal effects.** More on this below.
+
+## Choosing Between Them: LM Tests
+
+There is a diagnostic test for choosing the appropriate model. The Lagrange Multiplier (LM) tests in `spdep::lm.LMtests()` take an OLS fit and a weights matrix and test for evidence of spatial error vs spatial lag structure in the residuals. You get five test statistics from `test = "all"`:
+
+- **LMerr**: tests for spatial error autocorrelation. Significant means the error model looks useful.
+- **LMlag**: tests for spatial lag structure. Significant means the lag model looks useful.
+- **RLMerr**: robust LM test for error, controlling for the possibility of a lag. Use this when both LMerr and LMlag are significant.
+- **RLMlag**: robust LM test for lag, controlling for error structure. Same situation.
+- **SARMA**: joint test for both.
+
+The decision tree is simple. If only one of LMerr or LMlag is significant, fit that model. If both are significant, look at the robust tests and fit whichever of RLMerr or RLMlag is more significant. If neither is significant, OLS is fine.
+
+## Toy Example
+
+We will build simulated data following the same spirit as the GLS chapter: a response $y$ that is a function of $x$ with spatially autocorrelated errors. We know going in that the spatial error model is the right answer. We will run the LM tests, confirm they point to the error model, and then fit both models to see what each gives us.
+
+### Data
+
+```{r, message=FALSE, warning=FALSE}
+n        <- 75
+easting  <- runif(n, 0, 100)
+northing <- runif(n, 0, 100)
+points   <- cbind(easting, northing)
+
+# Build spatially autocorrelated errors via a SAR process
+dnb   <- dnearneigh(x = points, d1 = 0, d2 = 150)
+dsts  <- nbdists(nb = dnb, coords = points)
+p     <- 2.25
+idw   <- lapply(dsts, function(x) x^-p)
+wList <- nb2listw(neighbours = dnb, glist = idw, style = "W")
+
+inv     <- spatialreg::invIrW(x = wList, rho = 0.75)
+epsilon <- inv %*% rnorm(n)
+epsilon <- scale(epsilon[,1])[,1]
+
+# Response variable: y is a function of x plus autocorrelated noise
+x  <- rnorm(n)
+B0 <- 3
+B1 <- 0.5
+y  <- B0 + B1*x + epsilon
+
+dat <- data.frame(easting, northing, y, x)
+```
+
+We also need a k-nearest-neighbor weights matrix for the SAR models. Same approach as the LISA chapter.
+
+```{r}
+nb_k8 <- knn2nb(knearneigh(points, k = 8))
+W <- nb2listw(nb_k8, style = "W")
+```
+
+### OLS and Residual Check
+
+Start with OLS.
+
+```{r}
+ols <- lm(y ~ x, data = dat)
+dat$olsResids <- residuals(ols)
+moran.test(dat$olsResids, W)
+```
+
+Moran's I is significantly positive on the OLS residuals. We know we have a problem. Run the LM tests.
+
+### LM Tests
+
+```{r}
+lm.LMtests(ols, listw = W, test = "all")
+```
+
+Both LMerr and LMlag will likely be significant -- a spatial error process can produce apparent lag structure too because the autocorrelated errors bleed into the response. Look at the robust tests. RLMerr should dominate, since that is how we built the data. That is the model to fit.
+
+### Spatial Error Model
+
+```{r}
+semFit <- errorsarlm(y ~ x, data = dat, listw = W)
+summary(semFit)
+```
+
+The coefficient table gives $\hat\beta_0$ and $\hat\beta_1$, interpreted exactly like OLS coefficients. The additional parameter is $\lambda$ -- the spatial autocorrelation in the errors. A value near 1 means strong spatial error dependence; near 0 means the error model adds little over OLS. Given how we generated the data ($\rho = 0.75$), expect $\hat\lambda$ to be substantial. The coefficient estimates should land near our known values of $\beta_0 = 3$ and $\beta_1 = 0.5$.
+
+Check the residuals.
+
+```{r}
+dat$semResids <- residuals(semFit)
+moran.test(dat$semResids, W)
+```
+
+Moran's I on the SEM residuals should be near zero. The spatial structure has been absorbed into $\lambda$ and what is left looks like independent noise.
+
+### Spatial Lag Model
+
+For comparison, fit the lag model on the same data.
+
+```{r}
+slmFit <- lagsarlm(y ~ x, data = dat, listw = W)
+summary(slmFit)
+```
+
+The lag model estimates $\rho$, the spatial autoregression of the response. Because the data were generated under an error process, this is the wrong model. It will likely fit reasonably (the models are related) but the LM tests already pointed us elsewhere. Compare AIC.
+
+```{r}
+AIC(semFit, slmFit)
+```
+
+The SEM should win. This is a good workflow to internalize: LM tests first, then model fitting, then AIC as a sanity check.
+
+## Back to the Bird Data
+
+Let's run this workflow on the bird diversity dataset from the GLS chapter.
+
+```{r, eval=FALSE}
+dat_birds <- read.csv("data/birdDiv.csv")
+datSF <- dat_birds %>%
+  st_as_sf(coords = c("UTME", "UTMN"), crs = 26912)
+
+coords_birds <- st_coordinates(datSF)
+nb_birds     <- knn2nb(knearneigh(coords_birds, k = 8))
+W_birds      <- nb2listw(nb_birds, style = "W")
+```
+
+OLS and Moran test on residuals:
+
+```{r, eval=FALSE}
+ols_birds <- lm(birdDiv ~ plantDiv, data = dat_birds)
+moran.test(residuals(ols_birds), W_birds)
+```
+
+If Moran's I flags autocorrelated residuals, run the LM tests:
+
+```{r, eval=FALSE}
+lm.LMtests(ols_birds, listw = W_birds, test = "all")
+```
+
+Then fit the model the tests recommend and compare the coefficient on `plantDiv` to what OLS and GLS gave in the previous chapter. Does the point estimate shift? Do the standard errors change? That is the correction at work.
+
+## A Note on Interpreting Lag Model Coefficients
+
+This is worth saying slowly because it catches people off guard.
+
+In an OLS or SEM, $\hat\beta_1 = 0.5$ means: a one-unit increase in $x$ is associated with a 0.5-unit increase in $y$, full stop. That is a total effect.
+
+In a SLM, a change in $x_i$ affects $y_i$ directly, but that change in $y_i$ then propagates to neighboring locations because their $y$ values depend on $y_i$ via the lag term. Those ripples feed back. The $\hat\beta_1$ from `lagsarlm` is only the direct local effect, before the spatial propagation plays out. The full marginal effect -- including spillovers -- requires computing impacts from the fitted model.
+
+```{r, eval=FALSE}
+impacts(slmFit, listw = W, R = 500)
+```
+
+The output decomposes effects into direct (same-location), indirect (spillover to neighbors), and total. For most environmental science applications, the total effects are what you want to report if you are using a lag model. If the indirect effects are small relative to the direct effects, the distinction matters less in practice -- but check.
+
+If this all feels like it complicates what should be a simple regression, that is because the lag model is making a more specific and more mechanistic claim about the data-generating process. The error model is the cleaner choice when you just want valid inference on your predictors and space is nuisance variation.
+
+## GLS vs. SAR: When to Use Which
+
+They are often interchangeable in practice for the spatial error case.
+
+GLS uses a variogram -- a continuous function of distance -- to model the error correlation structure. It captures the range, sill, and nugget of the spatial dependence and is very flexible. SAR models use a discrete neighbor structure: you define who counts as a neighbor and the autocorrelation operates only among neighbors. GLS tends to work better when you have a clear distance-decay structure and a reasonable sample size to fit the variogram. SAR works better when your data are naturally defined by adjacency or neighborhood -- watershed catchments, habitat patches, gridded climate data -- and when you want to lean on the weights matrix you have already built for exploratory work like LISA.
+
+The spatial lag model has no real GLS equivalent. If the biology or ecology predicts a spillover or diffusion process, fit the lag model. Just be careful with the coefficients.
+
+## Your Work
+
+The Meuse River data contains several candidate predictors for soil lead contamination. `dist` is the normalized distance from the river channel (0 to 1) and `ffreq` is a flooding frequency class (a factor with three levels). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.
+
+```{r, eval=FALSE}
+data(meuse.all)
+meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+  st_set_crs(28992)
+meuse_sf$log_lead <- log(meuse_sf$lead)
+```
+
+1. Build a k-nearest-neighbor weights matrix with $k = 8$.
+
+2. Fit OLS of `log_lead ~ dist + ffreq`. Run Moran's I on the residuals.
+
+3. If the residuals are autocorrelated, run the LM tests. Which model do they recommend?
+
+4. Fit the recommended model. Check the residuals. Did the spatial structure get absorbed?
+
+5. Compare the coefficients on `dist` and `ffreq` between OLS and your SAR model. Do the substantive conclusions change, or mostly just the standard errors?
+
+6. Write one paragraph: is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in soil?
+
+```{r, echo=FALSE, eval=FALSE}
+# --- instructor key ---
+data(meuse.all)
+meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+  st_set_crs(28992)
+meuse_sf$log_lead <- log(meuse_sf$lead)
+coords <- st_coordinates(meuse_sf)
+
+nb_k8 <- knn2nb(knearneigh(coords, k = 8))
+W <- nb2listw(nb_k8, style = "W")
+
+# OLS
+ols_lead <- lm(log_lead ~ dist + ffreq, data = as.data.frame(meuse_sf))
+moran.test(residuals(ols_lead), W)  # significant
+
+# LM tests -- expect LMerr to dominate
+lm.LMtests(ols_lead, listw = W, test = "all")
+
+# SEM
+sem_lead <- errorsarlm(log_lead ~ dist + ffreq,
+                       data = as.data.frame(meuse_sf), listw = W)
+summary(sem_lead)
+moran.test(residuals(sem_lead), W)  # should be clean
+
+# SLM for comparison
+slm_lead <- lagsarlm(log_lead ~ dist + ffreq,
+                     data = as.data.frame(meuse_sf), listw = W)
+summary(slm_lead)
+
+AIC(sem_lead, slm_lead)
+
+# The lag model would imply that lead contamination at one location
+# spatially drives contamination at neighboring locations --
+# a diffusion or contagion process. For inert fluvial sediment,
+# that mechanism is not ecologically compelling. The error model
+# (shared unmeasured drivers: flood frequency variation, sediment
+# texture, proximity to historical channel features) is more defensible.
+```

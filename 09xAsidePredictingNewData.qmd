@@ -33,7 +33,7 @@ summary(lm1)
 We have one clearly useful predictor and one borderline one. Now, say we want to extend that model to a new data set. The object `lm1` is class `lm`, and most model classes in R have a `predict` function that accepts a `newdata` argument for exactly this purpose.
 
 ::: {.callout-note}
-See the [Understanding Methods and Generics in R aside](01xAsideMethodsAndGenerics.html) if the idea of a generic `predict` function dispatching to `predict.lm` is unclear.
+See the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html) if the idea of a generic `predict` function dispatching to `predict.lm` is unclear.
 :::
 
 Let's imagine a new data set with `x1` and `x2` but no observed `y`:

@@ -98,7 +98,7 @@ The last rows of the summary, **GCV** and **REML**, show two different criteria 
 
 ### A Note on GCV
 
-GCV stands for Generalized Cross-Validation. The "generalized" part is worth talking about as you've seen "regular" cross-validation in the [Model Skill and Cross Validation aside](04xAsideModelSkill.html).
+GCV stands for Generalized Cross-Validation. The "generalized" part is worth talking about as you've seen "regular" cross-validation in the [Model Skill and Cross Validation aside](06xAsideModelSkill.html).
 
 In LOOCV you remove each observation, refit the model without it, predict it back, and repeat $n$ times. It works, but you're fitting 164 separate models to find the best $\lambda$. GCV approximates that process using a mathematical shortcut. Rather than actually leaving each point out, it uses the model's hat matrix -- a matrix that describes how much each observation influences its own prediction -- to estimate what LOOCV would give for any value of $\lambda$ without refitting the model each time. That's the "generalized" part: it generalizes cross-validation from something you do by brute force to something you can compute analytically from a single model fit.
 
@@ -107,7 +107,7 @@ The result is the same thing you want from LOOCV: the $\lambda$ that minimizes p
 Now let's predict over the full grid and make a raster.
 
 ::: {.callout-note}
-Note that we're calling `predict()` again here which is the same generic function we used with `gstat` objects in the IDW module. It dispatches to a different method under the hood because `logLeadTPSmodel` is a `Tps` object rather than a `gstat` object, but the interface looks the same. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](01xAsideMethodsAndGenerics.html).
+Note that we're calling `predict()` again here which is the same generic function we used with `gstat` objects in the IDW module. It dispatches to a different method under the hood because `logLeadTPSmodel` is a `Tps` object rather than a `gstat` object, but the interface looks the same. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html).
 :::
 
 ```{r}
@@ -210,7 +210,7 @@ rmseNULL
 1 - (rmse / rmseNULL)
 ```
 
-TPS beats the null. The skill score here (`r round(1 - (rmse / rmseNULL),3)`) usually lands around 0.35-0.45 depending on the random split. Compare that to IDW from the last module, where the skill score was around 0.22-0.25. TPS is doing better, though not dramatically. For a full treatment of how to interpret these skill scores, see the [Model Skill and Cross Validation aside](04xAsideModelSkill.html).
+TPS beats the null. The skill score here (`r round(1 - (rmse / rmseNULL),3)`) usually lands around 0.35-0.45 depending on the random split. Compare that to IDW from the last module, where the skill score was around 0.22-0.25. TPS is doing better, though not dramatically. For a full treatment of how to interpret these skill scores, see the [Model Skill and Cross Validation aside](06xAsideModelSkill.html).
 
 ## Is This an Improvement?
 
