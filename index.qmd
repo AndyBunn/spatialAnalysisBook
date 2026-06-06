@@ -272,7 +272,7 @@ date: ""
   </svg>
 
   <div class="content">
-    <a href="00Welcome.html" class="enter-button">Welcome →</a>
+    <a href="01Welcome.html" class="enter-button">Welcome →</a>
     <div class="banner-title">
       Spatial <span class="accent-word">Analysis</span><br>
       for Environmental Science

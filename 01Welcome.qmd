@@ -115,6 +115,7 @@ OLS isn't the right tool.
     - *Aside: OLS via Algebra and Matrices* -- Derives the OLS solution algebraically
       and in matrix form, then implements both in R. Background that makes the GLS
       chapter make more sense.
+- **Spatial Regression: Lag and Error Models** -- GLS treats space as nuisance in the residuals. SAR models let you go further: test whether the structure is in the errors or in the response itself, and fit accordingly.
 
 ::: {.callout-note}
 ## Points and grids, not polygons

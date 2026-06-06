@@ -8,7 +8,7 @@ What we do need is a working vocabulary for two things: point data and raster da
 
 So that's the plan for this chapter. Quick introduction to `sf` for points. Quick introduction to `terra` for rasters. Then we move on.
 
-We'll use three packages in this chapter. `tidyverse` [@R-tidyverse] for general data wrangling, `sf` [@R-sf] for vector spatial data, and `terra` [@R-terra] for rasters. You'll see these same packages throughout the book. Full citations are in the [Packages](07PackagesUsed.html) chapter at the back.
+We'll use three packages in this chapter. `tidyverse` [@R-tidyverse] for general data wrangling, `sf` [@R-sf] for vector spatial data, and `terra` [@R-terra] for rasters. You'll see these same packages throughout the book. Full citations are in the [References](12References.html) chapter at the back.
 
 ```{r, include=FALSE}
 library(tidyverse)
@@ -42,7 +42,7 @@ plot(californiaOzonePointsSF)
 
 A few things worth knowing about `sf` objects before we move on:
 
-**Generic functions work on them.** `plot()`, `summary()`, and `print()` all know what to do with an `sf` object. We'll talk more about how R handles this in the [Methods and Generics aside](01xAsideMethodsAndGenerics.html), but the short version is: the same function call does sensible things regardless of what you hand it.
+**Generic functions work on them.** `plot()`, `summary()`, and `print()` all know what to do with an `sf` object. We'll talk more about how R handles this in the [Methods and Generics aside](02xAsideMethodsAndGenerics.html), but the short version is: the same function call does sensible things regardless of what you hand it.
 
 **The geometry column sticks around.** When you use `dplyr` verbs like `filter()` or `select()` on an `sf` object, the geometry column comes along for the ride. You don't have to do anything special.
 

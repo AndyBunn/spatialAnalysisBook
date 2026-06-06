@@ -161,7 +161,7 @@ p1 + geom_point(aes(x=2,y=4,size=zhat_s0))
 You can see how we interpolated (estimated) one point using inverse distance weighting. And you could imagine then how we'd do that for any point we could imagine.
 
 ::: {.callout-note}
-If you need a refresher in `dist()`, work through the [Distance Matrices aside](02xAsideDistanceMatrices.html).
+If you need a refresher in `dist()`, work through the [Distance Matrices aside](03xAsideDistanceMatrices.html).
 :::
 
 ## Application
@@ -214,7 +214,7 @@ So the idea here is that we will model a value for lead at each of the locations
 We can use the coordinates in `meuse_grid_sf` as the locations to predict using IDW. We don't care about the data in `meuse_grid_sf` like soil type or distance to river. We just want the locations. To do this, we will use the `gstat` function which creates an object that holds all the information necessary for prediction. Here we tell `gstat` that we want an IDW model with a power of 2 using the `idp` parameter. The formula `logLead~1` tells `gstat` there are no covariates, just an intercept. The spatial weighting by distance is what makes this IDW -- that's handled by `idp`, not by the formula. This distinction will matter when we add covariates in regression kriging.
 
 ::: {.callout-note}
-Note that we're calling `predict()` here which is a generic function that will dispatch to a different method under the hood because `idw_p2_model` is a `gstats` object. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](01xAsideMethodsAndGenerics.html).
+Note that we're calling `predict()` here which is a generic function that will dispatch to a different method under the hood because `idw_p2_model` is a `gstats` object. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html).
 :::
 
 ```{r}
@@ -269,7 +269,7 @@ Are those bumps and craters real? Or an artifact? Would the surface be better if
 Those craters are artifacts of IDW, not real structure in the data. Here's why they happen: in areas where sample points are sparse, IDW has very little to work with. Any location in a gap between widely-spaced points ends up being pulled hard toward the one or two nearest observations, creating bullseye patterns around each isolated point. The center of the Meuse study area is sampled more thinly than the edges near the river, which is why that's where the craters are worst. No interpolation method handles sparse data well, but IDW is particularly vulnerable to this because its weighting scheme has no concept of the broader spatial structure of the data -- it just sees distance. Keep this in mind as we look at skill.
 
 ## Skill
-Now that we are making predictions we need to assess how good they are. The [Model Skill and Cross Validation aside](04xAsideModelSkill.html) covers all of this in detail and is worth reading before going further. The short version is: we'll use R$^2$, RMSE, and the observed-vs-predicted plot throughout the interpolation chapters, and we always care more about out-of-sample skill than in-sample fit. Here's the in-sample picture first, just to show why:
+Now that we are making predictions we need to assess how good they are. The [Model Skill and Cross Validation aside](06xAsideModelSkill.html) covers all of this in detail and is worth reading before going further. The short version is: we'll use R$^2$, RMSE, and the observed-vs-predicted plot throughout the interpolation chapters, and we always care more about out-of-sample skill than in-sample fit. Here's the in-sample picture first, just to show why:
 
 ```{r}
 obs <- meuse_sf$logLead
@@ -343,7 +343,7 @@ rmseNULL
 1 - (rmse / rmseNULL)
 ```
 
-For a full treatment of the null model and how to interpret these skill scores, see the [Model Skill and Cross Validation aside](04xAsideModelSkill.html).
+For a full treatment of the null model and how to interpret these skill scores, see the [Model Skill and Cross Validation aside](06xAsideModelSkill.html).
 
 So we have to ask, "How can we improve this model in a responsible way?"
 
@@ -441,7 +441,7 @@ prcpCA %>% ggplot() +
   scale_size(guide="none")
 ```
 
-Use IDW to create a surface of total annual precipitation in California. Tune and assess skill as you see fit. Interpret and explain your surface and anything you notice in particular about it. A skill assessment of some kind is important so see the [Model Skill and Cross Validation aside](04xAsideModelSkill.html).
+Use IDW to create a surface of total annual precipitation in California. Tune and assess skill as you see fit. Interpret and explain your surface and anything you notice in particular about it. A skill assessment of some kind is important so see the [Model Skill and Cross Validation aside](06xAsideModelSkill.html).
 
 One warning. There are a few stations on the coast that are classified as `NA` in the gridded surface you'll make. This is because the gridded surface is 10x10 km and that coarse resolution means some of the edge cases (stations very close to the coast) get turned into "ocean" instead of "land". This is a really common issue when moving from point to raster data. It won't affect what you do until you try to assess skill. Then you'll find that some (eight, I think) of the stations will show up as `NA` when you use `extract`. This will cause your `rsq` and `rmse` calculations to return `NA`. You can overcome this in a variety of ways (e.g., `cor(obs,preds,use="complete.obs")^2` and `sqrt(mean((preds - obs)^2,na.rm=TRUE))` or with a mask etc.). You'd have figured that out on your own I bet, but I'm just giving you a heads up.
 

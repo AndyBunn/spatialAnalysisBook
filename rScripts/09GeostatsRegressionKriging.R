@@ -1,0 +1,182 @@
+## ----echo=FALSE, message=FALSE, warning=FALSE, results='hide'-----------------
+set.seed(733)
+
+
+## ----message=FALSE, warning=FALSE---------------------------------------------
+library(tidyverse)
+library(sf)
+library(terra)
+library(tidyterra)
+library(gstat)
+library(cowplot)
+
+
+## -----------------------------------------------------------------------------
+data(meuse.all)
+str(meuse.all)
+
+
+## -----------------------------------------------------------------------------
+meuse.grid <- readRDS("../data/meuse.grid.Rds")
+str(meuse.grid)
+
+
+## -----------------------------------------------------------------------------
+meusePoints_sf <- st_as_sf(meuse.all, coords = c("x","y"), crs=28992)
+meuseGrid_sf <- st_as_sf(meuse.grid, coords = c("x","y"), crs=28992)
+meusePoints_sf
+meuseGrid_sf
+
+
+## -----------------------------------------------------------------------------
+# get the relative distance from meuseGrid_sf and add it to meusePoints_sf
+meuseGrid_dist_sf <- meuseGrid_sf %>% select(dist)
+# join the two objects by the nearest point
+meusePoints_sf <- st_join(meusePoints_sf, meuseGrid_dist_sf, join = st_nearest_feature)
+# note that we now have relative dist for each point now in the column `dist`
+meusePoints_sf
+
+
+## -----------------------------------------------------------------------------
+meusePoints_sf <- meusePoints_sf %>% mutate(sqrt_dist = sqrt(dist))
+meuseGrid_sf <- meuseGrid_sf %>% mutate(sqrt_dist = sqrt(dist))
+
+
+## -----------------------------------------------------------------------------
+meusePoints_sf <- meusePoints_sf %>% drop_na(om)
+
+
+## -----------------------------------------------------------------------------
+meusePoints_sf <- meusePoints_sf %>% mutate(soil = factor(soil))
+meuseGrid_sf <- meuseGrid_sf %>% mutate(soil = factor(soil))
+
+
+## -----------------------------------------------------------------------------
+om_lm <- lm(om~sqrt_dist+soil, data=meusePoints_sf)
+summary(om_lm)
+anova(om_lm)
+
+
+## -----------------------------------------------------------------------------
+meuseGrid_sf$omHat <- predict(om_lm, newdata=meuseGrid_sf)
+
+sf_2_rast <- function(sfObject, variable2get = 1){
+  tmp <- sfObject[,variable2get] %>% st_drop_geometry()
+  dfObject <- data.frame(st_coordinates(sfObject), z=tmp)
+  rastObject <- rast(dfObject, crs=crs(sfObject))
+  return(rastObject)
+}
+
+meuseGrid_rast <- sf_2_rast(meuseGrid_sf, variable2get = "omHat")
+ggplot() + geom_spatraster(data = meuseGrid_rast,
+                           mapping = aes(fill=omHat)) +
+  scale_fill_terrain_c() +
+  labs(fill = "omHat")
+
+
+
+## ----echo=FALSE---------------------------------------------------------------
+w <- spdep::knn2nb(spdep::knearneigh(meusePoints_sf, k=4))
+foo <- spdep::moran.test(residuals(om_lm), spdep::nb2listw(w))
+
+
+## -----------------------------------------------------------------------------
+omVar <- variogram(om~1, meusePoints_sf)
+plot(omVar, pch=20, cex=1.5, col="black",
+     ylab=expression("Semivariance ("*gamma*")"),
+     xlab="Distance (m)", main = "% Soil Organic Matter")
+
+
+## -----------------------------------------------------------------------------
+omGstat <- gstat(id = "omModel", formula = om ~ sqrt_dist + soil, 
+                 data = meusePoints_sf)
+omGstat_obsVariogram <- variogram(omGstat)
+plot(omGstat_obsVariogram, pch=20, cex=1.5, col="black",
+     ylab=expression("Semivariance ("*gamma*")"),
+     xlab="Distance (m)", main = "Model Residuals")
+
+
+## -----------------------------------------------------------------------------
+omGau_variogramModel <- vgm(psill = 2, model = "Gau", range = 500, nugget = 4)
+omGau_fittedVariogram <- fit.variogram(object = omGstat_obsVariogram, 
+                                       model = omGau_variogramModel)
+plot(omGstat_obsVariogram, omGau_fittedVariogram, pch=20, cex=1.5, col="black",
+     ylab=expression("Semivariance ("*gamma*")"),
+     xlab="Distance (m)", main = "Model Residuals")
+
+
+## -----------------------------------------------------------------------------
+# Update the gstat object with the variogram:
+omGstat_w_variogram <- gstat(omGstat, id="omModel", model=omGau_fittedVariogram)
+# And predict
+omHat_sf <- predict(omGstat_w_variogram, newdata = meuseGrid_sf)
+omHat_sf
+
+
+## -----------------------------------------------------------------------------
+omHat_rast <- sf_2_rast(omHat_sf, variable2get = "omModel.pred")
+
+# kriged residual surface = RK prediction minus OLS trend
+omHat_sf$krigedResid <- omHat_sf$omModel.pred - meuseGrid_sf$omHat
+omResid_rast <- sf_2_rast(omHat_sf, variable2get = "krigedResid")
+
+p_ols <- ggplot() +
+  geom_spatraster(data = meuseGrid_rast, mapping = aes(fill=omHat)) +
+  scale_fill_terrain_c(limits=c(0,18)) +
+  labs(title="OLS trend", fill="om (%)") +
+  theme(axis.text=element_blank(), axis.ticks=element_blank())
+
+p_resid <- ggplot() +
+  geom_spatraster(data = omResid_rast, mapping = aes(fill=krigedResid)) +
+  scale_fill_gradient2(low="blue", mid="white", high="red", 
+                     midpoint=0, na.value="transparent") +
+  labs(title="Kriged residuals", fill="resid") +
+  theme(axis.text=element_blank(), axis.ticks=element_blank())
+
+p_rk <- ggplot() +
+  geom_spatraster(data = omHat_rast, mapping = aes(fill=omModel.pred)) +
+  scale_fill_terrain_c(limits=c(0,18)) +
+  labs(fill="om (%)") +
+  theme(axis.text=element_blank(), axis.ticks=element_blank())
+
+
+eq <- ggdraw() + draw_label("OLS trend  +  Kriged residuals  =  RK prediction", 
+                             fontface="italic", size=11)
+
+top_row <- plot_grid(p_ols, p_resid, ncol=2)
+plot_grid(top_row, eq, p_rk, nrow=3, rel_heights=c(1, 0.1, 1))
+
+
+
+## -----------------------------------------------------------------------------
+omHatVar_rast <- sf_2_rast(omHat_sf, variable2get = "omModel.var")
+omHatVar_rast <- omHatVar_rast %>% mutate(omModel.var.sqrt = sqrt(omModel.var))
+ggplot() + geom_spatraster(data = omHatVar_rast,
+                           mapping = aes(fill=omModel.var.sqrt)) +
+  scale_fill_terrain_c() +
+  labs(fill = "Organic Matter SD (%)")
+
+
+## ----eval=FALSE,echo=FALSE,message=FALSE, warning=FALSE-----------------------
+# # the rk
+# out <- gstat.cv(object=omGstat_w_variogram,nfold=10)
+# #r2
+# cor(out$observed, out$observed - out$residual)^2
+# cor(out$observed, out$omModel.pred)^2 # same
+# 
+# # the lm
+# out2 <- gstat.cv(omGstat,nfold=10)
+# #r2
+# cor(out2$observed, out2$observed - out2$residual)^2
+# cor(out2$observed, out2$omModel.pred)^2 # same
+# 
+# # oh! by fold. this is better prob
+# out@data %>% group_by(fold) %>% summarise(r2=cor(observed, omModel.pred)^2) %>% summarise(mean(r2))
+# out2@data %>% group_by(fold) %>% summarise(r2=cor(observed, omModel.pred)^2) %>% summarise(mean(r2))
+# 
+# # same as lm?
+# library(caret)
+# trainControl <- trainControl(method = "cv", number = 10)
+# fit <- train(om~sqrt_dist+soil,data=meusePoints_sf, trControl = trainControl, method = "lm")
+# fit
+

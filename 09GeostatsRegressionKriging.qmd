@@ -34,7 +34,7 @@ The residuals from the OLS model represent the spatial variation that the covari
 RK is used more and more commonly now that cheap and powerful covariates can be derived from remote sensing and GIS data. Elevation grids, land cover maps, distance-to-feature layers: if it predicts your response and you have it everywhere, it can go in the model.
 
 ::: {.callout-note}
-If you want a refresher on how to fit an OLS model and then apply it to new data with `predict`, see the [Predicting New Data aside](05xAsidePredictingNewData.html). That pattern is the foundation of the RK workflow.
+If you want a refresher on how to fit an OLS model and then apply it to new data with `predict`, see the [Predicting New Data aside](09xAsidePredictingNewData.html). That pattern is the foundation of the RK workflow.
 :::
 
 ## Back to the Netherlands
