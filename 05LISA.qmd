@@ -11,7 +11,7 @@ Space matters: Spatial pattern lets us understand process. Global Moran's I tell
 @anselin1995local is the original paper introducing LISA. It is not a breezy read, but sections 1 through 3 are worth your time. Pay attention to the conceptual motivation -- why a global statistic is insufficient -- and the four categories of local spatial association. You do not need to follow every bit of the math.
 
 ::: {.callout-note}
-This module builds directly on the [Spatial Autocorrelation chapter](04Intro2Autocorrelation.html). Make sure you are comfortable with Moran's I and how spatial weights matrices work before diving in.
+This module builds directly on the [Spatial Autocorrelation chapter](04GlobalAutocorrelation.html). Make sure you are comfortable with Moran's I and how spatial weights matrices work before diving in.
 :::
 
 ## Packages
