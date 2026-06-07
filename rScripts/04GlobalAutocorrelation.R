@@ -35,7 +35,7 @@ Dmat <- as.matrix(dist(transect$x))
 
 # Step 2: we only want each pair once (i,j is the same pair as j,i),
 # so we pull out just the upper triangle of the distance matrix.
-# upper.tri() returns a logical matrix -- TRUE above the diagonal, FALSE elsewhere.
+# upper.tri() returns a logical matrix with TRUE above the diagonal, FALSE elsewhere.
 DmatUpperTri <- upper.tri(Dmat)
 
 # Step 3: find the row and column positions of those TRUE cells.
@@ -74,13 +74,13 @@ pairs_df %>%
 
 
 ## -----------------------------------------------------------------------------
-data(meuse.all)
-class(meuse.all)
-head(meuse.all)
+meuse2 <- readRDS("../data/meuse2.Rds")
+class(meuse2)
+head(meuse2)
 
 
 ## -----------------------------------------------------------------------------
-meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
 

@@ -303,6 +303,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -317,7 +333,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#this-is-not-a-textbook" id="toc-this-is-not-a-textbook" class="nav-link" data-scroll-target="#this-is-not-a-textbook">This Is Not a Textbook</a></li>
   <li><a href="#how-these-notes-are-laid-out" id="toc-how-these-notes-are-laid-out" class="nav-link" data-scroll-target="#how-these-notes-are-laid-out">How These Notes Are Laid Out</a></li>
   <li><a href="#whats-in-these-notes" id="toc-whats-in-these-notes" class="nav-link" data-scroll-target="#whats-in-these-notes">What’s in These Notes</a></li>
-  <li><a href="#go-do-great-things" id="toc-go-do-great-things" class="nav-link" data-scroll-target="#go-do-great-things">Go Do Great Things</a></li>
+  <li><a href="#the-final-frontier" id="toc-the-final-frontier" class="nav-link" data-scroll-target="#the-final-frontier">The Final Frontier</a></li>
   <li><a href="#technical-setup" id="toc-technical-setup" class="nav-link" data-scroll-target="#technical-setup">Technical Setup</a>
   <ul>
   <li><a href="#project-structure" id="toc-project-structure" class="nav-link" data-scroll-target="#project-structure">Project Structure</a></li>
@@ -352,7 +368,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Species don’t distribute themselves at random. Wildfire risk is not uniform across a landscape. Lead contamination in urban soils clusters near old roads and demolished buildings. Precipitation gradients drive vegetation boundaries that don’t care about county lines. In each case, where something is happening is part of the story.</p>
 <p>The underlying idea has a name. Tobler’s First Law of Geography states that everything is related to everything else, but near things are more related than distant things. It sounds obvious until you realize how much standard statistical practice ignores it.</p>
 <p>If you treat spatially dependent observations as independent, your standard errors will be too small, your p-values too optimistic, and your predictions won’t hold up. This isn’t a minor technical complaint. It’s a systematic bias, and it runs through a lot of published environmental science.</p>
-<p>The tools to do this right have existed for decades. What’s changed is that they are now accessible – implemented in open, well-documented software, with enough worked examples that you don’t need a geostatistics PhD to use them correctly. There’s no longer a good reason to leave spatial structure on the table.</p>
+<p>The tools to do this right have existed for decades. What’s changed is that they are now implemented in open, well-documented software, with enough worked examples that you don’t need a geostatistics PhD to use them correctly. There’s no longer a good reason to leave spatial structure on the table.</p>
 <p>Spatial pattern is also information in its own right. Where something is happening, and where it isn’t, tells you something about the processes driving it. Learning to read that structure is part of the fundamental job of environmental science: figuring out why things are patterned the way they are.</p>
 </section>
 <section id="this-is-not-a-textbook" class="level2">
@@ -362,7 +378,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="how-these-notes-are-laid-out" class="level2">
 <h2 class="anchored" data-anchor-id="how-these-notes-are-laid-out">How These Notes Are Laid Out</h2>
-<p>Most chapters follow a natural progression, each building on the last. Scattered through the notes you’ll find <strong>Asides</strong> – side quests that dig into something that doesn’t quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.</p>
+<p>Most chapters follow a natural progression, each building on the last. Scattered through the notes you’ll find <strong>Asides</strong> which are side quests that dig into something that doesn’t quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.</p>
 <p>The Asides are linked from the chapters that depend on them. Skipping one will likely leave you confused when that chapter references it. They are separate from the main chapters not because they are less important, but because pulling them out keeps the main flow readable. When you hit a link to an Aside, follow it.</p>
 </section>
 <section id="whats-in-these-notes" class="level2">
@@ -377,25 +393,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Point Patterns &amp; Autocorrelation</strong> is where the analysis starts. We ask the most basic spatial question – are things randomly distributed, or is there structure? – and then move on to measuring spatial dependence in continuous variables.</p>
 <ul>
-<li><p><strong>Point Patterns</strong> – How to quantify whether points in space are randomly distributed, clustered, or repulsed, using kernel density estimation and Ripley’s K.</p>
+<li><strong>Point Patterns</strong> – How to quantify whether points in space are randomly distributed, clustered, or repulsed, using kernel density estimation and Ripley’s K.
 <ul>
 <li><em>Aside: Distance Matrices</em> – A detour into how distances between points are computed and stored. This comes up enough that it’s worth understanding before you need it.</li>
 </ul></li>
-<li><p><strong>Global Spatial Autocorrelation</strong> – How to measure and describe spatial structure in a continuous variable using variograms, Moran’s I, and correlograms.</p>
+<li><strong>Global Spatial Autocorrelation</strong> – How to measure and describe spatial structure in a continuous variable using variograms, Moran’s I, and correlograms.
 <ul>
 <li><em>Aside: Correlation and Regression Are Not the Same Thing</em> – These two ideas get conflated constantly. This aside untangles them before we lean on regression in later chapters.</li>
 </ul></li>
-<li><p><strong>Local Spatial Autocorrelation</strong> – Global Moran’s I tells you whether spatial structure exists. LISA tells you where. We decompose the global statistic into location-specific values and map the hot spots, cold spots, and spatial outliers. <strong>Interpolation &amp; Geostatistics</strong> is about prediction. We have measurements at some locations and want to estimate values at others. We start with deterministic methods and work up to kriging, which is the probabilistic workhorse of geostatistics.</p></li>
-<li><p><strong>Inverse Distance Weighting</strong> – Predicting values at unsampled locations using a deterministic, distance-weighted approach. Simple, intuitive, and a good place to start.</p>
+<li><strong>Local Spatial Autocorrelation</strong> – Global Moran’s I tells you whether spatial structure exists. LISA tells you where. We decompose the global statistic into location-specific values and map the hot spots, cold spots, and spatial outliers.</li>
+</ul>
+<p><strong>Interpolation &amp; Geostatistics</strong> is about prediction. We have measurements at some locations and want to estimate values at others. We start with deterministic methods and work up to kriging, which is the probabilistic workhorse of geostatistics.</p>
+<ul>
+<li><strong>Inverse Distance Weighting</strong> – Predicting values at unsampled locations using a deterministic, distance-weighted approach. Simple, intuitive, and a good place to start.
 <ul>
 <li><em>Aside: Model Skill and Cross Validation</em> – A model that fits your data well is not necessarily a model that predicts well. This aside covers how to tell the difference before we start building interpolation models that depend on getting this right.</li>
 </ul></li>
-<li><p><strong>Thin-Plate Splines</strong> – A smooth, flexible interpolation method that minimizes curvature across the surface.</p></li>
-<li><p><strong>Kriging</strong> – Uses the spatial structure of the data to predict unknown values and, unlike IDW, gives you a real measure of uncertainty.</p>
+<li><strong>Thin-Plate Splines</strong> – A smooth, flexible interpolation method that minimizes curvature across the surface.</li>
+<li><strong>Kriging</strong> – Uses the spatial structure of the data to predict unknown values and, unlike IDW, gives you a measure of uncertainty.
 <ul>
 <li><em>Aside: Kriging Variance By Hand</em> – Cracks open the <code>gstat</code> black box. We calculate kriging weights and prediction variance using matrix algebra on a toy dataset and check our work against the package.</li>
 </ul></li>
-<li><p><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when covariates explain part of the spatial pattern.</p>
+<li><strong>Regression Kriging</strong> – Kriging with external predictors folded in. Useful when covariates explain part of the spatial pattern.
 <ul>
 <li><em>Aside: Predicting New Data with a Fitted Model</em> – A refresher on using <code>predict</code> on new data.</li>
 </ul></li>
@@ -414,7 +433,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Points and grids, not polygons
+<span class="screen-reader-only">Note</span>Points and Grids, Not Polygons
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -422,9 +441,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="go-do-great-things" class="level2">
-<h2 class="anchored" data-anchor-id="go-do-great-things">Go Do Great Things</h2>
-<p>You are going to learn to see the world spatially. I mean that practically, not dramatically. By the end you will be able to look at a dataset, ask where things are happening and why, and have real tools to answer those questions.</p>
+<section id="the-final-frontier" class="level2">
+<h2 class="anchored" data-anchor-id="the-final-frontier">The Final Frontier</h2>
+<p>You are going to learn to see the world spatially. By the end you will be able to look at a dataset, ask where things are happening and why, and have tools to answer those questions.</p>
 <p>The people who do this work well are not necessarily the ones who find it easiest. They’re the ones who run the code when it breaks, read the error messages, ask questions, and keep going. That’s the whole secret.</p>
 <p>So: set up your project, download the data, and let’s get to work.</p>
 </section>

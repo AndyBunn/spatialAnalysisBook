@@ -268,6 +268,22 @@ ul.task-list li input[type="checkbox"] {
   <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -298,12 +314,12 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>These notes started as a weekly handout for a ten-week graduate course in spatial analysis at Western Washington University. They have grown, as course notes sometimes do, into something closer to a short book. That process wasn’t really intentional, I’d fix a confusing explanation, add a section that answers a question, expand a toy example and after a few years of that I had something worth sharing more broadly.</p>
+<p>These notes started as a weekly handout for a graduate course in spatial analysis at Western Washington University. They have grown, as course notes sometimes do, into something closer to a short book. That process wasn’t really intentional, I’d fix a confusing explanation, add a section that answers a question, expand a toy example and after a few years of that I had something worth sharing more broadly.</p>
 <p>I am Andy Bunn. I am a professor of environmental sciences at Western Washington University in Bellingham, which sits in the northwest corner of the contiguous United States in a part of the world that is unreasonably beautiful. My research is mostly about paleoclimate and carbon cycling using tree rings. I have been writing R code since about 2000, including <code>dplR</code>, a package for dendrochronology that is part of the <a href="https://opendendro.org">openDendro</a> project. I am not a statistician. I am an environmental scientist and teacher who has spent a career working with spatial data.</p>
-<p>The students these notes were written for are masters students in environmental sciences at WWU. They are smart and motivated, and most do applied work. They came to graduate school to better understand ecosystems, watersheds, climate, toxicology, or some other chunk of the world. They’ve taken an introductory stats class covering linear modeling but not math beyond calculus. And many of them are going to spend their careers working with data that have coordinates attached, which means they need to know this material whether they signed up for it or not.</p>
+<p>The students these notes were written for are masters students in environmental sciences at WWU. They are smart and motivated, and most do applied work. They came to graduate school to better understand ecosystems, watersheds, climate, toxicology, or some other chunk of the world. They’ve taken an introductory stats class covering linear modeling but not math beyond calculus. And many of them are going to spend their careers working with data that have coordinates attached, which means they need to know about spatial analysis.</p>
 <p>The emphasis is on building intuition and getting things done in R, not on mathematical derivation. The scope is deliberately narrow: we work with point observations and continuous raster surfaces, not areal data or complex network structures. We often simulate known patterns before applying methods to real data, because the best way to trust a tool is to watch it find something you planted. We use the Meuse River dataset, a classic, and a few others that connect to problems environmental scientists actually care about.</p>
 <p>If you are not one of my students, these notes might still be useful to you if you are an ecologist or environmental scientist who needs to handle spatial structure in your data and want a practical, R-based entry point. There is no shortage of spatial analysis textbooks, but most of them are either deeply rooted in GIS workflows, pitched at geographers rather than ecologists, or written at a mathematical level that assumes more background than most field scientists have. These notes try to occupy the middle ground: rigorous enough to be clear about what the methods are doing, accessible enough that a first-year masters student can follow along and run the code.</p>
-<p>A few things these notes are not. They are not a comprehensive treatment of spatial statistics. They are not a GIS manual. They say almost nothing about areal data (– (polygons, watersheds, administrative units) which is a whole separate analytic world that would double the length of the course. And they are not a substitute for reading the other literature, which is why each chapter has a reading section.</p>
+<p>A few things these notes are not. They are not a comprehensive treatment of spatial statistics. They are not a GIS manual. They say almost nothing about areal data (polygons, watersheds, administrative units) which is a whole separate analytic world that would double the length of the course. And they are not a substitute for reading the other literature, which is why each chapter has a reading section.</p>
 <p>The notes are a living document. If you find errors, have suggestions, or want to tell me that a particular explanation finally made something click, I’d love to hear from you.</p>
 <p><em>Andy Bunn</em><br>
 <em>Bellingham, Washington</em></p>

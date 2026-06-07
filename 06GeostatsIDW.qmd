@@ -79,7 +79,7 @@ foo %>% ggplot(mapping = aes(x=d,y=w,color=p)) + geom_line() +
 
 So, $p=0$ would weight all distances equally and as $p$ increases, the weights fall off quickly with distance.
 
-## Toy example
+## Toy Example
 ### Data
 Now that we have the information we need on the algorithm, let's do a quick and dirty example by hand to walk through some of the calculations. 
 
@@ -168,17 +168,17 @@ If you need a refresher in `dist()`, work through the [Distance Matrices aside](
 ### Data
 Now that we've done a toy example, let's give this a shot with the lead data from the Meuse River. Because the lead data are pretty skewed, we will log transform it. First we'll load, then log the lead column, make it into a `sf` object and then plot.
 
-First we will turn the `meuse` into class `sf`.
+We use `meuse2` from the `gstat` package - not `sp::meuse`, which is a different and older version of the same data. First we load it and make it into an `sf` object.
 
 ```{r}
-data(meuse.all)
-glimpse(meuse.all)
-class(meuse.all)
-meuse.all$logLead <- log(meuse.all$lead)
+meuse2 <- readRDS("data/meuse2.Rds")
+glimpse(meuse2)
+class(meuse2)
+meuse2$logLead <- log(meuse2$lead)
 # or for the tidyverse fans this is the same output
-meuse.all <- meuse.all %>% mutate(logLead = log(lead))
+meuse2 <- meuse2 %>% mutate(logLead = log(lead))
 # make into sf
-meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
 class(meuse_sf) # note change in class from data.frame to sf and data.frame
@@ -191,18 +191,18 @@ p2 <- ggplot(data = meuse_sf) +
 p2
 ```
 
-Let's interpolate those measurements to an empty grid that covers the whole study site. There is a handy object called `meuse.grid` that has a full grid of this area with 40-m cells stored as a `data.frame`. 
+Let's interpolate those measurements to an empty grid that covers the whole study site. We will use `meuse.grid2`, a 40 x 40 m prediction grid covering the study area with 3089 cells. It includes elevation, terrain derivatives, land cover, and distance to the river from modern open data sources. See the [appendix](A1MeuseData.qmd) for full variable descriptions and provenance.
 
 ```{r}
-meuse.grid <- readRDS("data/meuse.grid.Rds")
-head(meuse.grid)
+meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
+head(meuse.grid2)
 ```
 
-This has some of the fields (e.g., `soil`) that overlaps with `meuse`. We will use those later when we do some regression-based interpolation. Right now we just want the coordinates to predict onto which are in the first two columns. Let's make a `SpatRaster` object using `rast` form `terra`.
+This has several fields that overlap with `meuse2` (e.g., `soil`, `ffreq`), plus the new terrain and land cover variables. We will use those later for regression-based interpolation. Right now we just want the coordinates to predict onto. Let's make an `sf` object from it.
 
 
 ```{r}
-meuse_grid_sf <- st_as_sf(meuse.grid, 
+meuse_grid_sf <- st_as_sf(meuse.grid2, 
                           coords = c("x","y"), 
                           crs = st_crs(meuse_sf))
 meuse_grid_sf
@@ -225,7 +225,7 @@ logLeadIDW_p2_sf <- predict(idw_p2_model,meuse_grid_sf)
 logLeadIDW_p2_sf
 ```
 
-Now, we are going to look at the interpolated data and assess if it's a "good" interpolation in a bit. But first, let's look at the `logLeadIDW_p2_sf` object we made. This is a `sf` object returned by `predict`. The interpolated lead levels are accessed via `logLeadIDW_p2_sf$var1.pred` (we will turn a blind eye to the `logLeadIDW_p2_sf$var1.var` column of NA values for *now* -- those NAs are there because IDW is deterministic; there's no probability model underneath it and therefore no variance to estimate. When we get to kriging, that column will actually mean something). All the `gstat` functions we are going to use follow this convention so the good news is that you only have to get used to it once.
+Now, we are going to look at the interpolated data and assess if it's a "good" interpolation in a bit. But first, let's look at the `logLeadIDW_p2_sf` object we made. This is a `sf` object returned by `predict`. The interpolated lead levels are accessed via `logLeadIDW_p2_sf$var1.pred` (we will turn a blind eye to the `logLeadIDW_p2_sf$var1.var` column of NA values for *now*. Those NAs are there because IDW is deterministic; there's no probability model underneath it and therefore no variance to estimate. When we get to kriging, that column will actually mean something). All the `gstat` functions we are going to use follow this convention so the good news is that you only have to get used to it once.
 
 But first, the `gstat` `predict` function returned a `sf` point object. We want it to be a `SpatRaster`. You'd think there would be an elegant way to convert an evenly spaced point object into a `SpatRaster` object but there isn't at the moment so we will brute force it. This is a little irksome but whatever. I'll write a little function to do this just because we'll have to do it a few times. If you haven't done this, writing functions is a good tool to have at your disposal.
 
@@ -420,7 +420,7 @@ There are two files:
 
 1. `prcpCA.rds` is a data frame with 432 points containing precipitation information. The columns `X` and `Y` give the coordinates of the station projected in California Albers [EPSG:3310](https://epsg.io/3310) with units in meters. We want to use the `ANNUAL` column which is total annual precipitation at that point in mm.
 
-2. `gridCA.rds` is data frame with two columns `X` and `Y` that represent an empty grid of cells that we will interpolate the precip values into like we did with `meuse.grid` above. The spacing is 10x10 km for each point.
+2. `gridCA.rds` is data frame with two columns `X` and `Y` that represent an empty grid of cells that we will interpolate the precip values into like we did with `meuse.grid2` above. The spacing is 10x10 km for each point.
 
 ```{r}
 # precip point data

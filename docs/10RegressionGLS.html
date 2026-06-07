@@ -351,6 +351,22 @@ window.Quarto = {
   <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -372,7 +388,7 @@ window.Quarto = {
   <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis">Analysis</a></li>
   <li><a href="#interpretation" id="toc-interpretation" class="nav-link" data-scroll-target="#interpretation">Interpretation</a></li>
   </ul></li>
-  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your work</a></li>
+  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your Work</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/10RegressionGLS.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -772,7 +788,7 @@ Note
 </section>
 </section>
 <section id="your-work" class="level2">
-<h2 class="anchored" data-anchor-id="your-work">Your work</h2>
+<h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
 <p>The joy of simulated data is, of course, that we know the real answer going in. We knew that <span class="math inline">\(y=\beta_0 + \beta_1x + \epsilon\)</span> and we knew that the residual term was spatially autocorrelated. Obviously, that’s a luxury we don’t have when making inference about data we collect.</p>
 <p>The file <code>birdDiv.csv</code> has data on bird diversity and plant community diversity and coordinates for 64, 1-ha plots across the Colorado Plateau and Mogollon Rim region of northern Arizona (roughly Flagstaff east to the New Mexico border). The coordinates are UTM Zone 12N, most likely NAD83 (EPSG:26912), and are in meters.</p>
 <p>A note on the diversity values: they are non-integer and range from 3.16 to 12.95 for birds and 3.70 to 8.14 for plants. These are not raw species counts. They are likely a diversity index – Shannon, Fisher’s alpha, or similar – but the original source and exact units have been lost. Higher values indicate greater diversity in both cases, and the relative patterns across plots are interpretable even if the absolute values are not.</p>
@@ -782,7 +798,7 @@ Note
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>A note on data provenance
+<span class="screen-reader-only">Warning</span>A Note on Data Provenance
 </div>
 </div>
 <div class="callout-body-container callout-body">

@@ -16,12 +16,12 @@ library(tidyterra)
 ## -----------------------------------------------------------------------------
 #| warning: false
 #| message: false
-data(meuse.all)
-meuse.all$logLead <- log(meuse.all$lead)
-meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+meuse2 <- readRDS("../data/meuse2.Rds")
+meuse2$logLead <- log(meuse2$lead)
+meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
-meuse.grid <- readRDS("../data/meuse.grid.Rds")
+meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
 
 
 ## -----------------------------------------------------------------------------
@@ -33,16 +33,16 @@ ggplot(data = meuse_sf) +
 
 
 ## -----------------------------------------------------------------------------
-logLeadTPSmodel <- Tps(x = meuse.all[,2:3], Y = meuse.all$logLead)
+logLeadTPSmodel <- Tps(x = meuse2[,1:2], Y = meuse2$logLead)
 logLeadTPSmodel
 
 
 ## -----------------------------------------------------------------------------
-# Predict the model over all the coordinates in meuse.grid
-logLeadPreds <- c(predict(object=logLeadTPSmodel, x = meuse.grid[,1:2]))
+# Predict the model over all the coordinates in meuse.grid2
+logLeadPreds <- c(predict(object=logLeadTPSmodel, x = meuse.grid2[,1:2]))
 # Store in a data.frame with the x,y coordinates
-logLeadTPS <- data.frame(x = meuse.grid[,1],
-                         y = meuse.grid[,2],
+logLeadTPS <- data.frame(x = meuse.grid2[,1],
+                         y = meuse.grid2[,2],
                          logLead=logLeadPreds)
 # And into SpatRaster
 logLeadTPS_rast <- rast(logLeadTPS, crs=crs(meuse_sf))
@@ -56,7 +56,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
-obs <- meuse.all$logLead
+obs <- meuse2$logLead
 preds <- extract(logLeadTPS_rast, meuse_sf) %>% pull(logLead)
 rsq <- cor(obs,preds)^2
 rmse <- sqrt(mean((preds - obs)^2))
@@ -74,27 +74,27 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
-n <- nrow(meuse.all)
+n <- nrow(meuse2)
 rows4test <- sample(x = 1:n,size = n*0.2)
-meuseTest <- meuse.all[rows4test,]
-meuseTrain <- meuse.all[-rows4test,]
+meuseTest <- meuse2[rows4test,]
+meuseTrain <- meuse2[-rows4test,]
 
 # Note meuseTrain here
-logLeadTPSmodel <- Tps(x = meuseTrain[,2:3], Y = meuseTrain$logLead)
+logLeadTPSmodel <- Tps(x = meuseTrain[,1:2], Y = meuseTrain$logLead)
 logLeadTPSmodel
 
-# Predict the model over all the coordinates in meuse.grid
-logLeadPreds <- c(predict(object=logLeadTPSmodel, x = meuse.grid[,1:2]))
+# Predict the model over all the coordinates in meuse.grid2
+logLeadPreds <- c(predict(object=logLeadTPSmodel, x = meuse.grid2[,1:2]))
 # Store in a data.frame with the x,y coordinates
-logLeadTPS <- data.frame(x = meuse.grid[,1],
-                         y = meuse.grid[,2],
+logLeadTPS <- data.frame(x = meuse.grid2[,1],
+                         y = meuse.grid2[,2],
                          logLead=logLeadPreds)
 # And into SpatRaster
 logLeadTPS_rast <- rast(logLeadTPS, crs=crs(meuse_sf))
 
 # Look at skill on withheld data. Note meuseTest:
 obs <- meuseTest$logLead
-preds <- extract(logLeadTPS_rast, meuseTest[,2:3]) %>% pull(logLead)
+preds <- extract(logLeadTPS_rast, meuseTest[,1:2]) %>% pull(logLead)
 rsq <- cor(obs,preds)^2
 rmse <- sqrt(mean((preds - obs)^2))
 c(rsq = rsq, rmse = rmse)

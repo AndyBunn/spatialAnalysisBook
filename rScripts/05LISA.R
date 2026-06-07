@@ -11,8 +11,8 @@ library(gstat)
 
 
 ## -----------------------------------------------------------------------------
-data(meuse.all)
-meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+meuse2 <- readRDS("../data/meuse2.Rds")
+meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 meuse_sf$log_lead <- log(meuse_sf$lead)
 

@@ -133,7 +133,8 @@ ggplot(redwoodK, mapping = aes(x=r, ymin = lo-pi*r^2, ymax=hi-pi*r^2)) +
   geom_line(mapping = aes(y=theo-pi*r^2),col="red", linetype="dashed") +
   geom_line(mapping = aes(y=obs-pi*r^2)) +
   labs(y=expression(K(r) - pi~r^2), x = "r") +
-  scale_x_continuous(expand = c(0,0))
+  ylim(-0.05,0.05) +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------

@@ -261,7 +261,7 @@ The scenario where OLS can be truly biased (not just inefficient) is worth flagg
 
 Finally, we did it right, and that should be satisfying. What would have happened if $\beta_1$ had been smaller? That is, what if $y$ was made up of more noise and less $x$? E.g., $y=\beta_0 + 0.5(\beta_1)x + 2(\epsilon)$? This model, with `r n` points, should be pretty robust on the simple hypothesis test on the slope (H$_1$: $\beta_1 \neq 0$) but we know that parameter estimation is inefficient with autocorrelated residuals, so having clean residuals and good parameter estimation is important.
 
-## Your work
+## Your Work
 The joy of simulated data is, of course, that we know the real answer going in. We knew that $y=\beta_0 + \beta_1x + \epsilon$ and we knew that the residual term was spatially autocorrelated. Obviously, that's a luxury we don't have when making inference about data we collect.
 
 The file `birdDiv.csv` has data on bird diversity and plant community diversity and coordinates for 64, 1-ha plots across the Colorado Plateau and Mogollon Rim region of northern Arizona (roughly Flagstaff east to the New Mexico border). The coordinates are UTM Zone 12N, most likely NAD83 (EPSG:26912), and are in meters.
@@ -270,7 +270,7 @@ A note on the diversity values: they are non-integer and range from 3.16 to 12.9
 
 ::: {.callout-warning}
 
-## A note on data provenance
+## A Note on Data Provenance
 
 This dataset is a good reminder to document your data sources carefully and immediately. The coordinates, spatial extent, plot size, and biological variables here are all internally consistent and ecologically plausible, but the original source has been lost, making it impossible to properly cite, verify the methods, or understand the diversity metric. This happens more easily than you might think: a dataset downloaded for a class exercise, renamed, reformatted, and re-used a few years later can quickly become an orphan with no traceable origin. Get in the habit of keeping a README alongside any dataset you download, noting the source, date accessed, and any transformations you applied.
 
