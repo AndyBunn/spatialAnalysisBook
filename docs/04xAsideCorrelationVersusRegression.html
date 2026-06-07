@@ -332,6 +332,22 @@ window.Quarto = {
   <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -379,7 +395,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="why-this-matters">Why This Matters</h2>
 <p>Before we start talking about spatial autocorrelation, we need to talk about correlation and regression. Not because you haven’t seen them before, but because the two concepts get conflated constantly by students – but also by people who really should know better.</p>
 <p>The conflation has a tell. It looks like this: someone makes a scatter plot, right-clicks on it in Excel, and adds a “best fit line.” They didn’t think about whether a line was appropriate. They didn’t ask what question the line is answering. They just added it because it was there. Please do not do this. A scatter plot is complete without a regression line. Adding one implies something about direction, prediction, and causation that you may not actually mean.</p>
-<p>One more thing before we start. This aside is about linear association. Pearson correlation measures the strength of a linear relationship between two variables. Linear regression models that relationship with a line. If the underlying relationship is curved, both will mislead you in their own ways – correlation will understate the association and the regression line will be a poor summary of the data. That is a real limitation and worth knowing, but it is a topic for another day. Everything that follows assumes linearity.</p>
+<p>One more thing before we start. This aside is about linear association. Pearson correlation measures the strength of a linear relationship between two variables. Linear regression models that relationship with a line. If the underlying relationship is curved, both will mislead you in their own ways. Correlation will understate the association and the regression line will be a poor summary of the data. That is a limitation and worth knowing, but it is a topic for another day. Everything that follows assumes linearity.</p>
 </section>
 <section id="here-is-some-data" class="level2">
 <h2 class="anchored" data-anchor-id="here-is-some-data">Here is Some Data</h2>
@@ -470,7 +486,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="regression-direction-and-causality">Regression, Direction, and Causality</h2>
 <p>When you write <span class="math inline">\(y = \beta_0 + \beta_1 x + \epsilon\)</span>, you are not just describing an association. You are saying that <span class="math inline">\(x\)</span> belongs on the right side of the equation and <span class="math inline">\(y\)</span> belongs on the left. That is a claim about structure. It is, at minimum, a claim that you have thought about which variable might be driving which.</p>
 <p>This is why regression gets associated with causality even though it cannot establish it. A regression model is consistent with a causal interpretation, but it does not require one and it does not prove one. Two variables can be strongly related through a common cause, through confounding, or through coincidence, and a regression model will fit them all the same way.</p>
-<p>There is a real and ongoing debate about this in statistics. For decades the discipline largely avoided causal language, treating everything as “association” and leaving causal inference to subject matter experts. Judea Pearl, among others, argued forcefully that this was a mistake – that researchers need explicit tools for thinking about causality, not just instructions to be careful. The counter-argument is that statistics summarizes data, and causal claims require assumptions about the world that go beyond what data alone can support. Both sides have a point.</p>
+<p>There is an ongoing debate about this in statistics. For decades the discipline largely avoided causal language, treating everything as “association” and leaving causal inference to subject matter experts. Judea Pearl, among others, argued forcefully that this was a mistake saying that researchers need explicit tools for thinking about causality, not just instructions to be careful. The counter-argument is that statistics summarizes data, and causal claims require assumptions about the world that go beyond what data alone can support. Both sides have a point.</p>
 <p>Where does that leave you? Here: when you decide to regress <span class="math inline">\(y\)</span> on <span class="math inline">\(x\)</span> rather than <span class="math inline">\(x\)</span> on <span class="math inline">\(y\)</span>, you are making a choice that should reflect your understanding of the system. Correlation requires no such choice. Regression does. And this is one more reason to think twice before adding a best fit line to a scatter plot. That line implies you have made the choice. If you have not thought about it, the line is doing work you did not authorize.</p>
 </section>
 <section id="the-mathematical-link-between-correlation-and-regression" class="level2">

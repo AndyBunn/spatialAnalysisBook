@@ -84,14 +84,14 @@ p1 + geom_point(aes(x=2,y=4,size=zhat_s0))
 
 
 ## -----------------------------------------------------------------------------
-data(meuse.all)
-glimpse(meuse.all)
-class(meuse.all)
-meuse.all$logLead <- log(meuse.all$lead)
+meuse2 <- readRDS("../data/meuse2.Rds")
+glimpse(meuse2)
+class(meuse2)
+meuse2$logLead <- log(meuse2$lead)
 # or for the tidyverse fans this is the same output
-meuse.all <- meuse.all %>% mutate(logLead = log(lead))
+meuse2 <- meuse2 %>% mutate(logLead = log(lead))
 # make into sf
-meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
 class(meuse_sf) # note change in class from data.frame to sf and data.frame
@@ -105,12 +105,12 @@ p2
 
 
 ## -----------------------------------------------------------------------------
-meuse.grid <- readRDS("../data/meuse.grid.Rds")
-head(meuse.grid)
+meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
+head(meuse.grid2)
 
 
 ## -----------------------------------------------------------------------------
-meuse_grid_sf <- st_as_sf(meuse.grid, 
+meuse_grid_sf <- st_as_sf(meuse.grid2, 
                           coords = c("x","y"), 
                           crs = st_crs(meuse_sf))
 meuse_grid_sf

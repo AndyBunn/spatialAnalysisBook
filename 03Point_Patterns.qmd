@@ -5,11 +5,9 @@ set.seed(1984)
 ```
 
 ## Big Idea
-Space matters: Spatial pattern lets us understand process. That is, knowing where things are 
-(and whether their locations are random, clustered, or repulsed) is the first step to 
-understanding the underlying mechanisms that put them there.
+Space matters: Spatial pattern lets us understand process. That is, knowing where things are (and whether their locations are random, clustered, or repulsed) is the first step to understanding the underlying mechanisms that put them there.
 
-We can quantify the pattern of points themselves or in the presence of an explanatory variable. 
+We can quantify the pattern of points themselves or in the presence of an explanatory variable.
 
 ## Reading
 Read chapter 7 in Bivand's book up to section 7.5 [@bivand2008pointpattern]. Also start reading through @fortin2016spatial as a great overall short chapter on spatial analysis. Don't worry about some of the details in there yet. We will revisit as we go along.
@@ -21,7 +19,7 @@ Before diving in, make sure you're comfortable with distance matrices. If you ne
 
 
 ## Packages
-We will use `spatstat`[@R-spatstat] for point pattern analysis and I've thrown in some tidyverse[@R-tidyverse] syntax as well. 
+We will use `spatstat`[@R-spatstat] for point pattern analysis and I've thrown in some tidyverse[@R-tidyverse] syntax as well.
 
 ```{r, message=FALSE}
 library(tidyverse)
@@ -29,11 +27,11 @@ library(spatstat)
 ```
 
 ## Point Patterns
-Point pattern analysis (PPA) is the study of the spatial arrangements of points in space. It fundamentally deals with whether or not points are randomly distributed, clumped, or repulsed from each other. 
+Point pattern analysis (PPA) is the study of the spatial arrangements of points in space. It fundamentally deals with whether or not points are randomly distributed, clumped, or repulsed from each other.
 
-PPA doesn't require any other measurement besides the location of points. The easiest way to think about this is to imagine a scatter plot of the points -- i.e., a simple point map of the locations. Quantifying the pattern of these points is the goal of the analysis and we do so over the boundary of the data which is called the bounding box, or the convex hull of the points.
+PPA doesn't require any other measurement besides the location of points. The easiest way to think about this is to imagine a scatter plot of the points (i.e., a simple point map of the locations). Quantifying the pattern of these points is the goal of the analysis and we do so over the boundary of the data which is called the bounding box, or the convex hull of the points.
 
-What we want to know is whether a bunch of points are randomly arranged or if they have some kind of spatial structure. We call a random pattern complete spatial randomness (CSR) and model it as a Poisson point process (which has convenient mathematical properties discussed in the reading). If a pattern doesn't look like CSR we are generally interested in whether the points are clumped or repulsed. But we can't just eyeball it -- brains make patterns where there are none. Thus, we'll look at two methods for determining CSR: kernel estimation and Ripley's K. As always we hope to make inference about process (e.g., contagion or competition) by understanding pattern.
+What we want to know is whether a bunch of points are randomly arranged or if they have some kind of spatial structure. We call a random pattern complete spatial randomness (CSR) and model it as a Poisson point process (which has convenient mathematical properties discussed in the reading). If a pattern doesn't look like CSR we are generally interested in whether the points are clumped or repulsed. But we can't just eyeball it. Our brains make patterns where there are none. Thus, we'll look at two methods for determining CSR: kernel estimation and Ripley's K. As always we hope to make inference about process (e.g., contagion or competition) by understanding pattern.
 
 Point patterns are a relatively simple form of spatial analysis but can really make clear concepts like clustering and uniformity.
 
@@ -172,9 +170,9 @@ We can test $\hat{K}$ against CSR which has a value of $K(r)=\pi r^2$ for a homo
 
 We can calculate an envelope of possible values of $K(r)$ in a Monte Carlo framework where the number of simulations specifies the significance level as $\alpha = 2/(1 + n)$ where $n$ is the number of simulations. If the observed function value lies outside the envelope we can reject the null hypothesis of CSR at the distance $r$. With the default of 99 simulations you have $\alpha = 2/(1+99) = 0.02$. 
 
-A heads up though. That significance level is technically only valid if you pick a single value of $r$ before looking at the data and test only there. In practice nobody does that -- you look at the whole curve. When you do that you are implicitly running many tests at once (one per value of $r$), which is the same problem as running a bunch of t-tests without correcting for multiple comparisons. Your true $\alpha$ is higher than advertised. The fix is to use `global=TRUE` in the `envelope` call, which builds the envelope based on the maximum deviation of each simulated curve across all $r$ values rather than pointwise. This gives you a single honest test of the whole curve at $\alpha = 1/(1 + n)$ with the default `nrank=1`. For a deeper treatment see @baddeley2014tests who go after this problem directly.
+A heads up though. That significance level is technically only valid if you pick a single value of $r$ before looking at the data and test only there. In practice nobody does that -- you look at the whole curve. When you do that you are implicitly running many tests at once (one per value of $r$), which is the same problem as running a bunch of t-tests without correcting for multiple comparisons. Your true $\alpha$ is higher than advertised. The fix is to use `global=TRUE` in the `envelope` call, which builds the envelope based on the maximum deviation of each simulated curve across all $r$ values rather than pointwise. This gives you a single test of the whole curve at $\alpha = 1/(1 + n)$ with the default `nrank=1`. For a deeper treatment see @baddeley2014tests who go after this problem directly.
 
-And even if you do use `global=TRUE` and get a clean test, keep in mind that a p-value only tells you whether the pattern is distinguishable from CSR -- not why. Two completely different processes can produce identical patterns, and a non-significant result doesn't mean the process is random, just that you couldn't detect structure with this data and this statistic. The goal is always to use pattern to think about process, not to collect p-values.
+And even if you do use `global=TRUE` and get a clean test, keep in mind that a p-value only tells you whether the pattern is distinguishable from CSR. It doesn't tell you why. Two different processes can produce identical patterns, and a non-significant result doesn't mean the process is random, just that you couldn't detect structure with this data and this statistic. The goal is always to use pattern to think about process, not to collect p-values.
 
 The `envelope` function is chatty by default and prints out information on the simulations as it runs them. In the code chunk below I'll quiet it down by setting the argument `verbose=FALSE`. If you leave it as the default value of `TRUE`, the markdown doc gets messy.
 
@@ -207,9 +205,9 @@ This shows intense clumping at all distances.
 Thus, the `japanesepines` are randomly distributed while the other two are clumped but in different ways. The `redwood` data are clumped out to a radius of a fifth of the bounding box while the `bei` data are clustered out as far as we can measure. Oh, and how far can we measure before running into edge effects?
 
 ### Distances and edges
-Edge effects are a perennial problem is spatial analysis. We will talk about them more as the quarter progresses but the question always nags at us: what's over the edge of the map? Edge effects arise because points outside the boundary can't be counted, right? And points near the edge have to be down weighted in some way because we have less information about them. When we do distance-based analysis we have to be conservative about edges and there are two conceptual ways of thinking about this. One, we can limit our analysis to short distances to reduce the number of edge cases. Two, we can try to correct for the edge effects. 
+Edge effects are a perennial problem is spatial analysis. The question always nags at us: what's over the edge of the map? Edge effects arise because points outside the boundary can't be counted, right? And points near the edge have to be down weighted in some way because we have less information about them. When we do distance-based analysis we have to be conservative about edges and there are two conceptual ways of thinking about this. One, we can limit our analysis to short distances to reduce the number of edge cases. Two, we can try to correct for the edge effects. 
 
-Look back the x-axis of the plots of $\hat K$ above. Note that the distances are much shorter than the span of the original data. Both the `japanesepines` and the `redwood` data are stored with the coordinate data on a scale from 0 to 1 (but the `japanesepines` data are on a 5.7 x 5.7 m square as discussed above) and the `bei` data are in a 1000 x 500 m rectangle. The plots above truncate at distances of 1/4 the shortest span of the data. This is a default in `spatstat` and fairly conservative. We can override that using the `rmax` argument. E.g., we can look at distances up to 50% of the study area.
+Look back the x-axis of the plots of $\hat K$ above. Note that the distances are much shorter than the span of the original data. Both the `japanesepines` and the `redwood` data are stored with the coordinate data on a scale from 0 to 1 (but the `japanesepines` data are on a 5.7 x 5.7 m square as discussed above) and the `bei` data are in a 1000 x 500 m rectangle. The plots above truncate at distances of 1/4 the shortest span of the data. This is a default in `spatstat` and fairly conservative. We can override that using the `rmax` argument. E.g., we could look at distances up to 50% of the study area.
 
 ```{r}
 plot(envelope(redwood, fun = Kest, nsim = 100,
@@ -228,7 +226,7 @@ plot(japanesepinesK2)
 ```
 
 ### L hat
-I've dragged you through $\hat K$ and the plots above and now I'm going to tell you that I'm not a fan of the way the $\hat K(r)$ as a function of $r$ looks. I think they are hard to interpret because the random expectation is non-linear and that is hard to visualize. I prefer looking them transformed so that the y-axis and x-axis are on a 1:1 scale. This is referred to as $L$ and is a simple transformation of the $K$ function:
+I've dragged you through $\hat K$ and the plots above and now I'm going to tell you that I'm not a fan of the way the $\hat K(r)$ as a function of $r$ looks. I think those plots are hard to interpret because the random expectation is non-linear and that is hard to visualize. I prefer looking them transformed so that the y-axis and x-axis are on a 1:1 scale. This is referred to as $L$ and is a simple transformation of the $K$ function:
 
 $$L(r) = \sqrt{(K(r)/\pi} $$
 
@@ -247,7 +245,8 @@ ggplot(redwoodK, mapping = aes(x=r, ymin = lo-pi*r^2, ymax=hi-pi*r^2)) +
   geom_line(mapping = aes(y=theo-pi*r^2),col="red", linetype="dashed") +
   geom_line(mapping = aes(y=obs-pi*r^2)) +
   labs(y=expression(K(r) - pi~r^2), x = "r") +
-  scale_x_continuous(expand = c(0,0))
+  ylim(-0.05,0.05) +
+  theme_minimal()
 ```
 
 I find this plot to be the simplest to interpret (it's also the way I was taught which influences that probably), the $L$ function next, and the raw $K$ function the hardest. But I tend to use $L$ plots because they are bundled in `spatstat` and redoing all the plots takes more work.
@@ -319,9 +318,9 @@ longleaf2L <- envelope(longleaf2, "Lcross",
 plot(longleaf2L)
 ```
 
-This shows the cross L-function between saplings and adults -- the L-function is based on distances from points from one age class to points from the other class. Thus the plot shows the L-function for saplings to adult pairs.This suggests that while there is within class attraction (the clustering seen previously), there is between class repulsion (inhibition). Can you put on your ecologist hat and figure out why this might be happening?  
+This shows the cross L-function between saplings and adults. The L-function is based on distances from points from one age class to points from the other class. Thus, the plot shows the L-function for saplings to adult pairs.This suggests that while there is within class attraction (the clustering seen previously), there is between class repulsion (inhibition). Can you put on your ecologist hat and figure out why this might be happening?  
 
-## Roll your own
+## Roll Your Own
 You can create your own point pattern by clicking on the screen and then plotting the kernel density and Ripley's K (or L). Do this several times and make different types of patterns (uniform, clumped, CSR). This is a fascinating exercise because it gives you a good idea of what CSR looks like in practice.
 
 ```{r, eval=FALSE}
@@ -336,7 +335,7 @@ plot(env)
 
 Note that you can just do this on your own. No need to show me in your assignment. To put this part of "Your Work" into your knitted doc for me to see would take some work because the `clickppp` function is interactive. You'd have to make `foo` by clicking and then save it using something like `saveRDS` and then reading it into your doc with `readRDS`. It's overkill to do that amount of work. So just do this on your own. 
 
-## More than trees
+## More Than Trees
 The `spatstat` library has a ludicrous number of data sets to work with. If you are not interested in trees for some reason (weird, I know) you can look at point patterns for all kinds of things: anemones, ants, gorilla nests, mycorrhizal fungi, waterstriders. Type `demo(data)` at the prompt to see all the `spatstat` data sets if you want to get an appreciation for all the different types of point pattern data that exist in `spatstat`. 
 
 ```{r,eval=FALSE}
@@ -347,7 +346,7 @@ Note the 3d data as well as the linear and dendritic point pattern data. We aren
 
 ## Your Work
 
-### Simulated data
+### Simulated Data
 I'm going to create a point pattern object (class `ppp`) from the "D" pattern in `simDat` above. I gave it units of kilometers but they could be anything you like ("feet", "furlongs", etc.). Anticipate what the L (or K) function will look like for this point pattern and then plot it. Is it what you thought it would look like? Go ahead and look at other patterns (e.g., Is "B" different from "C"?).
 
 ```{r, eval=F}
@@ -438,8 +437,7 @@ Dmat <- as.matrix(dist(cbind(x,y)))
 Dmat
 ```
 
-Now, extract all the elements by combining the upper and lower triangles of the matrix,
-i.e., all `d_{ij}` where `i!=j`
+Now, extract all the elements by combining the upper and lower triangles of the matrix, i.e., all `d_{ij}` where `i!=j`
 
 ```{r}
 Dvec <- c(Dmat[upper.tri(Dmat)],Dmat[lower.tri(Dmat)])

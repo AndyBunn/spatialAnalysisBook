@@ -24,6 +24,8 @@ todo.txt
 .DS_Store
 data.zip
 .positai
+rScripts/buildMeuseCovariates.R
+data/ESA_WorldCover_meuse.tif
 
 # docs is kept for GitHub Pages
 # _freeze is kept so Quarto can use cached outputs on GitHub

@@ -138,8 +138,8 @@ results %>%
 
 
 ## ----message=FALSE------------------------------------------------------------
-data(meuse.all)
-meuse_sf <- st_as_sf(meuse.all, coords=c("x","y"), crs=28992)
+meuse2 <- readRDS("../data/meuse2.Rds")
+meuse_sf <- st_as_sf(meuse2, coords=c("x","y"), crs=28992)
 
 test_m_idx                 <- sample(1:nrow(meuse_sf), size=round(nrow(meuse_sf) * 0.25))
 meuse_sf$split             <- "train"

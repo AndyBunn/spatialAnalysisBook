@@ -322,6 +322,22 @@ div.csl-indent {
   <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -434,7 +450,7 @@ Geodetic CRS:  WGS 84
 <p>A few things worth knowing about <code>sf</code> objects before we move on:</p>
 <p><strong>Generic functions work on them.</strong> <code>plot()</code>, <code>summary()</code>, and <code>print()</code> all know what to do with an <code>sf</code> object. We’ll talk more about how R handles this in the <a href="02xAsideMethodsAndGenerics.html">Methods and Generics aside</a>, but the short version is: the same function call does sensible things regardless of what you hand it.</p>
 <p><strong>The geometry column sticks around.</strong> When you use <code>dplyr</code> verbs like <code>filter()</code> or <code>select()</code> on an <code>sf</code> object, the geometry column comes along for the ride. You don’t have to do anything special.</p>
-<p><strong>CRS matters.</strong> If you try to do spatial operations on two <code>sf</code> objects with different coordinate systems, you’ll get an error. Good. R is catching a real problem. Transform with <code>st_transform()</code> when you need to match them up.</p>
+<p><strong>CRS matters.</strong> If you try to do spatial operations on two <code>sf</code> objects with different coordinate systems, you’ll get an error. Good. R is catching a problem. Transform with <code>st_transform()</code> when you need to match them up.</p>
 </section>
 <section id="rasters-with-terra" class="level2">
 <h2 class="anchored" data-anchor-id="rasters-with-terra">Rasters with <code>terra</code></h2>

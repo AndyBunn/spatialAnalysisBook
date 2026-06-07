@@ -27,7 +27,7 @@ The basic idea is a two-step process. First, fit an OLS regression of your respo
 
 $$\hat{Z}_{RK}(s_0) = \hat{Z}_{OLS}(s_0) + \hat{\varepsilon}(s_0)$$
 
-The OLS surface captures the broad, covariate-driven trend: organic matter is higher near the river, lower on certain soil types, and so on. In geostatistics, this large-scale spatially varying mean is called the trend, not a trend over time but a systematic variation across space driven by covariates. The kriged residual surface captures the local spatial deviations from that trend, the pockets where organic matter is a bit higher or lower than the covariates alone would predict, based on what we observe at nearby sample points. Adding them together gives a prediction that is informed by both the large-scale drivers and the local spatial structure.
+The OLS surface captures the broad, covariate-driven trend: organic matter is higher near the river and falls off with distance. In geostatistics, this large-scale spatially varying mean is called the trend, not a trend over time but a systematic variation across space driven by covariates. The kriged residual surface captures the local spatial deviations from that trend, the pockets where organic matter is a bit higher or lower than the covariates alone would predict, based on what we observe at nearby sample points. Adding them together gives a prediction that is informed by both the large-scale drivers and the local spatial structure.
 
 The residuals from the OLS model represent the spatial variation that the covariates couldn't explain. If those residuals are spatially autocorrelated (and they often are), kriging can extract useful information from their spatial structure. In a standard OLS setting, autocorrelated residuals are a problem because they violate the independence assumption. In RK, they're an opportunity.
 
@@ -39,80 +39,52 @@ If you want a refresher on how to fit an OLS model and then apply it to new data
 
 ## Back to the Netherlands
 
-Let's look at a real-world example of RK using, you guessed it, the Meuse River data. I'm pretty sick of these data but they are familiar to us. We've used `meuse.all` quite a bit and we've used `meuse.grid` as an empty grid to interpolate into. But `meuse.grid` has other variables in it that we haven't used yet, and some of those overlap with `meuse.all`. That overlap is what makes RK possible here.
+Let's look at a real-world example of RK using, you guessed it, the Meuse River data. I'm pretty sick of these data but they are familiar to us. We've spent several chapters working with `meuse2` (the point measurements) and `meuse.grid2` (the prediction grid). Now we're going to use `meuse.grid2` for something beyond just holding target coordinates - we're going to pull covariates from it directly onto our point data. That's what makes RK possible here.
 
 ### The Data
 
-```{r}
-data(meuse.all)
-str(meuse.all)
-```
-We know all too well by now that `meuse.all` is a `data.frame` with `r nrow(meuse.all)` point measurements of `r ncol(meuse.all)` variables. 
-
+`meuse2` has coordinates and metal concentrations. `meuse.grid2` has terrain variables, land cover, and river distance at every grid cell. To build a regression model for organic matter at the sample points, we need `river_dist_m` at the point locations. `st_join()` with `st_nearest_feature` handles that - it matches each sample point to its nearest grid cell and pulls the column across.
 
 ```{r}
-meuse.grid <- readRDS("data/meuse.grid.Rds")
-str(meuse.grid)
+meuse2 <- readRDS("data/meuse2.Rds")
+meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
 ```
 
-And `meuse.grid` is a `data.frame` with `r nrow(meuse.grid)` points on a grid and `r ncol(meuse.grid)` variables. 
+`meuse2` has `r nrow(meuse2)` point measurements and `meuse.grid2` has `r nrow(meuse.grid2)` grid cells. See the [appendix](A1MeuseData.qmd) for full variable descriptions.
 
-Three variables are shared between `meuse.all` and `meuse.grid`: distance to the river (normalized 0 to 1), soil type (three classes), and flooding frequency class (also three classes). Because we have these at every grid cell, we can build a regression model using them as predictors and then apply that model across the whole study area. See `?meuse.all` for details on the variables.
+We'll model `om`, percent organic matter, as a function of distance to the river. Distance to the river has a correlation of about -0.58 with organic matter - the strongest of any variable in `meuse.grid2`. Other candidates (elevation, slope, TWI, soil type, flooding frequency) either don't add much once distance is in the model or are largely redundant with it. Simple and defensible. We'll first do this naively with OLS alone, then add the kriging step to get RK.
 
-We'll skip cadmium, zinc, and lead this time and model `om`, percent organic matter in the soil, as a function of `dist` and `soil`. We'll first do this naively with OLS alone, and then add the kriging step to get RK.
+### Make data as `sf` and extract covariates
 
-
-### Make data as `sf` and clean it up
-First we will make both data sets into `sf` objects.
+Make both objects into `sf`, then use `st_join()` with `st_nearest_feature` to pull `river_dist_m` from the nearest grid cell onto each sample point.
 
 ```{r}
-meusePoints_sf <- st_as_sf(meuse.all, coords = c("x","y"), crs=28992)
-meuseGrid_sf <- st_as_sf(meuse.grid, coords = c("x","y"), crs=28992)
-meusePoints_sf
-meuseGrid_sf
+meusePoints_sf <- st_as_sf(meuse2, coords = c("x","y"), crs=28992)
+meuseGrid_sf   <- st_as_sf(meuse.grid2, coords = c("x","y"), crs=28992)
+
+covars_sf <- meuseGrid_sf %>% select(river_dist_m)
+meusePoints_sf <- st_join(meusePoints_sf, covars_sf, join = st_nearest_feature)
 ```
 
-One thing to note here is that the `dist.m` column in `meusePoints_sf` is the distance to the river in meters while `meuseGrid_sf` has distance in relative units (scaled 0 to 1). To make life easier we will add the relative distances to the point data using the `dist` values from `meuseGrid_sf`.
+Distance to the river is right-skewed - a handful of points are far from the channel and most are close. Log-transforming it spreads out the short-distance end of the scale where most of the variation in organic matter happens.
 
 ```{r}
-# get the relative distance from meuseGrid_sf and add it to meusePoints_sf
-meuseGrid_dist_sf <- meuseGrid_sf %>% select(dist)
-# join the two objects by the nearest point
-meusePoints_sf <- st_join(meusePoints_sf, meuseGrid_dist_sf, join = st_nearest_feature)
-# note that we now have relative dist for each point now in the column `dist`
-meusePoints_sf
-```
-
-We will go a step further and use the square root of the distance to the river as a predictor. This gives us a little more leverage on very short distances by stretching out that end of the scale.
-
-```{r}
-meusePoints_sf <- meusePoints_sf %>% mutate(sqrt_dist = sqrt(dist))
-meuseGrid_sf <- meuseGrid_sf %>% mutate(sqrt_dist = sqrt(dist))
-```
-
-The column `om` in `meusePoints_sf` has two missing values. I'm going to drop those rows to keep things clean. Note the new row count after you run this.
-
-```{r}
-meusePoints_sf <- meusePoints_sf %>% drop_na(om)
-```
-
-And we need soil type as a `factor` since it's categorical.
-
-```{r}
-meusePoints_sf <- meusePoints_sf %>% mutate(soil = factor(soil))
-meuseGrid_sf <- meuseGrid_sf %>% mutate(soil = factor(soil))
+meusePoints_sf <- meusePoints_sf %>%
+  mutate(log_dist = log(river_dist_m)) %>%
+  drop_na(om)
+meuseGrid_sf <- meuseGrid_sf %>%
+  mutate(log_dist = log(river_dist_m))
 ```
 
 ### OLS
-We'll start with a simple OLS model of organic matter ($y$) as a function of the square root of distance to the river ($x_1$) and soil type ($x_2$): $y=\beta_0 + \beta_1x_1+\beta_2x_2$, with parameters estimated by OLS.
+A simple OLS model: $om = \beta_0 + \beta_1 \log(\text{river\_dist}) + \varepsilon$.
 
 ```{r}
-om_lm <- lm(om~sqrt_dist+soil, data=meusePoints_sf)
+om_lm <- lm(om ~ log_dist, data = meusePoints_sf)
 summary(om_lm)
-anova(om_lm)
 ```
 
-Both distance and soil type are useful predictors of organic matter. Now, after you learn about the pitfalls of using OLS with spatial data you'll be appalled that I'm running this model without checking for autocorrelation in the residuals. But suppress your horror for now, because all we want to do here is show what a purely regression-based prediction surface looks like before we improve on it. Note the below we do the prediction and then make a raster of the output using the function `sf_2_rast` from the prior weeks.
+Distance to the river explains about half the variance in organic matter. Now, after you learn about the pitfalls of using OLS with spatial data you'll be appalled that I'm running this model without checking for autocorrelation in the residuals. But suppress your horror for now, because all we want to do here is show what a purely regression-based prediction surface looks like before we improve on it.
 
 ```{r}
 meuseGrid_sf$omHat <- predict(om_lm, newdata=meuseGrid_sf)
@@ -140,21 +112,21 @@ foo <- spdep::moran.test(residuals(om_lm), spdep::nb2listw(w))
 The prediction is reasonable, but the residuals are spatially autocorrelated: Moran's I on a four-neighbor object is `r round(foo$estimate[1],2)`, significantly greater than zero. That matters, and we'll come back to it in the GLS module. 
 
 ### RK Application
-The OLS model used distance and soil type but ignored everything we know about the spatial structure of organic matter. We threw out the variogram. And we know from the Moran's I above that the residuals are not spatially independent, meaning there is structure left over that the covariates didn't capture. That leftover structure is exactly what kriging is designed to exploit.
+The OLS model used distance to the river but ignored everything we know about the spatial structure of organic matter. We threw out the variogram. And we know from the Moran's I above that the residuals are not spatially independent, meaning there is structure left over that distance alone didn't capture. That leftover structure is exactly what kriging is designed to exploit.
 
 Let's look at the variogram of `om` before conditioning on anything
 
 ```{r}
-omVar <- variogram(om~1, meusePoints_sf)
+omVar <- variogram(om ~ 1, meusePoints_sf)
 plot(omVar, pch=20, cex=1.5, col="black",
      ylab=expression("Semivariance ("*gamma*")"),
      xlab="Distance (m)", main = "% Soil Organic Matter")
 ```
 
-Now we set up a `gstat` object that includes the regression formula. When we call `variogram` on this object, we get the variogram of the OLS residuals, not of `om` itself. The residuals here are just the familiar $e_i = om_i - \hat{om}_i$ at each sample point: how much higher or lower is the observed organic matter than what distance and soil type alone would predict? We're asking whether those leftover deviations have spatial structure, or whether they're just noise. Compare the two variogram plots and you'll notice the residual variogram has less total variance, which is the variance the covariates explained away. What remains still has spatial structure, which means kriging has something to work with.
+Now we set up a `gstat` object that includes the regression formula. When we call `variogram` on this object, we get the variogram of the OLS residuals, not of `om` itself. The residuals here are just the familiar $e_i = om_i - \hat{om}_i$ at each sample point: how much higher or lower is the observed organic matter than what log distance alone would predict? We're asking whether those leftover deviations have spatial structure, or whether they're just noise. Compare the two variogram plots and you'll notice the residual variogram has less total variance, which is the variance the covariates explained away. What remains still has spatial structure, which means kriging has something to work with.
 
 ```{r}
-omGstat <- gstat(id = "omModel", formula = om ~ sqrt_dist + soil, 
+omGstat <- gstat(id = "omModel", formula = om ~ log_dist,
                  data = meusePoints_sf)
 omGstat_obsVariogram <- variogram(omGstat)
 plot(omGstat_obsVariogram, pch=20, cex=1.5, col="black",
@@ -175,7 +147,7 @@ plot(omGstat_obsVariogram, omGau_fittedVariogram, pch=20, cex=1.5, col="black",
      xlab="Distance (m)", main = "Model Residuals")
 ```
 
-Now we update the `gstat` object with the fitted variogram model and predict across the grid. Under the hood, `predict` is doing three things at every grid cell. First, it evaluates the OLS model by plugging `sqrt_dist` and `soil` into $\hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2$ to get the covariate-driven trend at that location. Second, it kriging the residuals: it looks at the OLS residuals at the nearby sample points ($e_i = om_i - \hat{om}_i$) and uses the fitted variogram to estimate what the residual would be at the prediction location. Third, it adds the two together. The first part handles the large-scale pattern that distance and soil type explain. The second part handles the local spatial deviations that the covariates missed.
+Now we update the `gstat` object with the fitted variogram model and predict across the grid. Under the hood, `predict` is doing three things at every grid cell. First, it evaluates the OLS model by plugging `log_dist` into $\hat{\beta}_0 + \hat{\beta}_1 x_1$ to get the covariate-driven trend at that location. Second, it kriges the residuals: it looks at the OLS residuals at the nearby sample points ($e_i = om_i - \hat{om}_i$) and uses the fitted variogram to estimate what the residual would be at the prediction location. Third, it adds the two together. The first part handles the large-scale gradient in organic matter driven by distance to the river. The second part handles the local spatial deviations that distance alone couldn't predict.
 
 ```{r}
 # Update the gstat object with the variogram:
@@ -222,7 +194,7 @@ plot_grid(top_row, eq, p_rk, nrow=3, rel_heights=c(1, 0.1, 1))
 
 ```
 
-The OLS surface is smooth: it varies only with distance and soil type. The kriged residual surface shows local corrections, positive where nearby samples were higher than the OLS predicted and negative where they were lower. The RK surface is the sum, which has the broad shape of the OLS prediction but with local detail added by the kriged residuals.
+The OLS surface is smooth: it varies only with log distance to the river. The kriged residual surface shows local corrections, positive where nearby samples were higher than the OLS predicted and negative where they were lower. The RK surface is the sum, which has the broad shape of the OLS prediction but with local detail added by the kriged residuals.
 
 And the variance surface around the RK predictions:
 
@@ -235,31 +207,23 @@ ggplot() + geom_spatraster(data = omHatVar_rast,
   labs(fill = "Organic Matter SD (%)")
 ```
 
-Compare the RK prediction surface to the OLS surface above. The overall patterns driven by distance and soil type are still there, because those came from the regression, but the spatial detail is richer because the kriged residuals filled in structure the covariates missed. Whether the added complexity translates to better predictive skill is a question for cross-validation.
+Compare the RK prediction surface to the OLS surface above. The overall gradient driven by distance to the river is still there, because that came from the regression, but the spatial detail is richer because the kriged residuals filled in structure that distance alone missed. Whether the added complexity translates to better predictive skill is a question for cross-validation.
 
 ## Your Work
 Use `gstat.cv` to perform cross-validation on both the OLS-only model (`omGstat`) and the full RK model (`omGstat_w_variogram`). Compute RMSE and R$^2$ for each. Did RK improve the predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?
 
+This was a simple model using `om ~ log_dist`. What else might help?
+
 ```{r, eval=FALSE,echo=FALSE,message=FALSE, warning=FALSE}
 # the rk
-out <- gstat.cv(object=omGstat_w_variogram,nfold=10)
+out <- gstat.cv(object=omGstat_w_variogram)
 #r2
 cor(out$observed, out$observed - out$residual)^2
 cor(out$observed, out$omModel.pred)^2 # same
 
 # the lm
-out2 <- gstat.cv(omGstat,nfold=10)
+out2 <- gstat.cv(omGstat)
 #r2
 cor(out2$observed, out2$observed - out2$residual)^2
 cor(out2$observed, out2$omModel.pred)^2 # same
-
-# oh! by fold. this is better prob
-out@data %>% group_by(fold) %>% summarise(r2=cor(observed, omModel.pred)^2) %>% summarise(mean(r2))
-out2@data %>% group_by(fold) %>% summarise(r2=cor(observed, omModel.pred)^2) %>% summarise(mean(r2))
-
-# same as lm?
-library(caret)
-trainControl <- trainControl(method = "cv", number = 10)
-fit <- train(om~sqrt_dist+soil,data=meusePoints_sf, trControl = trainControl, method = "lm")
-fit
 ```

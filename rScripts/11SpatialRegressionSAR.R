@@ -93,38 +93,47 @@ AIC(semFit, slmFit)
 
 
 ## ----eval=FALSE---------------------------------------------------------------
-# data(meuse.all)
-# meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
-#   st_set_crs(28992)
+# meuse2      <- readRDS("../data/meuse2.Rds")
+# meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
+# meuse_sf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
 # meuse_sf$log_lead <- log(meuse_sf$lead)
+# # get river distance and flooding frequency from the grid
+# covars_sf <- st_as_sf(meuse.grid2, coords = c("x","y"), crs = 28992) %>%
+#   select(ffreq, river_dist_m)
+# meuse_sf <- st_join(meuse_sf, covars_sf, join = st_nearest_feature) %>%
+#   mutate(ffreq = factor(ffreq))
 
 
 ## ----echo=FALSE, eval=FALSE---------------------------------------------------
 # # --- instructor key ---
-# data(meuse.all)
-# meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
-#   st_set_crs(28992)
+# meuse2      <- readRDS("../data/meuse2.Rds")
+# meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
+# meuse_sf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
 # meuse_sf$log_lead <- log(meuse_sf$lead)
+# covars_sf <- st_as_sf(meuse.grid2, coords = c("x","y"), crs = 28992) %>%
+#   select(ffreq, river_dist_m)
+# meuse_sf <- st_join(meuse_sf, covars_sf, join = st_nearest_feature) %>%
+#   mutate(ffreq = factor(ffreq))
 # coords <- st_coordinates(meuse_sf)
 # 
 # nb_k8 <- knn2nb(knearneigh(coords, k = 8))
 # W <- nb2listw(nb_k8, style = "W")
 # 
 # # OLS
-# ols_lead <- lm(log_lead ~ dist + ffreq, data = as.data.frame(meuse_sf))
+# ols_lead <- lm(log_lead ~ river_dist_m + ffreq, data = as.data.frame(meuse_sf))
 # moran.test(residuals(ols_lead), W)  # significant
 # 
 # # LM tests -- expect LMerr to dominate
 # lm.LMtests(ols_lead, listw = W, test = "all")
 # 
 # # SEM
-# sem_lead <- errorsarlm(log_lead ~ dist + ffreq,
+# sem_lead <- errorsarlm(log_lead ~ river_dist_m + ffreq,
 #                        data = as.data.frame(meuse_sf), listw = W)
 # summary(sem_lead)
 # moran.test(residuals(sem_lead), W)  # should be clean
 # 
 # # SLM for comparison
-# slm_lead <- lagsarlm(log_lead ~ dist + ffreq,
+# slm_lead <- lagsarlm(log_lead ~ river_dist_m + ffreq,
 #                      data = as.data.frame(meuse_sf), listw = W)
 # summary(slm_lead)
 # 

@@ -46,7 +46,7 @@ A few things worth knowing about `sf` objects before we move on:
 
 **The geometry column sticks around.** When you use `dplyr` verbs like `filter()` or `select()` on an `sf` object, the geometry column comes along for the ride. You don't have to do anything special.
 
-**CRS matters.** If you try to do spatial operations on two `sf` objects with different coordinate systems, you'll get an error. Good. R is catching a real problem. Transform with `st_transform()` when you need to match them up.
+**CRS matters.** If you try to do spatial operations on two `sf` objects with different coordinate systems, you'll get an error. Good. R is catching a problem. Transform with `st_transform()` when you need to match them up.
 
 ## Rasters with `terra`
 

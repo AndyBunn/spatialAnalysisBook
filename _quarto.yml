@@ -43,6 +43,9 @@ book:
         - 10xAsideOLS-Algebra-Matrix.qmd
         - 11SpatialRegressionSAR.qmd
     - 12References.qmd
+    - part: "Appendices"
+      chapters:
+        - A1MeuseData.qmd
   repo-url: https://github.com/AndyBunn/spatialNotes
   repo-actions: [edit, issue]
 

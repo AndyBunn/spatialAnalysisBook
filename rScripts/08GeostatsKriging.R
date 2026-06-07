@@ -13,16 +13,16 @@ library(automap)
 
 ## -----------------------------------------------------------------------------
 # load
-data(meuse.all)
-meuse.grid <- readRDS("../data/meuse.grid.Rds")
+meuse2 <- readRDS("../data/meuse2.Rds")
+meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
 
 # make a variable to work with
-meuse.all$logLead <- log(meuse.all$lead)
+meuse2$logLead <- log(meuse2$lead)
 # make into sf
-meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
-meuse_grid_sf <- st_as_sf(meuse.grid, 
+meuse_grid_sf <- st_as_sf(meuse.grid2, 
                           coords = c("x","y"), 
                           crs = st_crs(meuse_sf))
 meuse_grid_sf

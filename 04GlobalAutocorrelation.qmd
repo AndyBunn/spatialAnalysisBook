@@ -5,7 +5,7 @@ set.seed(1984)
 ```
 
 ## Big Idea
-Space matters: Spatial pattern lets us understand process. Where point patterns ask whether locations themselves are clustered or random, autocorrelation asks how a measured quantity -- lead in soil, snow depth, bird diversity — varies across space and at what scale that variation operates. The methods in this chapter summarize that structure across the whole study area. Next module, we will ask where in the study area the structure is concentrated.
+Space matters: Spatial pattern lets us understand process. Where point patterns ask whether locations themselves are clustered or random, autocorrelation asks how a measured quantity (e.g., lead in soil, snow depth, bird diversity) varies across space and at what scale that variation operates. The methods in this chapter summarize that structure across the whole study area. Next module, we will ask where in the study area the structure is concentrated.
 
 ## Reading
 Start with the Intro section of Hijmans's [Spatial autocorrelation](https://www.rspatial.org/raster/analysis/3-spauto.html). Move onto the Moran's I section as you work through this page. Also, go back to @fortin2016spatial from last module paying particular attention to Spatial Autocorrelation Coefficients section. You can start Ch 8 in Bivand [@bivand2008geostatistics] and read through 8.4.2 (Cutoﬀ, Lag Width, Direction Dependence).
@@ -31,7 +31,7 @@ library(plotly)
 
 
 ## Preamble
-We covered point patterns already and that was fun and interesting in the kind of way studying logic is interesting. Quantifying spatial pattern by just looking at points alone is all well and good if you are counting trees -- and counting every tree. Recall that Ripley's K requires you to have a completely enumerated point pattern. Few environmental data sets I encounter are point patterns. Alas. But the huge amount of data in `spatstat` is making me feel lazy. I'll admit, revisiting `spatstat` got me thinking how cool point patterns are.
+We covered point patterns already and that was fun and interesting in the kind of way studying logic is interesting. Quantifying spatial pattern by just looking at points alone is all well and good if you are counting trees. Recall that Ripley's K requires you to have a completely enumerated point pattern so you'd need to count every tree. Few environmental data sets I encounter are point patterns. Alas. 
 
 But what if your variable of interest isn't as well behaved as a forest stem plot or a map of star positions? And what if you want to know the magnitude of correlation in a continuous variable as it varies in space? For instance, you might want to measure metal deposition in snow on Mt. Baker. You could lay out a nice grid and sample that. You might run a transect up the mountain. Or you might give bags to skiers heading into the back/side/slack country and tell them to take a sample when the spirit moved them (citizen dirtbag science). These types of sampling schemes are more common in most environmental fields and are not point patterns. But all would have good information and likely have interesting spatial structure.
 
@@ -50,21 +50,21 @@ You already know about correlation. If I give you a scatter plot of air temperat
 
 Now here's the twist. What if both axes are the *same* variable?
 
-That's not a typo. Autocorrelation is what you get when you correlate a variable with a version of itself -- just measured somewhere else. The "auto" means self. You're asking: does the value of $z$ at one location tell me something about the value of $z$ at a nearby location?
+That's not a typo. Autocorrelation is what you get when you correlate a variable with a version of itself but just measured somewhere else. The "auto" means self. You're asking: does the value of $z$ at one location tell me something about the value of $z$ at a nearby location?
 
-Think about soil lead. If I know the lead concentration at one spot is high, does that help me guess the concentration 50 meters away? 200 meters? 1000 meters? If the answer is yes at short distances, the data are spatially autocorrelated. That correlation should decay as you move farther away -- at some point, knowing the lead here tells you nothing about lead over there.
+Think about soil lead. If I know the lead concentration at one spot is high, does that help me guess the concentration 50 meters away? 200 meters? 1000 meters? If the answer is yes at short distances, the data are spatially autocorrelated. That correlation should decay as you move farther away. So at some point, knowing the lead here tells you nothing about lead over there.
 
 So the conceptual move is this: instead of plotting $A$ vs $B$, you plot $z_i$ vs $z_j$, where $i$ and $j$ are two locations. You do that for every pair of points in your data set. If nearby pairs cluster in the upper right and lower left of that scatter plot (both high or both low), you've got positive spatial autocorrelation. If nearby pairs tend toward opposite corners (one high, one low), that's negative autocorrelation. And if the scatter looks like a shotgun blast, there's no pattern.
 
 The distance between $i$ and $j$ is what makes this spatial. Rather than asking about the correlation across the whole data set at once, we ask: what does the correlation look like at 100m? At 500m? At 1km? That distance-dependence is the whole game.
 
-The two tools we'll use -- variograms and Moran's I -- are both trying to describe that relationship between geographic distance and the similarity of values. They approach it differently, but they're answering the same question.
+The two tools we'll use (variograms and Moran's I) are both trying to describe that relationship between geographic distance and the similarity of values. They approach it differently, but they're answering the same question.
 
 ### A small example
 
-Let me make this concrete with a tiny data set. Eight stations along a transect, spaced 100m apart. At each station we measure some variable -- soil nitrogen, temperature, whatever you like. The point is we have one variable measured at eight locations.
+Let me make this concrete with a tiny data set. Eight stations along a transect, spaced 100m apart. At each station we measure some variable (e.g., soil nitrogen, temperature). The point is we have one variable measured at eight locations.
 
-I'm keeping this example in one dimension -- stations strung out along a line -- because it's the easiest way to see the logic. But nothing about the math requires it. When we get to the Meuse data, each point has both an $x$ and a $y$ coordinate, and the distance between two points is just the familiar Euclidean distance $d_{ij} = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}$. The pairing logic is identical. More points, more pairs, same idea.
+I'm keeping this example in one dimension, like stations strung out along a line,  because it's the easiest way to see the logic. But nothing about the math requires it. When we get to the Meuse data, each point has both an $x$ and a $y$ coordinate, and the distance between two points is just the familiar Euclidean distance $d_{ij} = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}$. The pairing logic is identical. More points, more pairs, same idea.
 
 ```{r}
 transect <- data.frame(
@@ -94,7 +94,7 @@ Dmat <- as.matrix(dist(transect$x))
 
 # Step 2: we only want each pair once (i,j is the same pair as j,i),
 # so we pull out just the upper triangle of the distance matrix.
-# upper.tri() returns a logical matrix -- TRUE above the diagonal, FALSE elsewhere.
+# upper.tri() returns a logical matrix with TRUE above the diagonal, FALSE elsewhere.
 DmatUpperTri <- upper.tri(Dmat)
 
 # Step 3: find the row and column positions of those TRUE cells.
@@ -141,28 +141,28 @@ pairs_df %>%
   labs(x = expression(z[i]), y = expression(z[j]))
 ```
 
-In the close pairs panel, high values of $z_i$ go with high values of $z_j$. That's positive spatial autocorrelation. In the far pairs panel the scatter looks like a shotgun blast -- knowing $z_i$ tells you nothing about $z_j$.
+In the close pairs panel, high values of $z_i$ go with high values of $z_j$. That's positive spatial autocorrelation. In the far pairs panel the scatter looks like a shotgun blast meaning knowing $z_i$ tells you nothing about $z_j$.
 
 That scatter of $z_i$ vs $z_j$ is the conceptual core of everything we're doing in this module. Variograms and Moran's I are two more rigorous ways of quantifying what you can already see in those plots. They frame the question differently though: Moran's I measures *similarity* (do nearby pairs have similar values?), while the variogram measures *dissimilarity* (how different are nearby pairs, on average?). Same underlying question, opposite sign. One quick note on Moran's I specifically: it isn't exactly Pearson's $r$, but the intuition holds. It's a weighted version that accounts for the spatial arrangement of points rather than treating all pairs equally. More on that below.
 
 
-## Meuse River 
+## Meuse River
 Let's use the Meuse River data to illustrate the idea behind autocorrelation. This is a classic spatial data set that has coordinate data (a plain `data.frame`) with measurements on metal concentrations in soils as well as some other soil variables. We will return to these data again and again. It's a classic data set. Look at the help file for more details as well as the projection info. [Here is a link to a Google Map of the site](http://www.google.com/maps/place/50%C2%B057'46.6%22N+5%C2%B044'06.1%22E/@50.9629384,5.7350233,13z/data=!4m2!3m1!1s0x0:0x0) which is in the Netherlands on the border with Belgium. Someday I'll visit this site after so many years of working with these data. 
 
 ```{r}
-data(meuse.all)
-class(meuse.all)
-head(meuse.all)
+meuse2 <- readRDS("data/meuse2.Rds")
+class(meuse2)
+head(meuse2)
 ```
 
 We can transform the `data.frame` to a `sf` object by specifying the coordinates and the projection information.
 
 ```{r}
-meuse_sf <- st_as_sf(meuse.all, coords = c("x", "y")) %>%
+meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 ```
 
-Before we go any further, let's log-transform lead and add it as a column. Lead concentrations in soil are right-skewed -- a handful of hotspot values near the river are much larger than the rest of the data. Both the variogram and Moran's I involve squared deviations from the mean, so those few extreme values end up dominating the result. You wind up describing the spatial arrangement of your outliers rather than the general structure in the data. Log-transforming stabilizes the variance and gives both methods a fairer look at the whole dataset. We'll use `log_lead` throughout.
+Before we go any further, let's log-transform lead and add it as a column. Lead concentrations in soil are right-skewed with a handful of hotspot values near the river being much larger than the rest of the data. Both the variogram and Moran's I involve squared deviations from the mean, so those few extreme values end up dominating the result. You wind up describing the spatial arrangement of your outliers rather than the general structure in the data. Log-transforming stabilizes the variance and gives both methods a fairer look at the whole dataset. We'll use `log_lead` throughout.
 
 ```{r}
 meuse_sf$log_lead <- log(meuse_sf$lead)
@@ -177,7 +177,7 @@ ggplot(data = meuse_sf) +
 ```
 
 ### Using tmap
-I made the plot below with the `tmap` library.  I'm just sticking this here to give you a view of the site. It's not hard but it's also not required. Some folks always want to go the extra mile -- so this is a chance for that if you want to.
+I made the plot below with the `tmap` library.  I'm just sticking this here to give you a different view of the site.
 
 Anyways, here is the site:
 ```{r}
@@ -197,9 +197,9 @@ tm_shape(meuse_sf) +
 
 ## Spatial Autocorrelation
 ### Variograms
-Let's consider the simplest measure of spatial autocorrelation by calculating something called a semivariogram. We will use the `gstat` library to do so but could calculate this a few different ways -- there are several variogram functions in R.
+Let's consider the simplest measure of spatial autocorrelation by calculating something called a semivariogram. We will use the `gstat` library to do so but could calculate this a few different ways as there are several variogram functions in R.
 
-In this approach, we quantify spatial autocorrelation by examining the data set one pair of points at a time. The easiest way of getting a first blush of how autocorrelated spatial data are is by calculating and plotting a semivariogram. We do this by measuring the distance between two locations (recall Euclid!) and plotting the squared difference between the values of some variable ($z$) at that distance. We call this mass of points a semivariogram cloud. So we have $n(n-1)/2$ elements in a distance matrix and for two points $i$ and $j$ we calculate the distance via $d_{ij}=\sqrt{(x_j-x_i)^2 + (y_i-y_j)^2}$ where $x$ and $y$ are the coordinates of the points and we plot that distance against the squared difference of the variable ($z$) as $(z_i - z_j)^2$. A note on notation: the actual semivariogram estimator is $\hat{\gamma}(h) = \frac{1}{2N(h)}\sum(z_i - z_j)^2$, where the factor of $\frac{1}{2}$ and the averaging over $N(h)$ pairs in a distance bin are what give us the binned variogram. The cloud skips that averaging and just plots the raw squared differences -- which is why the y-axis scale drops dramatically when you go from cloud to binned.
+In this approach, we quantify spatial autocorrelation by examining the data set one pair of points at a time. The easiest way of getting a first blush of how autocorrelated spatial data are is by calculating and plotting a semivariogram. We do this by measuring the distance between two locations (recall Euclid!) and plotting the squared difference between the values of some variable ($z$) at that distance. We call this mass of points a semivariogram cloud. So we have $n(n-1)/2$ elements in a distance matrix and for two points $i$ and $j$ we calculate the distance via $d_{ij}=\sqrt{(x_j-x_i)^2 + (y_i-y_j)^2}$ where $x$ and $y$ are the coordinates of the points and we plot that distance against the squared difference of the variable ($z$) as $(z_i - z_j)^2$. A note on notation: the actual semivariogram estimator is $\hat{\gamma}(h) = \frac{1}{2N(h)}\sum(z_i - z_j)^2$, where the factor of $\frac{1}{2}$ and the averaging over $N(h)$ pairs in a distance bin are what give us the binned variogram. The cloud skips that averaging and just plots the raw squared differences which is why the y-axis scale drops dramatically when you go from cloud to binned.
 
 Thus, if pairs of points that are close together in space also have a smaller squared difference they are spatially autocorrelated. Typically, as points become farther away from each other the squared difference increases. At some distance, the squared difference levels out and the data tend to be uncorrelated.
 
@@ -244,7 +244,7 @@ So, when we use variogram above as `variogram(log_lead~1, locations = meuse_sf)`
 
 
 ## Global Moran's I
-Variograms are nifty tools -- but it would be nice to work with a technique that gave us more familiar numbers. Fortunately, there are other methods of measuring spatial autocorrelation beyond the variogram. The text introduces the idea of measuring spatial autocorrelation and explains how it is trickier than temporal autocorrelation because it is multi-dimensional and multi-directional. The reading starts you out with measuring spatial autocorrelation using Geary's C. The statistic used more commonly is global Moran's I which is close to the inverse of Geary's C (but is not identical).  Values of Moran's I greater than zero indicate positive spatial autocorrelation and values below zero indicate negative autocorrelation. Values range from minus one (perfect dispersion -- think chessboard) to values near one (strong clustering or gradients). A zero value indicates spatial randomness.
+Variograms are nifty tools, but it would be nice to work with a technique that gave us more familiar numbers. Fortunately, there are other methods of measuring spatial autocorrelation beyond the variogram. The text introduces the idea of measuring spatial autocorrelation and explains how it is trickier than temporal autocorrelation because it is multi-dimensional and multi-directional. The reading starts you out with measuring spatial autocorrelation using Geary's C. The statistic used more commonly is global Moran's I which is close to the inverse of Geary's C (but is not identical).  Values of Moran's I greater than zero indicate positive spatial autocorrelation and values below zero indicate negative autocorrelation. Values range from minus one (perfect dispersion like a chessboard) to values near one (strong clustering or gradients). A zero value indicates spatial randomness.
 
 ```{r,echo=FALSE,fig.width=9,fig.height=3}
 n <- 20
@@ -353,7 +353,7 @@ Now we can see that points far away from each other (between 500m and 1000m) are
 
 A single global Moran's I answers one question: does autocorrelation exist? But it doesn't tell you at what scale the structure operates -- is the dependence playing out at 100 m or 1000 m? Those are very different stories ecologically, and a single number buries the difference. The correlogram answers the scale question by plotting $I$ as a function of distance $d$. Where $I(d)$ is large and positive you have strong spatial dependence at that scale. Where it drops to zero you have found the effective range of autocorrelation -- the distance beyond which knowing a value here tells you nothing about a value there. That is the same information captured by the range parameter of a fitted variogram, just approached from the similarity direction rather than the dissimilarity direction.
 
-I like to look at Moran's I in a correlogram by distance -- kind of like we did with the variogram and in a way that is conceptually very similar to the Ripley's K function. We can do this as above by calculating Moran's I in different distance bands. That is, if we stratify the weights $W$ by distance we can plot Moran's I  as a function of distance. I'm going to do this by brute force in a loop -- it's ugly. What happens below is that I create a vector of distances from 0 to 1500 m in increments of 100 m. The the loop will step through that vector and create a weights matrix so that $W$ will equal one if points are within the specified distance and zero otherwise. Then I'll calculate Moran's I and save the result.
+I like to look at Moran's I in a correlogram by distance like we did with the variogram and in a way that is conceptually very similar to the Ripley's K function. We can do this as above by calculating Moran's I in different distance bands. That is, if we stratify the weights $W$ by distance we can plot Moran's I  as a function of distance. I'm going to do this by brute force in a loop which is ugly. What happens below is that I create a vector of distances from 0 to 1500 m in increments of 100 m. The the loop will step through that vector and create a weights matrix so that $W$ will equal one if points are within the specified distance and zero otherwise. Then I'll calculate Moran's I and save the result.
 
 So here is a Moran's I a correlogram by distance 0 to 1500 m in 100 m bins: 
 
@@ -385,11 +385,11 @@ ggplot(data=res, mapping = aes(x=midBin,y=I)) +
 
 Take a look at the loop. The indexing is pretty convoluted! But will let you see, hopefully, how we can make the $W$ matrix do our bidding by setting distances we specify to either zero or one and thus let us calculate Moran's I as a function of distance. 
 
-Looking at the figure, we see that log lead values are autocorrelated for a few hundred meters and then fall off. Again, this is conceptually similar to both the Ripley's K figure and the variograms above. If we wanted to we could have saved the p-values and colored them by significance. But that would be even more cumbersome that it is already. Don't fret too much -- there are automated ways of going about this that we will see in the next section.
+Looking at the figure, we see that log lead values are autocorrelated for a few hundred meters and then fall off. Again, this is conceptually similar to both the Ripley's K figure and the variograms above. If we wanted to we could have saved the p-values and colored them by significance. But that would be even more cumbersome that it is already. Don't fret too much! There are automated ways of going about this that we will see in the next section.
 
 We are working with point data here. And I typically work with either point data or raster data. But a lot of spatial analysis deals with polygons and it's pretty common in those cases to think about spatial structure in terms of neighboring polygons as opposed to thinking about distance. I'm not going to go into this much. Bivand spends a lot of time on it in the reading but I'll give a quick example.
 
-Often, and especially with areal data, we calculate the weights matrix using just the correlation between the $k$ closest neighbors and usually set $k=8$ (there is nothing magical about eight -- it is a loose kind of rule).  
+Often, and especially with areal data, we calculate the weights matrix using just the correlation between the $k$ closest neighbors and usually set $k=8$ (there is nothing magical about eight, it is a loose kind of rule).  
 
 ```{r}
 W <- knn2nb(knearneigh(meuse_sf,k=8))
@@ -413,7 +413,7 @@ ggplot(data=res, mapping = aes(x=k,y=I)) +
   labs(x="K neighbors",y="Moran's I")
 ```
 
-That's a Moran's I a correlogram by the number of neighbors. Because these are points, I prefer to look at Moran's I in a correlogram by distance -- like we did above but if we had to deal with polygonal data, we'd likely use this approach. See text for more info.
+That's a Moran's I a correlogram by the number of neighbors. Because these are points, I prefer to look at Moran's I in a correlogram by distance (like we did above) but if we had to deal with polygonal data, we'd likely use this approach. See the text for more info.
 
 ### Library `ncf`
 The `spdep`[@R-spdep] library is fantastic but doesn't produce the correlogram in the way we often see it with Moran's I by distance ($I=f(d)$). The `ncf`[@R-ncf] library does this out of the box. 
@@ -440,7 +440,7 @@ abline(h=0,lty="dashed")
 
 Let's look at what is going on here. We are calculating $I=f(d)$ and using 100 m increments. We are also doing significance testing with 100 bootstrap replicates of the data to test a null hypothesis of CSR. In the plot, the points are colored be whether or not autocorrelation is significantly different from zero in that distance class using a nominal (two-sided) 5%-level. This is a slightly fancier version of what we did in the loop above. And the syntax is much easier to follow.  
 
-We still see the same result we did above -- positive autocorrelation out to distances of about 500 m, very slight negative autocorrelation around 1000 m, and CSR otherwise. The distance where $I$ drops to zero -- around 500 m here -- is the effective range of spatial dependence. If that number looks familiar, it should: it is the same range you estimated from the variogram. The variogram and the correlogram are two views of the same underlying structure, one measuring dissimilarity and one measuring similarity.
+We still see the same result we did above with positive autocorrelation out to distances of about 500 m, very slight negative autocorrelation around 1000 m, and CSR otherwise. The distance where $I$ drops to zero (around 500 m here) is the effective range of spatial dependence. If that number looks familiar, it should: it is the same range you estimated from the variogram. The variogram and the correlogram are two views of the same underlying structure, one measuring dissimilarity and one measuring similarity.
 
 #### Watch those distances!
 Oh, one more thing. Remember how the point pattern functions in `spatstat` were very careful about not letting you run into edge effects? And `variogram` is that way too. The `correlog` function is not so careful! It's more libertarian its approach. 
@@ -837,8 +837,7 @@ You could imagine detrending this final surface with a model and then replotting
 ## Your Work
 I have a `sf` object in the file named `birdRichnessMexico.rds`.  That file contains points of bird richness (number of species) at a bunch of points in Mexico. The column `nSpecies` is the number of bird species occurring within a kilometer of that location. 
 
-The data are projected onto a plane (not a sphere) using the North America Albers Equal Area Conic, centered on Mexico ([SR-ORG:38](http://spatialreference.org/ref/sr-org/mexico-albers-equal-area-conic/)) which is an equal area projection suitable for the area. Using this projection allows us to have units in kilometers 
-Here is a simple map of the data using `tmap`. It's nice to visualize your data even if what you do is as simple as  `ggplot(data=birds_sf) + geom_sf()`. The more I learn about using `tmap` the more I like it. Setting `tmap_mode("view")` gives you an interactive map which is kind of fun. There is a lot more you can do with this if you like this kind of stuff.
+The data are projected onto a plane (not a sphere) using the North America Albers Equal Area Conic, centered on Mexico ([SR-ORG:38](http://spatialreference.org/ref/sr-org/mexico-albers-equal-area-conic/)) which is an equal area projection suitable for the area. Using this projection allows us to have units in kilometers. Here is a simple map of the data using `tmap`. It's nice to visualize your data even if what you do is as simple as  `ggplot(data=birds_sf) + geom_sf()`. The more I learn about using `tmap` the more I like it. Setting `tmap_mode("view")` gives you an interactive map which is kind of fun. There is a lot more you can do with this if you like this kind of stuff.
 
 ```{r, message=FALSE}
 library(tmap)
@@ -848,7 +847,7 @@ tm_shape(birds_sf) +
   tm_symbols(col="nSpecies", alpha = 0.7)
 ```
 
-Ok. With the mapping done, take a minute to look at the patterns you see. Some areas are hotspots of richness like in southern Veracruz. Others are less rich -- like northern Baja. Richness is quite a bit higher all over though when compared to the biological desert that is western Washington! 
+Ok. With the mapping done, take a minute to look at the patterns you see. Some areas are hotspots of richness like in southern Veracruz. Others, like northern Baja, are less rich. Richness is quite a bit higher all over though when compared to the biological desert that is western Washington! 
 
 Look at spatial autocorrelation in the bird data using Moran's I (use `correlog` or `spline.correlog`) and look at a variogram. 
 
