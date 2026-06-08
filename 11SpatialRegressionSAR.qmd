@@ -29,11 +29,15 @@ library(tidyverse)
 
 Let's be concrete about what these models actually say.
 
+A note on notation before we dive in. In what follows, $y$ is a vector of $n$ response values (one per location), $X$ is the design matrix, $\beta$ is the vector of regression coefficients, and $W$ is the spatial weights matrix you already know from Moran's I and LISA. The operation $Wy$ computes a weighted average of $y$ at neighboring locations -- that is the spatial lag.
+
+You will also notice that the same Greek letters appear here with different meanings than they had in earlier chapters. In the kriging chapter, $\lambda$ was the vector of interpolation weights. Here it is a scalar measuring how strongly errors are correlated across neighbors. In the GLS chapter, $\rho$ appeared in the code as the parameter we used to generate autocorrelated errors. Here $\rho$ is the spatial autoregression coefficient on the response itself. This is not a conspiracy. Notation is there to serve the math, not to rule it, and the same letters get recycled constantly across fields, papers, and packages. Treat each symbol as local to what you are reading.
+
 **Spatial error model (SEM):**
 
 $$y = X\beta + u, \quad u = \lambda W u + \varepsilon$$
 
-The residuals $u$ follow a spatial autoregressive process. A residual at location $i$ is a function of the residuals at its neighbors (via $\lambda W$) plus independent noise $\varepsilon$. The coefficient $\lambda$ (lambda) captures how strongly residuals are autocorrelated. The coefficients $\beta$ have the same interpretation as in OLS: a one-unit increase in $x$ is associated with a $\beta_1$ change in $y$, on average, holding everything else constant.
+The residuals $u$ follow a spatial autoregressive process. A residual at location $i$ is a function of the residuals at its neighbors (via $\lambda W$) plus independent noise $\varepsilon$. The coefficient $\lambda$ (lambda) captures how strongly residuals are autocorrelated across neighbors. The coefficients $\beta$ have the same interpretation as in OLS: a one-unit increase in $x$ is associated with a $\beta_1$ change in $y$, on average, holding everything else constant.
 
 Ecologically, the SEM is the right choice when space is a nuisance. Your predictors don't capture all the spatial structure in $y$, so the leftovers are autocorrelated. Classic example: you're modeling tree growth as a function of soil nitrogen, but soil moisture, microclimate, and a dozen other unmeasured things also drive growth and are themselves spatially structured. The SEM absorbs that shared unmeasured spatial structure into the error term and gives you clean, valid inference on the nitrogen-growth relationship.
 
@@ -41,11 +45,11 @@ Ecologically, the SEM is the right choice when space is a nuisance. Your predict
 
 $$y = \rho W y + X\beta + \varepsilon$$
 
-Now the response variable $y$ at each location appears on both sides of the equation. It is a function of $y$ at neighboring locations (via the spatial lag $Wy$), plus your predictors $X$ and independent noise $\varepsilon$. The coefficient $\rho$ (rho) captures how strongly $y$ at one location is pulled toward $y$ at its neighbors.
+Now the response variable $y$ at each location appears on both sides of the equation. It is a function of $Wy$ -- the weighted average of $y$ at neighboring locations -- plus your predictors $X$ and independent noise $\varepsilon$. The coefficient $\rho$ (rho) is a scalar that captures how strongly $y$ at one location is pulled toward $y$ at its neighbors.
 
 This is a fundamentally different claim from the SEM. The SLM says there is a spatial spillover process: $y$ at one location genuinely influences $y$ at neighboring locations. Classic examples are disease spread (infection rate in one area influences neighboring areas), invasive species dispersal (abundance at one site drives colonization of nearby sites), or any system where diffusion, movement, or social contagion is part of the process. If the biology or ecology predicts that kind of mechanism, the lag model is the one to reach for.
 
-One important caution: **the $\beta$ coefficients from the SLM are not total marginal effects.** More on this below.
+One important caution: the $\beta$ coefficients from the SLM are not total marginal effects. More on this below.
 
 ## Choosing Between Them: LM Tests
 
