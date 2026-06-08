@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Local Spatial Autocorrelation – Spatial Analysis for Environmental Science</title>
+<title>Local Spatial Autocorrelation – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -181,7 +181,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -360,7 +360,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -390,7 +395,6 @@ window.Quarto = {
    
   <ul>
   <li><a href="#big-idea" id="toc-big-idea" class="nav-link active" data-scroll-target="#big-idea">Big Idea</a></li>
-  <li><a href="#reading" id="toc-reading" class="nav-link" data-scroll-target="#reading">Reading</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#where-global-morans-i-falls-short" id="toc-where-global-morans-i-falls-short" class="nav-link" data-scroll-target="#where-global-morans-i-falls-short">Where Global Moran’s I Falls Short</a></li>
   <li><a href="#the-moran-scatterplot" id="toc-the-moran-scatterplot" class="nav-link" data-scroll-target="#the-moran-scatterplot">The Moran Scatterplot</a></li>
@@ -404,10 +408,12 @@ window.Quarto = {
   <li><a href="#the-local-i-values-themselves" id="toc-the-local-i-values-themselves" class="nav-link" data-scroll-target="#the-local-i-values-themselves">The Local I Values Themselves</a></li>
   </ul></li>
   <li><a href="#spatial-outliers-are-worth-your-attention" id="toc-spatial-outliers-are-worth-your-attention" class="nav-link" data-scroll-target="#spatial-outliers-are-worth-your-attention">Spatial Outliers Are Worth Your Attention</a></li>
-  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your Work</a>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a>
   <ul>
   <li><a href="#comparing-global-to-local" id="toc-comparing-global-to-local" class="nav-link" data-scroll-target="#comparing-global-to-local">Comparing Global to Local</a></li>
   </ul></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/05LISA.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -436,10 +442,6 @@ window.Quarto = {
 <section id="big-idea" class="level2">
 <h2 class="anchored" data-anchor-id="big-idea">Big Idea</h2>
 <p>Space matters: Spatial pattern lets us understand process. Global Moran’s I tells you <em>whether</em> spatial autocorrelation exists across your study area and perhaps at what distances. Local Indicators of Spatial Association (LISA) tell you <em>where</em>. LISA lets us go from a single number that summarizes the entire map to a map of where the clustering and the outliers actually live.</p>
-</section>
-<section id="reading" class="level2">
-<h2 class="anchored" data-anchor-id="reading">Reading</h2>
-<p><span class="citation" data-cites="anselin1995local">Anselin (<a href="12References.html#ref-anselin1995local" role="doc-biblioref">1995</a>)</span> is the original paper introducing LISA. It is not a breezy read, but sections 1 through 3 are worth your time. Pay attention to the conceptual motivation – why a global statistic is insufficient – and the four categories of local spatial association. You do not need to follow every bit of the math.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -456,7 +458,7 @@ Note
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>Same cast as the autocorrelation chapter with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> <code>tmap</code><span class="citation" data-cites="R-tmap">(<a href="12References.html#ref-R-tmap" role="doc-biblioref">Tennekes 2025</a>)</span>, <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="12References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>, and <code>spdep</code><span class="citation" data-cites="R-spdep">(<a href="12References.html#ref-R-spdep" role="doc-biblioref">Bivand 2026</a>)</span>.</p>
+<p>Same cast as the autocorrelation chapter with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> <code>tmap</code><span class="citation" data-cites="R-tmap">(<a href="13References.html#ref-R-tmap" role="doc-biblioref">Tennekes 2025</a>)</span>, <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="13References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>, and <code>spdep</code><span class="citation" data-cites="R-spdep">(<a href="13References.html#ref-R-spdep" role="doc-biblioref">Bivand 2026</a>)</span>.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -573,7 +575,7 @@ Note
 </section>
 <section id="a-simulated-example" class="level2">
 <h2 class="anchored" data-anchor-id="a-simulated-example">A Simulated Example</h2>
-<p>Before running LISA on real data, let’s plant a known hot spot in simulated data and confirm that we can find it. This is a recurring move in this course – if a method can not detect a pattern we deliberately created, we should not trust it on data where we do not know the answer.</p>
+<p>Before running LISA on real data, let’s plant a known hot spot in simulated data and confirm that we can find it. This is a recurring move throughout this book – if a method can not detect a pattern we deliberately created, we should not trust it on data where we do not know the answer.</p>
 <p>I will make an 8x8 grid of locations. All locations get values drawn from a standard normal distribution, except a 3x3 block in one corner which gets values drawn from a normal distribution centered at 4. That block is our planted hot spot.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -801,26 +803,36 @@ Moran I statistic       Expectation          Variance
 <p>In the lead data, an HL outlier would be a location with high lead concentrations in an area that is otherwise clean. That is worth a field visit. It might be an old refuse pile, a spill site, or a measurement error. You wouldn’t find it by looking at the global statistics or even the raw map without this kind of formal local analysis.</p>
 <p>The answer is that not every spatial outlier has a good story. Some are noise. But the ones that do have a story often have a good one, and LISA is what surfaces them for investigation.</p>
 </section>
-<section id="your-work" class="level2">
-<h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
-<p>Load the <code>birdRichnessMexico.rds</code> data from the last module.</p>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>LISA takes a global measure and makes it local. You go from “there is spatial structure in this variable” to “here is where that structure lives, and here is where the exceptions are.” Hot spots and cold spots tell you where the signal is concentrated. Spatial outliers tell you where something is off – and those are often the most ecologically interesting locations in the dataset.</p>
+<p>From here the book shifts to prediction. We’ve been describing spatial structure; now we’re going to use it. Interpolation methods like IDW and kriging take what you know at sampled locations and estimate values everywhere else. The variogram you met in the autocorrelation chapter is about to become a lot more useful.</p>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<p>Load the <code>birdRichnessMexico.rds</code> data from the previous chapter.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>birds_sf <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/birdRichnessMexico.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>In the last module you described the global spatial autocorrelation in bird richness using Moran’s I and variograms. Now take the next step.</p>
+<p>The previous chapter described the global spatial autocorrelation in bird richness using Moran’s I and variograms. Now take the next step and decompose that global signal locally.</p>
 <ol type="1">
 <li><p>Build a k-nearest-neighbor weights matrix with <span class="math inline">\(k = 8\)</span> and row-standardize it.</p></li>
 <li><p>Make a Moran scatterplot for <code>nSpecies</code>. Eyeball the four quadrants – where do most of the points fall?</p></li>
 <li><p>Run <code>localmoran</code> and build a LISA cluster map. Use <span class="math inline">\(\alpha = 0.01\)</span>.</p></li>
-<li><p>The global autocorrelation module showed that richness is highly structured in space. The LISA map should tell you <em>where</em> that structure is concentrated. Does the pattern of HH and LL clusters correspond to what you’d expect based on what you know about Mexican biogeography? Think about where the species-rich areas of Mexico are and what drives them.</p></li>
+<li><p>The global analysis showed that richness is highly structured in space. The LISA map tells you <em>where</em> that structure is concentrated. Does the pattern of HH and LL clusters correspond to what you’d expect from Mexican biogeography? Think about where the species-rich areas of Mexico are and what drives them.</p></li>
 <li><p>Are there any spatial outliers – HL or LH locations – that catch your eye? Pick one and offer a plausible ecological or geographic explanation for why that location might differ from its neighbors.</p></li>
 </ol>
 <section id="comparing-global-to-local" class="level3">
 <h3 class="anchored" data-anchor-id="comparing-global-to-local">Comparing Global to Local</h3>
-<p>As a final exercise, think about what you would have missed if you had stopped at the global Moran’s I. Write a short paragraph (3-4 sentences) comparing what the global statistic told you to what the LISA map tells you. This is the kind of thing you would put in the methods and results section of a paper.</p>
+<p>Think about what you would have missed by stopping at the global Moran’s I. How does the LISA map change or sharpen the story? This comparison – global statistic to local decomposition – is the kind of thing that belongs in a methods and results section when you are reporting spatial analysis.</p>
+</section>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<p><span class="citation" data-cites="anselin1995local">Anselin (<a href="13References.html#ref-anselin1995local" role="doc-biblioref">1995</a>)</span> is the original paper introducing LISA. Sections 1 through 3 are worth the effort – the conceptual motivation for why a global statistic is insufficient, and the four categories of local spatial association, are laid out clearly even if the full mathematical treatment is dense.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
@@ -843,7 +855,6 @@ Tennekes, Martijn. 2025. <em>Tmap: Thematic Maps</em>. <a href="https://github.c
 Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the Tidyverse</em>. <a href="https://tidyverse.tidyverse.org">https://tidyverse.tidyverse.org</a>.
 </div>
 </div>
-</section>
 </section>
 
 </main> <!-- /main -->

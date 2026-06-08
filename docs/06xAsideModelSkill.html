@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Aside: Model Skill and Cross Validation – Spatial Analysis for Environmental Science</title>
+<title>Aside: Model Skill and Cross Validation – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -424,7 +429,7 @@ window.Quarto = {
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>We’ll use our usual spatial toolkit: <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span>, <code>sf</code><span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, and <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="12References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>. And <code>PNWColors</code><span class="citation" data-cites="R-PNWColors">(<a href="12References.html#ref-R-PNWColors" role="doc-biblioref">Lawlor 2020</a>)</span> for color palettes that don’t make your eyes bleed.</p>
+<p>We’ll use our usual spatial toolkit: <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span>, <code>sf</code><span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, and <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="13References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>. And <code>PNWColors</code><span class="citation" data-cites="R-PNWColors">(<a href="13References.html#ref-R-PNWColors" role="doc-biblioref">Lawlor 2020</a>)</span> for color palettes that don’t make your eyes bleed.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -434,7 +439,7 @@ window.Quarto = {
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(PNWColors)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>We’ll also mention the <code>caret</code> package <span class="citation" data-cites="R-caret">(<a href="12References.html#ref-R-caret" role="doc-biblioref">Kuhn and Max 2008</a>)</span> toward the end of this chapter. It is the standard workhorse for cross validation in R, but it has its own syntax that takes some getting used to. For now we will build things by hand so the mechanics are clear.</p>
+<p>We’ll also mention the <code>caret</code> package <span class="citation" data-cites="R-caret">(<a href="13References.html#ref-R-caret" role="doc-biblioref">Kuhn and Max 2008</a>)</span> toward the end of this chapter. It is the standard workhorse for cross validation in R, but it has its own syntax that takes some getting used to. For now we will build things by hand so the mechanics are clear.</p>
 </section>
 <section id="measuring-skill" class="level2">
 <h2 class="anchored" data-anchor-id="measuring-skill">Measuring Skill</h2>
@@ -451,7 +456,7 @@ window.Quarto = {
 <p>where <span class="math inline">\(y_i\)</span> is the observed value, <span class="math inline">\(\hat{y}_i\)</span> is the predicted value, and <span class="math inline">\(\bar{y}\)</span> is the mean of the observed values. An <span class="math inline">\(R^2\)</span> of 1 means the model explains all of the variance in <span class="math inline">\(y\)</span>. An <span class="math inline">\(R^2\)</span> of 0 means the model does no better than predicting <span class="math inline">\(\bar{y}\)</span> for every observation. This is the version reported in <code>summary(lm(...))</code>.</p>
 <p>When we evaluate skill on withheld data, we will typically compute <span class="math inline">\(R^2\)</span> as the squared Pearson correlation between observed and predicted values:</p>
 <p><span class="math display">\[R^2 = \left[\text{cor}(y, \hat{y})\right]^2\]</span></p>
-<p>This is equivalent to the formula above for in-sample linear model predictions, but not in general. The correlation-based version is always between 0 and 1, because squaring a correlation removes the sign. The formula-based version applied to test data can actually go negative if your model’s predictions are worse than just using the mean everywhere. That is not a math error, it means the model is that bad. In this course we will use the correlation-based version:</p>
+<p>This is equivalent to the formula above for in-sample linear model predictions, but not in general. The correlation-based version is always between 0 and 1, because squaring a correlation removes the sign. The formula-based version applied to test data can actually go negative if your model’s predictions are worse than just using the mean everywhere. That is not a math error, it means the model is that bad. Throughout this book we use the correlation-based version:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rsq <span class="ot">&lt;-</span> <span class="fu">cor</span>(obs, preds)<span class="sc">^</span><span class="dv">2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>and pair it with the observed-vs-predicted plot so that systematic biases do not hide behind a number that looks acceptable.</p>
 </section>
@@ -711,7 +716,7 @@ window.Quarto = {
 </div>
 <p>The spread across folds is the variability in predictive performance conditional on this dataset and this model. A tight distribution means the mean is a reliable estimate. A wide one tells you a single split could easily have given you something misleading. The cross-validated mean is the number to report, not the in-sample <span class="math inline">\(R^2\)</span> from <code>summary(lm(...))</code>.</p>
 <p>One natural question is whether <span class="math inline">\(k=10\)</span> is the right choice. With larger <span class="math inline">\(k\)</span> you train on more data each time, which can help with small datasets. The extreme is <strong>leave-one-out cross validation</strong> (LOOCV), where <span class="math inline">\(k=n\)</span> and each test set has exactly one observation. LOOCV has low bias but can be computationally expensive and tends to produce noisy skill estimates. For most purposes <span class="math inline">\(k=5\)</span> or <span class="math inline">\(k=10\)</span> is a reasonable default.</p>
-<p>A brief note on <strong>repeated k-fold</strong>: with small datasets, the k-fold estimates themselves can vary from run to run because the fold assignments are random. Repeated k-fold runs the whole procedure multiple times with different random assignments and averages across all of them, giving you an interval estimate rather than a point estimate. The <code>caret</code> package handles this with <code>trainControl(method="repeatedcv", number=10, repeats=10)</code>. If you take the machine learning module you will work through that in detail. The structure is identical to what we built above, just automated and repeated.</p>
+<p>A brief note on <strong>repeated k-fold</strong>: with small datasets, the k-fold estimates themselves can vary from run to run because the fold assignments are random. Repeated k-fold runs the whole procedure multiple times with different random assignments and averages across all of them, giving you an interval estimate rather than a point estimate. The <code>caret</code> package handles this with <code>trainControl(method="repeatedcv", number=10, repeats=10)</code> – the structure is identical to what we built above, just automated and repeated.</p>
 </section>
 <section id="the-spatial-problem" class="level2">
 <h2 class="anchored" data-anchor-id="the-spatial-problem">The Spatial Problem</h2>
@@ -745,7 +750,7 @@ window.Quarto = {
 </div>
 <p>Look at where the test points land. Nearly every one of them is surrounded by training points. When you predict lead concentration at a withheld location that has three or four neighbors in the training set within 50 meters, you are not testing how well the model predicts in unknown space. You are testing it on locations well surrounded by known ones, which is a much easier task.</p>
 <p>The more principled alternative is to hold out spatially contiguous <strong>blocks</strong> rather than randomly scattered points. If you hold out an entire region, the model has to extrapolate into that region rather than interpolate between nearby training points. This is called <strong>spatial block cross validation</strong> and the <code>blockCV</code> and <code>spatialsample</code> packages implement it. We won’t go into the details here, but it is the right approach if you need predictions to generalize to new areas beyond your sampling domain.</p>
-<p>For the interpolation methods in this course, IDW and kriging, the standard approach is <strong>leave-one-out cross validation</strong> (LOOCV). Remove one observation, predict it from all the remaining observations, and repeat for every point. The <code>gstat</code> function <code>krige.cv()</code> implements this directly and we’ll use it in the kriging chapter. LOOCV is better than a single random split because every observation gets to be a test point, but it does not fully solve the spatial dependence problem. The left-out point still has autocorrelated neighbors in the training data. In geostatistics it is the accepted standard, and it is what we will use here, with that caveat in mind.</p>
+<p>For IDW and kriging, the standard approach is <strong>leave-one-out cross validation</strong> (LOOCV). Remove one observation, predict it from all the remaining observations, and repeat for every point. The <code>gstat</code> function <code>krige.cv()</code> implements this directly and we’ll use it in the kriging chapter. LOOCV is better than a single random split because every observation gets to be a test point, but it does not fully solve the spatial dependence problem. The left-out point still has autocorrelated neighbors in the training data. In geostatistics it is the accepted standard, and it is what we will use here, with that caveat in mind.</p>
 </section>
 <section id="a-note-on-interpolation" class="level2">
 <h2 class="anchored" data-anchor-id="a-note-on-interpolation">A Note on Interpolation</h2>

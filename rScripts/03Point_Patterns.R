@@ -214,28 +214,11 @@ text(15,8,"Tree", cex=0.75)
 
 ## -----------------------------------------------------------------------------
 # using subset
-heb_pub <- subset(sporophores, 
+heb_pub <- subset(sporophores,
                   marks %in% c("L pubescens","Hebloma spp"), drop=TRUE)
 cross_heb_pub <- envelope(heb_pub, "Lcross", verbose=FALSE)
 # or directly in envelope (note i and j arguments)
 cross_heb_pub <- envelope(sporophores, "Lcross", i="L pubescens", j = "Hebloma spp", verbose=FALSE)
-
-
-## ----echo=FALSE, eval=FALSE---------------------------------------------------
-# # Three levels, six comparisons. can do pairwise or use alltypes
-# # L laccata, L pubescens, Hebloma spp
-# sporophoresL <- alltypes(X = sporophores,fun = "Lcross",envelope=TRUE)
-# # so ugly
-# plot(sporophoresL)
-# 
-# # vs going pairwise e.g.,
-# # L pubescens, Hebloma spp
-# heb_pub <- subset(sporophores, marks %in% c("L pubescens","Hebloma spp"), drop=TRUE)
-# cross_heb_pub <- envelope(heb_pub, "Lcross", verbose=FALSE)
-# plot(cross_heb_pub)
-# # can use i and j args to envelope as well
-# cross_heb_pub <- envelope(sporophores, "Lcross", i="L pubescens", j = "Hebloma spp", verbose=FALSE)
-# plot(cross_heb_pub)
 
 
 ## -----------------------------------------------------------------------------

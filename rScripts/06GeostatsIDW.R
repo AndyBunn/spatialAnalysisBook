@@ -257,16 +257,6 @@ ggplot() +
 1 - (rmse / rmseNULL)
 
 
-## ----eval=FALSE, echo=FALSE---------------------------------------------------
-# #Optimizing p 3.058529
-# 
-# f = function(idp, formula, data,...){
-#   res <- sum(krige.cv(formula,data,set=list(debug=0,idp=idp),nfold=10,...)$residual**2)
-#   res
-# }
-# optimize(f, interval=c(0.01,4), formula=log(lead)~1, data=meuse_sf)
-
-
 ## -----------------------------------------------------------------------------
 # precip point data
 prcpCA <- readRDS("../data/prcpCA.rds")
@@ -277,40 +267,11 @@ gridCA <- readRDS("../data/gridCA.rds")
 prcpCA <- prcpCA %>% st_as_sf(coords = c("X", "Y")) %>%
   st_set_crs(value = 3310)
 
-# simple map -- see postscript below for a fancy map
-prcpCA %>% ggplot() + 
+# simple map
+prcpCA %>% ggplot() +
   geom_sf(aes(fill=ANNUAL,size=ANNUAL),color="white",
-          shape=21,alpha=0.8) + 
-  scale_fill_continuous(type = "viridis",name="mm") + 
+          shape=21,alpha=0.8) +
+  scale_fill_continuous(type = "viridis",name="mm") +
   labs(title="Total Annual Precipitation") +
   scale_size(guide="none")
-
-
-## ----echo=FALSE, eval=FALSE---------------------------------------------------
-# gridCA <- gridCA %>% st_as_sf(coords = c("X", "Y")) %>%
-#   st_set_crs(value = 3310)
-# 
-# idw_p2.5_model <- gstat(formula=ANNUAL~1,locations=prcpCA,
-#                         set=list(idp = 2.5))
-# 
-# prcpIDW_p2.5_sf <- predict(idw_p2.5_model,gridCA)
-# 
-# prcpIDW_p2.5_rast <- sf_2_rast(prcpIDW_p2.5_sf)
-# 
-# # and plot
-# ggplot() +
-#   geom_spatraster(data=prcpIDW_p2.5_rast, mapping = aes(fill=var1.pred),alpha=0.8) +
-#   scale_fill_continuous(type = "viridis",name="mm",na.value = "transparent") +
-#   labs(title="Total Annual Precip") +
-#   theme_minimal()
-# 
-# 
-# library(tmap)
-# 
-# tmap_mode("view")
-# tm_shape(prcpIDW_p2.5_rast) +
-#   tm_raster(col="var1.pred",alpha = 0.5) + #title = "TAP (mm)"
-#   tm_shape(prcpCA) +
-#   tm_symbols(col="deeppink",alpha=0.5,size = "ANNUAL")
-# 
 

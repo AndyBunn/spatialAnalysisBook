@@ -40,6 +40,7 @@ summary(om_lm)
 ## -----------------------------------------------------------------------------
 meuseGrid_sf$omHat <- predict(om_lm, newdata=meuseGrid_sf)
 
+# same sf_2_rast function from the IDW notes -- write it once, use it everywhere
 sf_2_rast <- function(sfObject, variable2get = 1){
   tmp <- sfObject[,variable2get] %>% st_drop_geometry()
   dfObject <- data.frame(st_coordinates(sfObject), z=tmp)
@@ -135,18 +136,4 @@ ggplot() + geom_spatraster(data = omHatVar_rast,
                            mapping = aes(fill=omModel.var.sqrt)) +
   scale_fill_terrain_c() +
   labs(fill = "Organic Matter SD (%)")
-
-
-## ----eval=FALSE,echo=FALSE,message=FALSE, warning=FALSE-----------------------
-# # the rk
-# out <- gstat.cv(object=omGstat_w_variogram)
-# #r2
-# cor(out$observed, out$observed - out$residual)^2
-# cor(out$observed, out$omModel.pred)^2 # same
-# 
-# # the lm
-# out2 <- gstat.cv(omGstat)
-# #r2
-# cor(out2$observed, out2$observed - out2$residual)^2
-# cor(out2$observed, out2$omModel.pred)^2 # same
 

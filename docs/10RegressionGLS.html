@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Regression: GLS with Autocorrelated Residuals – Spatial Analysis for Environmental Science</title>
+<title>Regression: GLS with Autocorrelated Residuals – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -378,7 +383,6 @@ window.Quarto = {
    
   <ul>
   <li><a href="#big-idea" id="toc-big-idea" class="nav-link active" data-scroll-target="#big-idea">Big Idea</a></li>
-  <li><a href="#reading" id="toc-reading" class="nav-link" data-scroll-target="#reading">Reading</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#regression" id="toc-regression" class="nav-link" data-scroll-target="#regression">Regression</a></li>
   <li><a href="#gls-and-ols" id="toc-gls-and-ols" class="nav-link" data-scroll-target="#gls-and-ols">GLS and OLS</a></li>
@@ -388,7 +392,9 @@ window.Quarto = {
   <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis">Analysis</a></li>
   <li><a href="#interpretation" id="toc-interpretation" class="nav-link" data-scroll-target="#interpretation">Interpretation</a></li>
   </ul></li>
-  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your Work</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/10RegressionGLS.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -416,17 +422,12 @@ window.Quarto = {
 
 <section id="big-idea" class="level2">
 <h2 class="anchored" data-anchor-id="big-idea">Big Idea</h2>
-<p>We flagged in the regression kriging module that spatially autocorrelated residuals from an OLS model are a problem. This is the module where we deal with that problem. It is also where we shift goals. Most of what we have done in this class has been interpolation: estimating values at unmeasured locations, with the prediction surface as the end product. Here we are doing something different. We want to understand the relationship between variables, estimate a coefficient that tells us how much <span class="math inline">\(y\)</span> changes with <span class="math inline">\(x\)</span>, and test whether that relationship is distinguishable from noise. Any predictions are a byproduct; the coefficients and their uncertainty are the point.</p>
+<p>The regression kriging chapter flagged that spatially autocorrelated residuals from an OLS model are a problem. This is where we deal with it. It is also where we shift goals. Most of what we have done in the preceding chapters has been interpolation: estimating values at unmeasured locations, with the prediction surface as the end product. Here we are doing something different. We want to understand the relationship between variables, estimate a coefficient that tells us how much <span class="math inline">\(y\)</span> changes with <span class="math inline">\(x\)</span>, and test whether that relationship is distinguishable from noise. Any predictions are a byproduct; the coefficients and their uncertainty are the point.</p>
 <p>Standard OLS regression assumes that the errors are independent. With spatial data, that assumption is commonly violated: nearby observations tend to share unmeasured spatial structure, which means their residuals are correlated rather than independent. When that happens, OLS coefficient estimates can be inefficient and their standard errors can be wrong, leading to overconfident inference. Generalized least squares (GLS) lets us explicitly model the spatial structure of the residuals and account for it, giving us better parameter estimates and valid hypothesis tests.</p>
-</section>
-<section id="reading" class="level2">
-<h2 class="anchored" data-anchor-id="reading">Reading</h2>
-<p><span class="citation" data-cites="dormann2007methods"><span class="nocase">Dormann et al.</span> (<a href="12References.html#ref-dormann2007methods" role="doc-biblioref">2007</a>)</span> provide a review of several methods for accounting for spatial structure in species distribution data. The paper does a good job of explaining the big picture on why space is important in a regression context. Much of the paper uses matrix notation that you might not be familiar with and the mathematical details are not critical. In this module, we will focus on using generalized least squares (GLS). For this paper, I suggest reading the intro and then skimming the rest. Pay attention to the first part of section three on spatial models based on GLS regression but don’t sweat the details more than you want to.</p>
-<p><span class="citation" data-cites="keitt2002accounting"><span class="nocase">Keitt et al.</span> (<a href="12References.html#ref-keitt2002accounting" role="doc-biblioref">2002</a>)</span> is also worth a heavy skim. They don’t use GLS in their approach but do show how spatial methods outperform standard methods in a few case studies. Focus on the implications rather than the methods in that paper. I worked with Tim Keitt when I was a masters student and my goodness, he is a smarty pants. It’s worth reading anything he’s written.</p>
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>You’ll want to install the packages below. We are going to fit a linear model using GLS as opposed to ordinary least squares and thus need <code>nlme</code><span class="citation" data-cites="R-nlme">(<a href="12References.html#ref-R-nlme" role="doc-biblioref">Pinheiro et al. 2025</a>)</span> as well as some of our other spatial standards: <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="12References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>, <code>spdep</code><span class="citation" data-cites="R-spdep">(<a href="12References.html#ref-R-spdep" role="doc-biblioref">Bivand 2026</a>)</span>, <code>ncf</code><span class="citation" data-cites="R-ncf">(<a href="12References.html#ref-R-ncf" role="doc-biblioref">Bjornstad 2026</a>)</span>, and <code>automap</code><span class="citation" data-cites="R-automap">(<a href="12References.html#ref-R-automap" role="doc-biblioref">Hiemstra et al. 2008</a>)</span>. As always, <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for data wrangling.</p>
+<p>You’ll want to install the packages below. We are going to fit a linear model using GLS as opposed to ordinary least squares and thus need <code>nlme</code><span class="citation" data-cites="R-nlme">(<a href="13References.html#ref-R-nlme" role="doc-biblioref">Pinheiro et al. 2025</a>)</span> as well as some of our other spatial standards: <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="13References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>, <code>spdep</code><span class="citation" data-cites="R-spdep">(<a href="13References.html#ref-R-spdep" role="doc-biblioref">Bivand 2026</a>)</span>, <code>ncf</code><span class="citation" data-cites="R-ncf">(<a href="13References.html#ref-R-ncf" role="doc-biblioref">Bjornstad 2026</a>)</span>, and <code>automap</code><span class="citation" data-cites="R-automap">(<a href="13References.html#ref-R-automap" role="doc-biblioref">Hiemstra et al. 2008</a>)</span>. As always, <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for data wrangling.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -513,7 +514,7 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>We are going to use <span class="math inline">\(\epsilon\)</span> as the error term in a model. I’ll use the terms “errors” and “residuals” interchangeably throughout these notes.</p>
+<p>We are going to use <span class="math inline">\(\epsilon\)</span> as the error term in a model. I’ll use the terms “errors” and “residuals” interchangeably throughout this book.</p>
 <p>We’ll now make <code>x</code> and then <span class="math inline">\(y=\beta_0 + \beta_1(x) + \epsilon\)</span>. We will run a linear model and look at the residuals with a correlogram.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -787,11 +788,16 @@ Note
 <p>Finally, we did it right, and that should be satisfying. What would have happened if <span class="math inline">\(\beta_1\)</span> had been smaller? That is, what if <span class="math inline">\(y\)</span> was made up of more noise and less <span class="math inline">\(x\)</span>? E.g., <span class="math inline">\(y=\beta_0 + 0.5(\beta_1)x + 2(\epsilon)\)</span>? This model, with 75 points, should be pretty robust on the simple hypothesis test on the slope (H<span class="math inline">\(_1\)</span>: <span class="math inline">\(\beta_1 \neq 0\)</span>) but we know that parameter estimation is inefficient with autocorrelated residuals, so having clean residuals and good parameter estimation is important.</p>
 </section>
 </section>
-<section id="your-work" class="level2">
-<h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
-<p>The joy of simulated data is, of course, that we know the real answer going in. We knew that <span class="math inline">\(y=\beta_0 + \beta_1x + \epsilon\)</span> and we knew that the residual term was spatially autocorrelated. Obviously, that’s a luxury we don’t have when making inference about data we collect.</p>
-<p>The file <code>birdDiv.csv</code> has data on bird diversity and plant community diversity and coordinates for 64, 1-ha plots across the Colorado Plateau and Mogollon Rim region of northern Arizona (roughly Flagstaff east to the New Mexico border). The coordinates are UTM Zone 12N, most likely NAD83 (EPSG:26912), and are in meters.</p>
-<p>A note on the diversity values: they are non-integer and range from 3.16 to 12.95 for birds and 3.70 to 8.14 for plants. These are not raw species counts. They are likely a diversity index – Shannon, Fisher’s alpha, or similar – but the original source and exact units have been lost. Higher values indicate greater diversity in both cases, and the relative patterns across plots are interpretable even if the absolute values are not.</p>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>GLS is OLS with one additional ingredient: a model for the error correlation structure. The slopes are still there, the interpretation is still the same, but the standard errors now reflect how the data are actually distributed in space rather than assuming independence that doesn’t exist. That’s the whole point.</p>
+<p>In practice, the most common outcome is what you saw here: the coefficients don’t move much, but the standard errors get corrected, the AIC improves, and you can make your inferential claims without the nagging worry that your p-values are artifacts of spatial structure. Sometimes the coefficients do shift, usually when a predictor covaries with the spatial autocorrelation in the residuals. When that happens, GLS isn’t just tidying up your errors. Rather, it’s telling you something about the model itself.</p>
+<p>The next chapter takes this further. GLS treats spatial autocorrelation as a nuisance in the residuals. SAR models ask whether the spatial structure might be in the response itself, not just the errors, and fit accordingly.</p>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<p>The file <code>birdDiv.csv</code> has data on bird diversity and plant community diversity for 64 one-hectare plots across the Colorado Plateau and Mogollon Rim region of northern Arizona. The coordinates are UTM Zone 12N, NAD83 (EPSG:26912), in meters.</p>
+<p>A note on the diversity values: they are non-integer and range from 3.16 to 12.95 for birds and 3.70 to 8.14 for plants. These are not raw species counts – they are likely a diversity index such as Shannon or Fisher’s alpha, though the original source and exact units have been lost. Higher values indicate greater diversity in both cases, and the relative patterns across plots are interpretable even if the absolute values are not.</p>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -802,10 +808,14 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This dataset is a good reminder to document your data sources carefully and immediately. The coordinates, spatial extent, plot size, and biological variables here are all internally consistent and ecologically plausible, but the original source has been lost, making it impossible to properly cite, verify the methods, or understand the diversity metric. This happens more easily than you might think: a dataset downloaded for a class exercise, renamed, reformatted, and re-used a few years later can quickly become an orphan with no traceable origin. Get in the habit of keeping a README alongside any dataset you download, noting the source, date accessed, and any transformations you applied.</p>
+<p>This dataset is a good reminder to document your data sources carefully and immediately. The coordinates, spatial extent, plot size, and biological variables here are all internally consistent and ecologically plausible, but the original source has been lost, making it impossible to properly cite, verify the methods, or understand the diversity metric. This happens more easily than you might think: a dataset downloaded for a class exercise, renamed, reformatted, and re-used a few years later can quickly become an orphan with no traceable origin. Keep a README alongside any dataset you use, noting the source, date accessed, and any transformations you applied.</p>
 </div>
 </div>
-<p>Your work is to model bird diversity as a function of plant diversity with the expectation that higher plant diversity is associated with higher bird diversity. Watch those residuals and interpret carefully!</p>
+<p>Model bird diversity as a function of plant diversity, with the expectation that higher plant diversity is associated with higher bird diversity. Follow the four-step workflow from this chapter: OLS first, correlogram of residuals, variogram if needed, GLS with an appropriate correlation structure. Watch those residuals and interpret carefully – does accounting for spatial structure change the inference?</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<p><span class="citation" data-cites="dormann2007methods"><span class="nocase">Dormann et al.</span> (<a href="13References.html#ref-dormann2007methods" role="doc-biblioref">2007</a>)</span> review methods for accounting for spatial structure in species distribution modeling. The intro and section 3 on GLS are the most directly relevant. <span class="citation" data-cites="keitt2002accounting"><span class="nocase">Keitt et al.</span> (<a href="13References.html#ref-keitt2002accounting" role="doc-biblioref">2002</a>)</span> show with ecological case studies how spatial methods outperform standard regression when dependence is ignored – worth a skim for the results even if you skip the methodological details. Tim Keitt is a smarty pants and it’s worth reading anything he’s written.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">

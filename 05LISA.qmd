@@ -7,9 +7,6 @@ set.seed(1984)
 ## Big Idea
 Space matters: Spatial pattern lets us understand process. Global Moran's I tells you *whether* spatial autocorrelation exists across your study area and perhaps at what distances. Local Indicators of Spatial Association (LISA) tell you *where*. LISA lets us go from a single number that summarizes the entire map to a map of where the clustering and the outliers actually live.
 
-## Reading
-@anselin1995local is the original paper introducing LISA. It is not a breezy read, but sections 1 through 3 are worth your time. Pay attention to the conceptual motivation -- why a global statistic is insufficient -- and the four categories of local spatial association. You do not need to follow every bit of the math.
-
 ::: {.callout-note}
 This module builds directly on the [Spatial Autocorrelation chapter](04GlobalAutocorrelation.html). Make sure you are comfortable with Moran's I and how spatial weights matrices work before diving in.
 :::
@@ -120,7 +117,7 @@ One important caveat: you are testing one hypothesis per location. With 164 loca
 
 ## A Simulated Example
 
-Before running LISA on real data, let's plant a known hot spot in simulated data and confirm that we can find it. This is a recurring move in this course -- if a method can not detect a pattern we deliberately created, we should not trust it on data where we do not know the answer.
+Before running LISA on real data, let's plant a known hot spot in simulated data and confirm that we can find it. This is a recurring move throughout this book -- if a method can not detect a pattern we deliberately created, we should not trust it on data where we do not know the answer.
 
 I will make an 8x8 grid of locations. All locations get values drawn from a standard normal distribution, except a 3x3 block in one corner which gets values drawn from a normal distribution centered at 4. That block is our planted hot spot.
 
@@ -280,15 +277,21 @@ In the lead data, an HL outlier would be a location with high lead concentration
 
 The answer is that not every spatial outlier has a good story. Some are noise. But the ones that do have a story often have a good one, and LISA is what surfaces them for investigation.
 
-## Your Work
+## Wrapping Up
 
-Load the `birdRichnessMexico.rds` data from the last module.
+LISA takes a global measure and makes it local. You go from "there is spatial structure in this variable" to "here is where that structure lives, and here is where the exceptions are." Hot spots and cold spots tell you where the signal is concentrated. Spatial outliers tell you where something is off -- and those are often the most ecologically interesting locations in the dataset.
+
+From here the book shifts to prediction. We've been describing spatial structure; now we're going to use it. Interpolation methods like IDW and kriging take what you know at sampled locations and estimate values everywhere else. The variogram you met in the autocorrelation chapter is about to become a lot more useful.
+
+## Exercises
+
+Load the `birdRichnessMexico.rds` data from the previous chapter.
 
 ```{r, eval=FALSE}
 birds_sf <- readRDS("data/birdRichnessMexico.rds")
 ```
 
-In the last module you described the global spatial autocorrelation in bird richness using Moran's I and variograms. Now take the next step.
+The previous chapter described the global spatial autocorrelation in bird richness using Moran's I and variograms. Now take the next step and decompose that global signal locally.
 
 1. Build a k-nearest-neighbor weights matrix with $k = 8$ and row-standardize it.
 
@@ -296,62 +299,14 @@ In the last module you described the global spatial autocorrelation in bird rich
 
 3. Run `localmoran` and build a LISA cluster map. Use $\alpha = 0.01$.
 
-4. The global autocorrelation module showed that richness is highly structured in space. The LISA map should tell you *where* that structure is concentrated. Does the pattern of HH and LL clusters correspond to what you'd expect based on what you know about Mexican biogeography? Think about where the species-rich areas of Mexico are and what drives them.
+4. The global analysis showed that richness is highly structured in space. The LISA map tells you *where* that structure is concentrated. Does the pattern of HH and LL clusters correspond to what you'd expect from Mexican biogeography? Think about where the species-rich areas of Mexico are and what drives them.
 
 5. Are there any spatial outliers -- HL or LH locations -- that catch your eye? Pick one and offer a plausible ecological or geographic explanation for why that location might differ from its neighbors.
 
 ### Comparing Global to Local
 
-As a final exercise, think about what you would have missed if you had stopped at the global Moran's I. Write a short paragraph (3-4 sentences) comparing what the global statistic told you to what the LISA map tells you. This is the kind of thing you would put in the methods and results section of a paper.
+Think about what you would have missed by stopping at the global Moran's I. How does the LISA map change or sharpen the story? This comparison -- global statistic to local decomposition -- is the kind of thing that belongs in a methods and results section when you are reporting spatial analysis.
 
-```{r,echo=FALSE,eval=FALSE}
-# --- instructor key ---
-birds_sf <- readRDS("data/birdRichnessMexico.rds")
+## Further Reading
 
-nb_birds <- knn2nb(knearneigh(birds_sf, k = 8))
-W_birds <- nb2listw(nb_birds, style = "W")
-
-# Moran scatterplot
-birds_sf$z <- as.vector(scale(birds_sf$nSpecies))
-birds_sf$lag_z <- lag.listw(W_birds, birds_sf$z)
-ggplot(birds_sf, aes(x = z, y = lag_z)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", formula = y ~ x - 1, se = FALSE, color = "firebrick") +
-  labs(x = "z (nSpecies)", y = "Spatial lag of z")
-
-# LISA
-lisa_birds <- localmoran(birds_sf$nSpecies, listw = W_birds)
-birds_sf$Ii <- lisa_birds[, "Ii"]
-birds_sf$pval <- lisa_birds[, "Pr(z != E(Ii))"]
-
-sig <- 0.01
-birds_sf$cluster <- case_when(
-  birds_sf$z > 0 & birds_sf$lag_z > 0 & birds_sf$pval < sig ~ "High-High",
-  birds_sf$z < 0 & birds_sf$lag_z < 0 & birds_sf$pval < sig ~ "Low-Low",
-  birds_sf$z > 0 & birds_sf$lag_z < 0 & birds_sf$pval < sig ~ "High-Low",
-  birds_sf$z < 0 & birds_sf$lag_z > 0 & birds_sf$pval < sig ~ "Low-High",
-  TRUE ~ "Not significant"
-)
-
-tmap_mode("view")
-tm_shape(birds_sf) +
-  tm_symbols(
-    fill = "cluster",
-    fill.scale = tm_scale_categorical(
-      values = c(
-        "High-High"       = "#d7191c",
-        "Low-Low"         = "#2c7bb6",
-        "High-Low"        = "#fdae61",
-        "Low-High"        = "#abd9e9",
-        "Not significant" = "#d9d9d9"
-      )
-    ),
-    size = 0.3,
-    fill_alpha = 0.8
-  )
-# HH in southern Mexico (Veracruz, Oaxaca, Chiapas) -- expected from tropical biodiversity
-# LL in Baja, Sonoran desert -- also expected
-# Some HL outliers worth examining
-```
+@anselin1995local is the original paper introducing LISA. Sections 1 through 3 are worth the effort -- the conceptual motivation for why a global statistic is insufficient, and the four categories of local spatial association, are laid out clearly even if the full mathematical treatment is dense.

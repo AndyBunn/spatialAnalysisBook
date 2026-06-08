@@ -5,10 +5,6 @@ set.seed(184)
 ```
 
 
-## Reading
-
-In Hijmans's [Interpolation](https://rspatial.org/analysis/4-interpolation.html) he covers thin-plate splines using an example but doesn't discuss the theory at all. Bivand also waves at it in Ch 8. ESRI has a decent reading on [radial basis functions](https://pro.arcgis.com/en/pro-app/help/analysis/geostatistical-analyst/how-radial-basis-functions-work.htm) that is worth a look.
-
 ## Big Idea
 
 IDW was our first crack at spatial interpolation. Simple, transparent, and completely deterministic. Thin-plate splines (TPS) are also deterministic, but the philosophy is different. Instead of weighting nearby points by distance, TPS fits a single smooth surface to all the data at once, penalizing roughness globally rather than reasoning locally from neighbors. The payoff is a smoother surface with none of the bullseye artifacts IDW made in sparse areas. The cost is that TPS is a black box. The math is complex, the fitting is automatic, and the surface can over-smooth in ways that are hard to diagnose.
@@ -128,7 +124,7 @@ ggplot() +
   theme_minimal()
 ```
 
-Compare that to the IDW surface from the last module. No craters. The sparse center of the study area gets a smooth interpolation rather than bullseyes around each isolated point. That's the global nature of TPS doing its job.
+Compare that to the IDW surface from the IDW chapter. No craters. The sparse center of the study area gets a smooth interpolation rather than bullseyes around each isolated point. That's the global nature of TPS doing its job.
 
 ## Skill
 
@@ -210,9 +206,9 @@ rmseNULL
 1 - (rmse / rmseNULL)
 ```
 
-TPS beats the null. The skill score here (`r round(1 - (rmse / rmseNULL),3)`) usually lands around 0.35-0.45 depending on the random split. Compare that to IDW from the last module, where the skill score was around 0.22-0.25. TPS is doing better, though not dramatically. For a full treatment of how to interpret these skill scores, see the [Model Skill and Cross Validation aside](06xAsideModelSkill.html).
+TPS beats the null. The skill score here (`r round(1 - (rmse / rmseNULL),3)`) usually lands around 0.35-0.45 depending on the random split. Compare that to the IDW chapter, where the skill score was around 0.22-0.25. TPS is doing better, though not dramatically. For a full treatment of how to interpret these skill scores, see the [Model Skill and Cross Validation aside](06xAsideModelSkill.html).
 
-## Is This an Improvement?
+## Wrapping Up
 
 In terms of skill scores, TPS and IDW are in the same neighborhood on the Meuse data. TPS tends to do a bit better out-of-sample, but the margins are not large.
 
@@ -228,6 +224,10 @@ Both IDW and TPS produce a surface but tell you nothing about how wrong it might
 
 That's what kriging fixes. Kriging is a probabilistic method that uses the variogram (which you already know from the autocorrelation module) to model the spatial structure of the data and produce a prediction surface with an actual uncertainty estimate alongside it. That `var1.var` column that was full of NAs in the IDW output? Kriging fills it in, and it means something. That's the next chapter.
 
-## Your Work
+## Exercises
 
-None for this module. This is meant as an add-on to introduce you to TPS before we move on to kriging. That said, you should be able to apply this to the California precipitation data from the IDW assignment by following the workflow above.
+Try applying the TPS workflow to the California precipitation data from the IDW chapter. The setup is the same -- `prcpCA.rds` for the point data, `gridCA.rds` for the prediction grid. Compare your TPS surface to the IDW surface you made there. Where do they differ? Does TPS handle the sparse regions of the state better, and does cross-validation skill reflect that?
+
+## Further Reading
+
+Hijmans's [Interpolation](https://rspatial.org/analysis/4-interpolation.html) covers TPS with worked examples. ESRI has a readable conceptual overview of [radial basis functions](https://pro.arcgis.com/en/pro-app/help/analysis/geostatistical-analyst/how-radial-basis-functions-work.htm) that situates TPS in the broader RBF family. For the mathematical details of the `fields` implementation, the [package vignette](https://github.com/NCAR/fields/blob/master/fieldsVignette.pdf) by Ashton Wiens and Mitch Krock is the place to go.

@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Welcome and How to Get Setup – Spatial Analysis for Environmental Science</title>
+<title>Welcome and How to Get Setup – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -121,7 +121,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -300,7 +300,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -330,9 +335,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#why-spatial-analysis" id="toc-why-spatial-analysis" class="nav-link active" data-scroll-target="#why-spatial-analysis">Why Spatial Analysis</a></li>
-  <li><a href="#this-is-not-a-textbook" id="toc-this-is-not-a-textbook" class="nav-link" data-scroll-target="#this-is-not-a-textbook">This Is Not a Textbook</a></li>
-  <li><a href="#how-these-notes-are-laid-out" id="toc-how-these-notes-are-laid-out" class="nav-link" data-scroll-target="#how-these-notes-are-laid-out">How These Notes Are Laid Out</a></li>
-  <li><a href="#whats-in-these-notes" id="toc-whats-in-these-notes" class="nav-link" data-scroll-target="#whats-in-these-notes">What’s in These Notes</a></li>
+  <li><a href="#how-to-use-this-book" id="toc-how-to-use-this-book" class="nav-link" data-scroll-target="#how-to-use-this-book">How to Use This Book</a></li>
+  <li><a href="#how-this-book-is-laid-out" id="toc-how-this-book-is-laid-out" class="nav-link" data-scroll-target="#how-this-book-is-laid-out">How This Book Is Laid Out</a></li>
+  <li><a href="#whats-in-this-book" id="toc-whats-in-this-book" class="nav-link" data-scroll-target="#whats-in-this-book">What’s in This Book</a></li>
   <li><a href="#the-final-frontier" id="toc-the-final-frontier" class="nav-link" data-scroll-target="#the-final-frontier">The Final Frontier</a></li>
   <li><a href="#technical-setup" id="toc-technical-setup" class="nav-link" data-scroll-target="#technical-setup">Technical Setup</a>
   <ul>
@@ -371,20 +376,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The tools to do this right have existed for decades. What’s changed is that they are now implemented in open, well-documented software, with enough worked examples that you don’t need a geostatistics PhD to use them correctly. There’s no longer a good reason to leave spatial structure on the table.</p>
 <p>Spatial pattern is also information in its own right. Where something is happening, and where it isn’t, tells you something about the processes driving it. Learning to read that structure is part of the fundamental job of environmental science: figuring out why things are patterned the way they are.</p>
 </section>
-<section id="this-is-not-a-textbook" class="level2">
-<h2 class="anchored" data-anchor-id="this-is-not-a-textbook">This Is Not a Textbook</h2>
-<p>These are notes and tutorials for working with data. Think of them less like a textbook and more like notes left by someone who has gotten lost in these same woods and wants to help you find your way through.</p>
-<p>They are hands-on by design. You will write code, look at data, make maps, fit models, and interpret results. Each section builds on what came before. The math shows up when it needs to, but the emphasis throughout is on doing spatial analysis and understanding what you’re doing. We aren’t deriving things for their own sake.</p>
+<section id="how-to-use-this-book" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-use-this-book">How to Use This Book</h2>
+<p>This is a hands-on book. You will write code, look at data, make maps, fit models, and interpret results. Each chapter builds on what came before. The math shows up when it needs to, but the emphasis throughout is on doing spatial analysis and understanding what you’re doing. Not deriving things for their own sake.</p>
 </section>
-<section id="how-these-notes-are-laid-out" class="level2">
-<h2 class="anchored" data-anchor-id="how-these-notes-are-laid-out">How These Notes Are Laid Out</h2>
-<p>Most chapters follow a natural progression, each building on the last. Scattered through the notes you’ll find <strong>Asides</strong> which are side quests that dig into something that doesn’t quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.</p>
+<section id="how-this-book-is-laid-out" class="level2">
+<h2 class="anchored" data-anchor-id="how-this-book-is-laid-out">How This Book Is Laid Out</h2>
+<p>Most chapters follow a natural progression, each building on the last. Scattered through the book you’ll find <strong>Asides</strong> which are side quests that dig into something that doesn’t quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.</p>
 <p>The Asides are linked from the chapters that depend on them. Skipping one will likely leave you confused when that chapter references it. They are separate from the main chapters not because they are less important, but because pulling them out keeps the main flow readable. When you hit a link to an Aside, follow it.</p>
 </section>
-<section id="whats-in-these-notes" class="level2">
-<h2 class="anchored" data-anchor-id="whats-in-these-notes">What’s in These Notes</h2>
-<p>The notes are organized into four parts. Each builds on the one before it.</p>
-<p><strong>Foundations</strong> gets you oriented on the two data types that show up everywhere in these notes: point observations and raster surfaces. We aren’t a GIS-in-R course, so we won’t linger here long.</p>
+<section id="whats-in-this-book" class="level2">
+<h2 class="anchored" data-anchor-id="whats-in-this-book">What’s in This Book</h2>
+<p>The book is organized into four parts. Each builds on the one before it.</p>
+<p><strong>Foundations</strong> gets you oriented on the two data types that show up everywhere in this book: point observations and raster surfaces. This isn’t a GIS-in-R book, so we won’t linger here long.</p>
 <ul>
 <li><strong>Spatial Data: A Quick Orientation</strong> – A fast introduction to <code>sf</code> for point data and <code>terra</code> for rasters. Enough to follow along with the rest of the book. For the full treatment, see <a href="https://r.geocompx.org/">Geocomputation with R</a> or the <a href="https://datacarpentry.org/r-raster-vector-geospatial/">Data Carpentries spatial curriculum</a>.
 <ul>
@@ -427,6 +431,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul></li>
 <li><strong>Spatial Regression: Lag and Error Models</strong> – GLS treats space as nuisance in the residuals. SAR models let you go further: test whether the structure is in the errors or in the response itself, and fit accordingly.</li>
 </ul>
+<p><strong>What You Can Do Now</strong> closes the book. A short synthesis of the three modes of spatial analysis – description, prediction, inference – and where to go from here.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -437,7 +442,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>One thing you will not find in these notes is areal data analysis. Watersheds, land cover polygons, census tracts, habitat patches: that world has its own analytical framework, its own vocabulary, and its own rabbit holes, and going there turns a spatial analysis course into a GIS course fast. The methods here are built around point observations and continuous raster surfaces, which is where most field-based environmental and ecological data lives anyway.</p>
+<p>One thing you will not find in this book is areal data analysis. Watersheds, land cover polygons, census tracts, habitat patches: that world has its own analytical framework, its own vocabulary, and its own rabbit holes, and going there turns a spatial analysis book into a GIS book fast. The methods here are built around point observations and continuous raster surfaces, which is where most field-based environmental and ecological data lives anyway.</p>
 </div>
 </div>
 </section>
@@ -457,18 +462,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>To follow along, you’ll want a working RStudio project.</p>
 <ol type="1">
 <li><p><strong>Create a new RStudio project</strong><br>
-Go to <strong>File → New Project → New Directory → New Project</strong>. Give it a name (something like <code>spatial-course</code>) and choose where to save it.</p></li>
+Go to <strong>File → New Project → New Directory → New Project</strong>. Give it a name (something like <code>spatial-analysis</code>) and choose where to save it.</p></li>
 <li><p><strong>Download the <code>data/</code> folder</strong><br>
-The datasets used in the examples are in the <code>data/</code> folder of the course repository. Download that folder and place it inside your project directory.</p>
+The datasets used in the examples are in the <code>data/</code> folder of the book’s GitHub repository. Download that folder and place it inside your project directory.</p>
 <p>You can <a href="https://github.com/AndyBunn/spatialNotes/releases/download/data-latest/data.zip">download the data directly</a> from the GitHub <a href="https://github.com/AndyBunn/spatialNotes">repo</a>:</p>
 <pre><code>https://github.com/AndyBunn/spatialNotes/releases/download/data-latest/data.zip</code></pre>
 <p>Once it’s unzipped, your folder structure should look something like this:</p>
-<pre><code>spatial-course/
+<pre><code>spatial-analysis/
 ├── data/
 │   ├── birdRichnessMexico.rds
 │   ├── prcpCA.rds
 │   └── ...
-└── spatial-course.Rproj</code></pre></li>
+└── spatial-analysis.Rproj</code></pre></li>
 <li><p><strong>Use relative paths in your code</strong><br>
 Use paths like <code>"data/birdRichnessMexico.rds"</code> rather than full file paths. This keeps the code portable – it will run on any machine without modification.</p>
 <div class="cell">
@@ -479,13 +484,13 @@ Use paths like <code>"data/birdRichnessMexico.rds"</code> rather than full file 
 </div></li>
 <li><p><strong>Save your <code>.qmd</code> or <code>.Rmd</code> files in the project root</strong><br>
 When you make a file for working through a chapter, save it in the project’s root directory. Quarto (<code>.qmd</code>) and R Markdown (<code>.Rmd</code>) files are close cousins – the syntax is nearly identical and either will work fine here. After finishing the point pattern chapter, your structure might look like this:</p>
-<pre><code>spatial-course/
+<pre><code>spatial-analysis/
 ├── data/
 │   ├── birdRichnessMexico.rds
 │   ├── prcpCA.rds
 │   └── ...
 ├── pointPatternWork.qmd
-└── spatial-course.Rproj</code></pre></li>
+└── spatial-analysis.Rproj</code></pre></li>
 </ol>
 
 

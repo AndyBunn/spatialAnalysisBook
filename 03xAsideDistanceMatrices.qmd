@@ -6,7 +6,7 @@ set.seed(1984)
 
 ## Why This Matters
 
-Distance matrices show up everywhere in this course: point pattern analysis, variograms, spatial weights, IDW, kriging, and nearest-neighbor analyses. You will use them so often and in so many different forms that it's worth slowing down and really understanding what they are, how R stores them, and what they're doing under the hood before you need to rely on them for something more complex.
+Distance matrices show up everywhere in this book: point pattern analysis, variograms, spatial weights, IDW, kriging, and nearest-neighbor analyses. You will use them so often and in so many different forms that it's worth slowing down and really understanding what they are, how R stores them, and what they're doing under the hood before you need to rely on them for something more complex.
 
 None of it is hard. But the details matter more here, because a lot of subtle bugs in spatial analysis can come from misunderstanding the structure of a distance matrix.
 
@@ -172,7 +172,7 @@ A few things worth knowing about LCP distances:
 - They can be **asymmetric** if the cost surface is directional. Traveling uphill costs more than traveling downhill, so a path across rugged terrain may have different cost depending on which direction you go.
 - The `gdistance` package is the standard tool for this in R. It takes a cost raster, builds a transition matrix between neighboring cells, and then uses graph algorithms to find minimum cost paths between any pair of points.
 
-We won't implement LCP analyses in this course, but you should know the concept exists and why it matters. When you're thinking about habitat connectivity, dispersal corridors, or movement between patches, Euclidean distance is often a poor proxy for what's actually constraining your organisms. Cost distances, even rough ones based on broad land cover classes, tend to do much better.
+LCP analyses are outside the scope of this book, but worth knowing the concept exists and why it matters. When you're thinking about habitat connectivity, dispersal corridors, or movement between patches, Euclidean distance is often a poor proxy for what's actually constraining your organisms. Cost distances, even rough ones based on broad land cover classes, tend to do much better.
 
 ## The Scale Problem
 
@@ -263,7 +263,7 @@ Compare the two matrices directly and you'll see that not only are the magnitude
 
 ## Quick Reference
 
-Here's a cheat sheet for some of the distance-related functions you'll use in this course:
+Here's a cheat sheet for some of the distance-related functions you'll use in this book:
 
 | Situation | Function | Returns |
 |---|---|---|

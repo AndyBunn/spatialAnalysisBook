@@ -188,10 +188,10 @@ gridCA <- readRDS("../data/gridCA.rds")
 prcpCAsf <- prcpCA %>% st_as_sf(coords = c("X", "Y")) %>%
   st_set_crs(value = 3310)
 
-prcpCAsf %>% ggplot() + 
+prcpCAsf %>% ggplot() +
   geom_sf(aes(fill=ANNUAL,size=ANNUAL),color="white",
-          shape=21,alpha=0.8) + 
-  scale_fill_continuous(type = "viridis",name="mm") + 
+          shape=21,alpha=0.8) +
+  scale_fill_continuous(type = "viridis",name="mm") +
   labs(title="Total Annual Precipitation") +
   scale_size(guide="none")
 

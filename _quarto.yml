@@ -4,11 +4,11 @@ project:
   pre-render: Rscript purl_all.R
 
 book:
-  title: "Spatial Analysis for Environmental Science"
-  subtitle: "Course Notes"
+  title: "Applied Spatial Analysis for Environmental Science"
+  subtitle: "An R-Based Introduction"
   author: "Andy Bunn"
   date: today
-  description: "Spatial analysis notes and exercises"
+  description: "An applied introduction to spatial analysis for environmental scientists using R"
   navbar:
     background: dark
     search: true
@@ -42,7 +42,8 @@ book:
         - 10RegressionGLS.qmd
         - 10xAsideOLS-Algebra-Matrix.qmd
         - 11SpatialRegressionSAR.qmd
-    - 12References.qmd
+    - 12Conclusion.qmd
+    - 13References.qmd
     - part: "Appendices"
       chapters:
         - A1MeuseData.qmd

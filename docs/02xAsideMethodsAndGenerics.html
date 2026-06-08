@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Aside: Understanding Methods and Generics in R – Spatial Analysis for Environmental Science</title>
+<title>Aside: Understanding Methods and Generics in R – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -150,7 +150,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -329,7 +329,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -530,7 +535,7 @@ Answer? <strong>Generics and methods.</strong></p>
 <li>If it finds that method, it runs it.</li>
 <li>If not, it falls back to <code>summary.default()</code>.</li>
 </ol>
-<p>This system is called S3. It’s the oldest and most common object system in R, and it’s what you’ll encounter in almost every package you use in this course.</p>
+<p>This system is called S3. It’s the oldest and most common object system in R, and it’s what you’ll encounter in almost every package you use.</p>
 <p>You can look under the hood:</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -679,7 +684,7 @@ see '?methods' for accessing help and source code</code></pre>
     class(ans) &lt;- "summary.lm"
     ans
 }
-&lt;bytecode: 0x11f9f6460&gt;
+&lt;bytecode: 0x10d4ff2e8&gt;
 &lt;environment: namespace:stats&gt;</code></pre>
 </div>
 </div>
@@ -706,7 +711,7 @@ For example:</p>
 <div class="cell-output cell-output-stdout">
 <pre><code>function (object, ...) 
 UseMethod("summary")
-&lt;bytecode: 0x11f9fad00&gt;
+&lt;bytecode: 0x10d502350&gt;
 &lt;environment: namespace:base&gt;</code></pre>
 </div>
 </div>
@@ -990,7 +995,7 @@ see '?methods' for accessing help and source code</code></pre>
     class(ans) &lt;- "summary.lm"
     ans
 }
-&lt;bytecode: 0x11f9f6460&gt;
+&lt;bytecode: 0x10d4ff2e8&gt;
 &lt;environment: namespace:stats&gt;</code></pre>
 </div>
 <details open="" class="code-fold">
@@ -1005,7 +1010,7 @@ see '?methods' for accessing help and source code</code></pre>
 <section id="why-this-matters" class="level2">
 <h2 class="anchored" data-anchor-id="why-this-matters">Why This Matters</h2>
 <p>Understanding how generics and methods work helps you read other people’s code, write better functions, and make sense of R’s behavior when things feel a little magic.</p>
-<p>You’ll see this pattern come up throughout the course. When we work with spatial objects — things like <code>sf</code> features or <code>ppp</code> point patterns — the same idea applies. <code>plot()</code>, <code>summary()</code>, <code>print()</code> all do the right thing because someone wrote a method for that class. Now you know how.</p>
+<p>You’ll see this pattern come up throughout the book. When we work with spatial objects — things like <code>sf</code> features or <code>ppp</code> point patterns — the same idea applies. <code>plot()</code>, <code>summary()</code>, <code>print()</code> all do the right thing because someone wrote a method for that class. Now you know how.</p>
 
 
 </section>

@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Spatial Data in R: A Quick Orientation – Spatial Analysis for Environmental Science</title>
+<title>Spatial Data in R: A Quick Orientation – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -140,7 +140,7 @@ div.csl-indent {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -319,7 +319,12 @@ div.csl-indent {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -351,7 +356,7 @@ div.csl-indent {
   <li><a href="#points-with-sf" id="toc-points-with-sf" class="nav-link active" data-scroll-target="#points-with-sf">Points with <code>sf</code></a></li>
   <li><a href="#rasters-with-terra" id="toc-rasters-with-terra" class="nav-link" data-scroll-target="#rasters-with-terra">Rasters with <code>terra</code></a></li>
   <li><a href="#projections-why-you-want-to-be-on-a-plane" id="toc-projections-why-you-want-to-be-on-a-plane" class="nav-link" data-scroll-target="#projections-why-you-want-to-be-on-a-plane">Projections: Why You Want to Be on a Plane</a></li>
-  <li><a href="#whats-next" id="toc-whats-next" class="nav-link" data-scroll-target="#whats-next">What’s Next</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/02SpatialCrashCourse.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -377,11 +382,11 @@ div.csl-indent {
 </header>
 
 
-<p>There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It goes deep fast. We aren’t going to go there. This is not a GIS-in-R course, and these notes are not a substitute for one.</p>
+<p>There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It goes deep fast. We aren’t going to go there. This is not a GIS-in-R book, and it is not a substitute for one.</p>
 <p>If you want the full treatment, two resources will serve you well. <a href="https://r.geocompx.org/">Geocomputation with R</a> by Lovelace, Nowosad, and Muenchow is the best book on the subject and it’s free online. The <a href="https://datacarpentry.org/r-raster-vector-geospatial/">Data Carpentries spatial curriculum</a> covers the fundamentals in a hands-on workshop format. Work through either of those and you’ll come out knowing a lot more than we need here.</p>
 <p>What we do need is a working vocabulary for two things: point data and raster data. Those are the main characters in this book. Polygons and lines show up occasionally but they aren’t the focus.</p>
 <p>So that’s the plan for this chapter. Quick introduction to <code>sf</code> for points. Quick introduction to <code>terra</code> for rasters. Then we move on.</p>
-<p>We’ll use three packages in this chapter. <code>tidyverse</code> <span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for general data wrangling, <code>sf</code> <span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> for vector spatial data, and <code>terra</code> <span class="citation" data-cites="R-terra">(<a href="12References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> for rasters. You’ll see these same packages throughout the book. Full citations are in the <a href="12References.html">References</a> chapter at the back.</p>
+<p>We’ll use three packages in this chapter. <code>tidyverse</code> <span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for general data wrangling, <code>sf</code> <span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> for vector spatial data, and <code>terra</code> <span class="citation" data-cites="R-terra">(<a href="13References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> for rasters. You’ll see these same packages throughout the book. Full citations are in the <a href="12References.html">References</a> chapter at the back.</p>
 <section id="points-with-sf" class="level2">
 <h2 class="anchored" data-anchor-id="points-with-sf">Points with <code>sf</code></h2>
 <p>The <code>sf</code> package handles vector data in R: points, lines, and polygons. We care about points. An <code>sf</code> object looks like a data frame, which is intentional. It is a data frame, with one extra column that holds the geometry.</p>
@@ -608,8 +613,8 @@ max value   : 3645.142 </code></pre>
 <p>You’ll notice the resolution changes when you reproject a raster. <code>terra</code> has to resample the grid to fit the new coordinate system. That’s normal. Check the extent and resolution in the output to make sure things look right.</p>
 <p>From here on, we’ll work in projected coordinates. If you load data in geographic coordinates, reproject it before doing any analysis. Make it a habit.</p>
 </section>
-<section id="whats-next" class="level2">
-<h2 class="anchored" data-anchor-id="whats-next">What’s Next</h2>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>You now know enough to follow along. We have <code>sf</code> for our point observations and <code>terra</code> for our gridded surfaces. The chapters ahead use both, and you’ll get more comfortable with them as we go.</p>
 <p>Starting with Point Patterns, we’re going to ask the most basic spatial question: are these points randomly distributed, or is there structure? You’d be surprised how much that question opens up.</p>
 

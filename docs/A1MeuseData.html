@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Appendix: The Meuse Dataset – Spatial Analysis for Environmental Science</title>
+<title>Appendix: The Meuse Dataset – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -88,7 +88,7 @@ div.csl-indent {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./12References.html" rel="prev">
+<link href="./13References.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -139,7 +139,7 @@ div.csl-indent {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -318,7 +318,12 @@ div.csl-indent {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -381,21 +386,21 @@ div.csl-indent {
 </header>
 
 
-<p>We use the Meuse River dataset throughout these notes, so it’s worth saying clearly where it comes from, what’s in it, and how the version you’re working with was assembled.</p>
-<p>The original <code>meuse.all</code> from the <code>gstat</code> package has 17 columns, most of which we never touch - landuse codes, indicator variables for which survey the row came from, a lime field test result. Handing students a 17-column data frame when you only ever use 7 of those columns is a tax on attention. Same problem with the original <code>meuse.grid</code>: it had a normalized distance column and two arbitrary area-split columns (<code>part.a</code>, <code>part.b</code>) that served no purpose in these notes. So we stripped both down. <code>meuse2</code> has the coordinates and the metals plus organic matter. <code>meuse.grid2</code> has the grid coordinates and a set of modern, interpretable covariates. The covariates that matter for the regression kriging chapter - soil type, flooding frequency, river distance - live in <code>meuse.grid2</code> and get extracted onto the point data when needed using <code>terra::extract()</code>. That workflow is more realistic than having covariates pre-joined into the point dataset anyway.</p>
+<p>We use the Meuse River dataset throughout this book, so it’s worth saying clearly where it comes from, what’s in it, and how the version you’re working with was assembled.</p>
+<p>The original <code>meuse.all</code> from the <code>gstat</code> package has 17 columns, most of which we never touch - landuse codes, indicator variables for which survey the row came from, a lime field test result. Handing students a 17-column data frame when you only ever use 7 of those columns is a tax on attention. Same problem with the original <code>meuse.grid</code>: it had a normalized distance column and two arbitrary area-split columns (<code>part.a</code>, <code>part.b</code>) that served no purpose in this book. So we stripped both down. <code>meuse2</code> has the coordinates and the metals plus organic matter. <code>meuse.grid2</code> has the grid coordinates and a set of modern, interpretable covariates. The covariates that matter for the regression kriging chapter - soil type, flooding frequency, river distance - live in <code>meuse.grid2</code> and get extracted onto the point data when needed using <code>terra::extract()</code>. That workflow is more realistic than having covariates pre-joined into the point dataset anyway.</p>
 <section id="origin" class="level2">
 <h2 class="anchored" data-anchor-id="origin">Origin</h2>
 <p>The original data were collected in the early 1990s near the village of Stein in the Netherlands, in the floodplain of the Meuse River. The data include topsoil heavy metal concentrations (cadmium, copper, lead, zinc) at 155 sample locations, along with a handful of environmental covariates. The dataset was published and distributed with the <code>sp</code> package in R by Edzer Pebesma and Roger Bivand, and it has been a workhorse teaching dataset in spatial statistics ever since.</p>
-<p>The original dataset comes in two objects from the <code>sp</code> package: <code>meuse</code> (155 sample points) and <code>meuse.grid</code> (the prediction grid). In these notes we use trimmed versions of both. For the point data we use <code>meuse2</code>, and for the prediction grid we use <code>meuse.grid2</code>. Load them like this:</p>
+<p>The original dataset comes in two objects from the <code>sp</code> package: <code>meuse</code> (155 sample points) and <code>meuse.grid</code> (the prediction grid). In this book we use trimmed versions of both. For the point data we use <code>meuse2</code>, and for the prediction grid we use <code>meuse.grid2</code>. Load them like this:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>meuse2 <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/meuse2.Rds"</span>)            <span class="co"># 164 sample points</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>meuse.grid2 <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/meuse.grid2.Rds"</span>)  <span class="co"># prediction grid</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="the-prediction-grid" class="level2">
 <h2 class="anchored" data-anchor-id="the-prediction-grid">The prediction grid</h2>
 <p><code>meuse.grid2</code> extends the original <code>meuse.grid</code> with modern covariate layers pulled from open data sources. Here is what was added and where it came from.</p>
-<p><strong>Elevation and terrain derivatives</strong> were pulled using the <code>elevatr</code> package <span class="citation" data-cites="R-elevatr">(<a href="12References.html#ref-R-elevatr" role="doc-biblioref">Hollister et al. 2025</a>)</span>, which fetches AWS terrain tiles at roughly 10 m resolution (zoom level 14). The elevation raster was reprojected to RD New (EPSG:28992) before computing terrain derivatives with <code>terra::terrain()</code> and <code>terra::flowAccumulation()</code> <span class="citation" data-cites="R-terra">(<a href="12References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span>.</p>
-<p><strong>Land cover</strong> is from ESA WorldCover 2021, a global 10 m land cover product based on Sentinel-1 and Sentinel-2 imagery. The data are freely available from the ESA public S3 bucket and were accessed using the <code>rstac</code> package <span class="citation" data-cites="R-rstac">(<a href="12References.html#ref-R-rstac" role="doc-biblioref">Simoes et al. 2021</a>)</span>. The study area straddles the boundary between two 3x3 degree tiles (N48E003 and N51E003), which were merged before cropping.</p>
-<p><strong>River distance</strong> was computed using main channel geometries pulled from OpenStreetMap via the <code>osmdata</code> package <span class="citation" data-cites="R-osmdata">(<a href="12References.html#ref-R-osmdata" role="doc-biblioref">Mark Padgham et al. 2017</a>)</span>, filtered to features tagged as <code>waterway=river</code> with names matching Maas, Meuse, or Afgesneden Maas. Streams and canals were excluded to avoid spurious near-zero distances in the upland parts of the study area. Distance from each grid cell to the nearest retained feature was calculated in meters using <code>sf::st_distance()</code> <span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>.</p>
+<p><strong>Elevation and terrain derivatives</strong> were pulled using the <code>elevatr</code> package <span class="citation" data-cites="R-elevatr">(<a href="13References.html#ref-R-elevatr" role="doc-biblioref">Hollister et al. 2025</a>)</span>, which fetches AWS terrain tiles at roughly 10 m resolution (zoom level 14). The elevation raster was reprojected to RD New (EPSG:28992) before computing terrain derivatives with <code>terra::terrain()</code> and <code>terra::flowAccumulation()</code> <span class="citation" data-cites="R-terra">(<a href="13References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span>.</p>
+<p><strong>Land cover</strong> is from ESA WorldCover 2021, a global 10 m land cover product based on Sentinel-1 and Sentinel-2 imagery. The data are freely available from the ESA public S3 bucket and were accessed using the <code>rstac</code> package <span class="citation" data-cites="R-rstac">(<a href="13References.html#ref-R-rstac" role="doc-biblioref">Simoes et al. 2021</a>)</span>. The study area straddles the boundary between two 3x3 degree tiles (N48E003 and N51E003), which were merged before cropping.</p>
+<p><strong>River distance</strong> was computed using main channel geometries pulled from OpenStreetMap via the <code>osmdata</code> package <span class="citation" data-cites="R-osmdata">(<a href="13References.html#ref-R-osmdata" role="doc-biblioref">Mark Padgham et al. 2017</a>)</span>, filtered to features tagged as <code>waterway=river</code> with names matching Maas, Meuse, or Afgesneden Maas. Streams and canals were excluded to avoid spurious near-zero distances in the upland parts of the study area. Distance from each grid cell to the nearest retained feature was calculated in meters using <code>sf::st_distance()</code> <span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>.</p>
 <p>Fourteen boundary cells with NA terrain values (edge effects from the neighborhood calculations in <code>terrain()</code>) were dropped, leaving 3089 grid cells.</p>
 <p>The script that builds the augmented grid is in <code>rScripts/buildMeuseCovariates.R</code>.</p>
 </section>
@@ -1136,7 +1141,7 @@ Simoes, Rolf, Felipe Souza, Matheus Zaglia, Gilberto Ribeiro Queiroz, Rafael San
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./12References.html" class="pagination-link" aria-label="References">
+      <a href="./13References.html" class="pagination-link" aria-label="References">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">References</span></span>
       </a>          
   </div>

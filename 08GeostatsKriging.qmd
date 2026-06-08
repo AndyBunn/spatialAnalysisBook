@@ -5,11 +5,8 @@
 set.seed(184)
 ```
 
-## Reading
-We will finish Ch 8 in Bivand [@bivand2008geostatistics]. Sections 8.4 and 8.5 are the most important for this module. It's fairly dense after that. Review @fortin2016spatial as well, especially 4.3 to 4.5
-
 ## Big Idea
-We often want to estimate phenomena at locations where we do not have measurements. Geostatistics is the field that we use to make (hopefully) accurate and reliable models of spatial data. We will use these models for prediction. We can use both deterministic and probabilistic models and this module will focus on probabilistic methods. Kriging is a probabilistic method that finds spatial pattern and predicts unknown values based on that spatial pattern. Unlike IDW, kriging generates a measure of uncertainty allowing us to estimate confidence in the predictions.
+We often want to estimate phenomena at locations where we do not have measurements. Geostatistics is the field that we use to make (hopefully) accurate and reliable models of spatial data. We will use these models for prediction. We can use both deterministic and probabilistic models. This chapter focuses on probabilistic methods. Kriging is a probabilistic method that finds spatial pattern and predicts unknown values based on that spatial pattern. Unlike IDW, kriging generates a measure of uncertainty allowing us to estimate confidence in the predictions.
 
 ## Packages
 The `gstat`[@R-gstat] package is your friend. And I'm going to plot in `ggplot` via `tidyverse`[@R-tidyverse] with `sf`[@R-sf], `terra`[@R-terra] and `tidyterra`[@R-tidyterra]. We'll also use `automap`[@R-automap] for automatic variogram fitting.
@@ -32,7 +29,7 @@ The method is named after Danie Krige, a South African mining engineer who devel
 
 Kriging is a geostatistical method of interpolation that uses spatial autocorrelation, and it works best when there is strong autocorrelation in the data. When kriging we use the distance between sample points (and sometimes direction) to explain variation in a variable. We then fit a mathematical model to a specified number of points (or points within a certain distance) to determine the output value for each location. 
 
-The approach will make heavy use of the variograms that we started with earlier in the class. They are how we are going to determine the parameter $\lambda$ in the formula for kriging:
+The approach makes heavy use of variograms, which we introduced in the Global Autocorrelation chapter. They are how we determine the parameter $\lambda$ in the formula for kriging:
 
 $$\hat{Z}(s_0)=\sum_{i=1}^n \lambda_i Z(s_i)$$
 
@@ -289,7 +286,7 @@ Note that `leadKrige` is a `sf` object that has the predicted surface `var1.pred
 
 Here is the prediction surface. Note how we specify what `attribute` we want to plot via `leadKrige["var1.pred"]`.
 
-I'll use the little function from the IDW notes to get a `rast` object from the `sf` object.
+I'll use the little function from the IDW chapter to get a `rast` object from the `sf` object. Remember, this is one of the reasons to write a function in the first place -- define it once, reuse it across chapters.
 ```{r}
 sf_2_rast <-function(sfObject,variableIndex = 1){
   # coerce sf to a data.frame
@@ -370,10 +367,10 @@ Everything we have done in this chapter is ordinary kriging (OK), which is what 
 
 **Anisotropic kriging** relaxes the assumption that spatial correlation is the same in all directions. If your variable has stronger autocorrelation along a river valley than across it, for example, a standard isotropic variogram will misrepresent that structure. You can model anisotropy by fitting an elliptical rather than circular variogram, via the `anis` argument to `vgm`. It adds complexity and you need enough data to justify it, but for strongly directional processes it can matter.
 
-As with many topics in this class, you could spend a whole quarter on kriging alone. Think of the pleasures involved!
+You could spend a whole semester on kriging alone. Think of the pleasures involved!
 
 ## Cross Validation
-I showed an example of using the built in cross validation function at the end of the last module. We can do the same with kriging. Instead of a straight call to `krige` we can call `krige.cv` for either k-fold or leave-one-out cross validation (LOOCV). It defaults to LOOCV so the predicted values are from the time they were left out the model.
+The IDW chapter showed an example of using the built-in cross validation function. We can do the same with kriging. Instead of a straight call to `krige` we can call `krige.cv` for either k-fold or leave-one-out cross validation (LOOCV). It defaults to LOOCV so the predicted values are from the time they were left out the model.
 
 ```{r}
 leadKrigeLOOCV_sf <- krige.cv(formula = logLead~1, 
@@ -388,12 +385,13 @@ c(rsq=rsq, rmse = rmse)
 
 The LOOCV R$^2$ is `r round(rsq,3)` and the RMSE is `r round(rmse,3)` which we get from the observed vs predicted values. But note all the fields we get from the `krige.cv` function. We get the prediction and prediction variance of the cross-validated data points and we also get the observed values. We also get the residuals (observed minus predicted), the z-score (the residual divided by kriging standard error), and the fold (in this case we have as many folds as rows in meuse because it is LOOCV).
 
-## The Payoff
+## Wrapping Up
 
 Recall that IDW and TPS gave us a prediction surface with no uncertainty attached. Every grid cell got a number and that was that. Kriging gives us the same prediction surface, but also the variance surface we just looked at, and that second surface is where probability theory earns its keep. Imagine you're deciding where to put additional soil sampling stations to reduce uncertainty in your lead concentration map. With IDW you have no principled way to answer that question, because IDW has no model of uncertainty to begin with. With kriging, you look at the variance surface and put your next sample where the variance is highest. Or imagine you need to flag grid cells where the predicted lead concentration exceeds a regulatory threshold: with a variance surface you can attach a probability to that exceedance rather than just a point estimate. The deterministic methods we covered earlier are fast and intuitive, but they borrow nothing from probability theory, so there is no statistically grounded way to quantify how much you should trust the predictions. Kriging trades some of that simplicity for something genuinely useful: a map of your own ignorance.
 
-## Your Work
-Let's turn again to the California precipitation data that you used for the IDW module. Like with IDW, you'll make a continuous 10x10 km surface of precipitation from the 432 locations of long-term precipitation records. But this time you'll krige the surface rather than use IDW.
+## Exercises
+
+Return to the California precipitation data from the IDW chapter. This time, krige the surface rather than use IDW.
 
 ```{r}
 # precip point data
@@ -404,15 +402,20 @@ gridCA <- readRDS("data/gridCA.rds")
 prcpCAsf <- prcpCA %>% st_as_sf(coords = c("X", "Y")) %>%
   st_set_crs(value = 3310)
 
-prcpCAsf %>% ggplot() + 
+prcpCAsf %>% ggplot() +
   geom_sf(aes(fill=ANNUAL,size=ANNUAL),color="white",
-          shape=21,alpha=0.8) + 
-  scale_fill_continuous(type = "viridis",name="mm") + 
+          shape=21,alpha=0.8) +
+  scale_fill_continuous(type = "viridis",name="mm") +
   labs(title="Total Annual Precipitation") +
   scale_size(guide="none")
 ```
 
-Use kriging to create a surface of total annual precipitation in California -- do not use `automap` but fit the models using `variogram`, `vgm`, and `fit.variogram` as above. Compare at least two variogram models and assess the surface fit in a sensible way. Interpret and explain your surface and anything you notice in particular about it. 
+Fit the variogram manually using `variogram`, `vgm`, and `fit.variogram` -- skip `automap` for this one. Compare at least two variogram models. Assess the surface using cross-validation and interpret what you find. How does the kriged surface compare to the IDW surface you made earlier? Does the kriging variance surface (`var1.var`) tell you anything useful about where you should trust the predictions?
+
+
+## Further Reading
+
+@bivand2008geostatistics chapter 8, sections 8.4 and 8.5, covers kriging theory and implementation in R in detail. @fortin2016spatial sections 4.3 to 4.5 provide a more accessible treatment of the same material. Both are worth having at hand when fitting variograms for the first time.
 
 ## Postscript: Automap
 You'll find it anyways, so let's get the cat out of the bag.

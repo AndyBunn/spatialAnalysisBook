@@ -9,9 +9,9 @@ Space matters: Spatial pattern lets us understand process. That is, knowing wher
 
 We can quantify the pattern of points themselves or in the presence of an explanatory variable.
 
-## Reading
-Read chapter 7 in Bivand's book up to section 7.5 [@bivand2008pointpattern]. Also start reading through @fortin2016spatial as a great overall short chapter on spatial analysis. Don't worry about some of the details in there yet. We will revisit as we go along.
+There are two kinds of spatial structure we care about in PPA. First-order effects describe how intensity varies across space: are some areas simply denser than others, regardless of what the neighboring points are doing? Second-order effects describe the interactions between points at various distances: do nearby points attract or repel each other? Kernel density estimation gets at the first question. Ripley's K gets at the second. Keeping that distinction in your head makes the rest of this chapter easier to follow.
 
+That said, the two are not always easy to separate. If you see a cluster of points, is it because intensity is genuinely higher in that area, or because points attract each other? The conventional answer is that interaction tends to operate at small scales while large-scale variation in density reflects intensity. So if clustering only shows up at short distances, think second-order. If the whole map looks uneven, think first-order. In practice you often need both tools to tell the story.
 
 ::: {.callout-note}
 Before diving in, make sure you're comfortable with distance matrices. If you need a refresher, work through the [Distance Matrix aside](03xAsideDistanceMatrices.html).
@@ -36,7 +36,7 @@ What we want to know is whether a bunch of points are randomly arranged or if th
 Point patterns are a relatively simple form of spatial analysis but can really make clear concepts like clustering and uniformity.
 
 ### Simulated Example
-Let's illustrate. I'll generate four maps. Each has 100 points. Your job is to figure out if the pattern is: random, clumped (clustered), or uniform (repulsed). Note that the code that goes into making these patterns is using random normal or random uniform distributions to accomplish this. I often simulate patterns in data that I know exist and then see if I can detect them using some method. In fact, we will do a lot of this during class. If you look at `simDat` below you'll see that it is four `data.frame` objects bound together. Each one shows a different pattern. Don't worry if you don't understand all the code that makes up `simDat`. I'll walk through it online. 
+Let's illustrate. I'll generate four maps. Each has 100 points. Your job is to figure out if the pattern is: random, clumped (clustered), or uniform (repulsed). Note that the code that goes into making these patterns is using random normal or random uniform distributions to accomplish this. I often simulate patterns in data that I know exist and then see if I can detect them using some method. If you look at `simDat` below you'll see that it is four `data.frame` objects bound together. Each one shows a different pattern.
 
 ```{r}
 n <- 100
@@ -214,10 +214,10 @@ plot(envelope(redwood, fun = Kest, nsim = 100,
               verbose=FALSE, rmax=0.5),main="")
 ```
 
-Is this reasonable or responsible? Ripley himself suggested the rule of 0.25 the short span of the data. There are discussions about other approaches in the literature but they are beyond the scope of this class.
+Is this reasonable or responsible? Ripley himself suggested the rule of 0.25 the short span of the data. There are discussions about other approaches in the literature but going deep on edge corrections is a rabbit hole.
 
-The other way of being careful about edges is to "correct" for the effect. These are  similarly tough reading. I remember slogging through Goreaud's 1999 [paper](https://www.jstor.org/stable/3237072?seq=1#metadata_info_tab_contents)
-which came out the year I took spatial analysis when I was a master's student. For this class I think it's enough to be aware that there are several different edge corrections out there. The Bivand reading walks through one of them and you can certainly read more as you desire.
+The other way of being careful about edges is to "correct" for the effect. These are similarly tough reading. I remember slogging through Goreaud's 1999 [paper](https://www.jstor.org/stable/3237072?seq=1#metadata_info_tab_contents)
+which came out the year I took spatial analysis when I was a master's student. It's enough to be aware that there are several different edge corrections out there. The Further Reading section points to where you can go deeper.
 
 ```{r}
 japanesepinesK2 <- Kest(japanesepines, verbose=FALSE, 
@@ -321,7 +321,7 @@ plot(longleaf2L)
 This shows the cross L-function between saplings and adults. The L-function is based on distances from points from one age class to points from the other class. Thus, the plot shows the L-function for saplings to adult pairs.This suggests that while there is within class attraction (the clustering seen previously), there is between class repulsion (inhibition). Can you put on your ecologist hat and figure out why this might be happening?  
 
 ## Roll Your Own
-You can create your own point pattern by clicking on the screen and then plotting the kernel density and Ripley's K (or L). Do this several times and make different types of patterns (uniform, clumped, CSR). This is a fascinating exercise because it gives you a good idea of what CSR looks like in practice.
+You can create your own point pattern by clicking on the screen and then plotting the kernel density and Ripley's K (or L). Try it several times, making different types of patterns: uniform, clumped, CSR. It's a useful calibration exercise -- CSR looks less random than most people expect.
 
 ```{r, eval=FALSE}
 foo <- clickppp(n = 50) # 50 points
@@ -333,21 +333,29 @@ env <- envelope(foo, Lest, nsim = 100)
 plot(env)
 ```
 
-Note that you can just do this on your own. No need to show me in your assignment. To put this part of "Your Work" into your knitted doc for me to see would take some work because the `clickppp` function is interactive. You'd have to make `foo` by clicking and then save it using something like `saveRDS` and then reading it into your doc with `readRDS`. It's overkill to do that amount of work. So just do this on your own. 
+Note that `clickppp` is interactive, so this won't run in a compiled document without some extra work (save with `saveRDS`, load with `readRDS`). It's worth doing at the console at least once.
 
 ## More Than Trees
-The `spatstat` library has a ludicrous number of data sets to work with. If you are not interested in trees for some reason (weird, I know) you can look at point patterns for all kinds of things: anemones, ants, gorilla nests, mycorrhizal fungi, waterstriders. Type `demo(data)` at the prompt to see all the `spatstat` data sets if you want to get an appreciation for all the different types of point pattern data that exist in `spatstat`. 
+The `spatstat` library has a ludicrous number of data sets to work with. If you are not interested in trees for some reason (weird, I know) you can look at point patterns for all kinds of things: anemones, ants, gorilla nests, mycorrhizal fungi, waterstriders. Type `demo(data)` at the prompt to see everything available.
 
 ```{r,eval=FALSE}
 demo(data)
 ```
 
-Note the 3d data as well as the linear and dendritic point pattern data. We aren't going to use these in this class but I want you to know they exist.
+Note the 3d data as well as the linear and dendritic point pattern data. Point pattern analysis goes places.
 
-## Your Work
+## Wrapping Up
+
+KDE and Ripley's K are asking the same question from different angles: are these points distributed randomly, or is there structure? KDE shows you the density surface visually. Ripley's K gives you a statistical test against the null of complete spatial randomness. Used together, they're a pretty powerful first look at a point dataset.
+
+What they can't tell you is why the pattern exists. Clustering could mean habitat preference, conspecific attraction, dispersal limitation, or just that the whole study area is better habitat than the surroundings. Figuring out which requires bringing in more data, more context, or a better question.
+
+The next chapters move from point patterns to continuous variables: instead of asking where events cluster, we'll ask how a measured value like lead concentration or species richness varies across space. That's autocorrelation, and it's where most of the rest of the book lives.
+
+## Exercises
 
 ### Simulated Data
-I'm going to create a point pattern object (class `ppp`) from the "D" pattern in `simDat` above. I gave it units of kilometers but they could be anything you like ("feet", "furlongs", etc.). Anticipate what the L (or K) function will look like for this point pattern and then plot it. Is it what you thought it would look like? Go ahead and look at other patterns (e.g., Is "B" different from "C"?).
+Here is a point pattern object (class `ppp`) built from the "D" pattern in `simDat` above, with units of kilometers. Before plotting the L function, predict what you expect to see. Then run it. Is it what you anticipated? Try the other patterns too -- is "B" distinguishable from "C"?
 
 ```{r, eval=F}
 patternD <- simDat %>% filter(id=="D")
@@ -359,10 +367,8 @@ plot(patternD)
 ```
 
 
-### Mycorrhizal fungi
-Let's look at an example of three species of [ectomycorrhizae](https://en.wikipedia.org/wiki/Ectomycorrhiza) distributed around a tree. 
-
-Here are three of the beauties.
+### Mycorrhizal Fungi
+Here is an example of three species of [ectomycorrhizae](https://en.wikipedia.org/wiki/Ectomycorrhiza) distributed around a tree.
 
 | ![Hebloma](assets/Hebloma.jpeg) | ![L_lac](assets/L_lac.jpeg) | ![L_pub](assets/L_pub.jpeg) |
 |:---:|:---:|:---:|
@@ -377,45 +383,29 @@ points(0,0,pch=16, cex=2)
 text(15,8,"Tree", cex=0.75)
 ```
 
-Note that this is a marked point pattern with three species of fungi. The data come from @ford1980spatial. It's not important that you understand the ins and outs of the various species described. You can read up on some of them in @agerer2001exploration if you like. But it's enough to know that different species have different functional roles and also differing abilities to colonize. Oh, and sporophores are mushrooms (but you probably knew that).
+This is a marked point pattern with three species of fungi. The data come from @ford1980spatial. Different species have different functional roles and differing abilities to colonize. Sporophores are mushrooms, in case that wasn't obvious.
 
-In the paper the authors suggest two things which we can look at using PPA. First, they suggest that there "were distinct arcs around the tree which were not occupied by sporophores of any species." Second, they say that there is "no consistent evidence of spatial inhibition between species." We just have one of the five years of data to look at here. But with the data we have, is there any suggestion of inhibition between species?
+@ford1980spatial suggest two things we can investigate with PPA. First, that there "were distinct arcs around the tree which were not occupied by sporophores of any species." Second, that there is "no consistent evidence of spatial inhibition between species." We have one of the five years of data here. Is there any suggestion of inhibition between species?
 
-If you want to subset the data here are two ways of doing it. E.g., to look at the L pubescens vs. the Hebloma spp. I'd do the cross analysis this way rather than use `alltypes` because the default plot for `alltypes` is essentially unreadable.
+To subset the data and run the cross L-function for two species, here are two equivalent approaches. The default plot for `alltypes` is essentially unreadable, so going pairwise is cleaner.
 
 ```{r}
 # using subset
-heb_pub <- subset(sporophores, 
+heb_pub <- subset(sporophores,
                   marks %in% c("L pubescens","Hebloma spp"), drop=TRUE)
 cross_heb_pub <- envelope(heb_pub, "Lcross", verbose=FALSE)
 # or directly in envelope (note i and j arguments)
 cross_heb_pub <- envelope(sporophores, "Lcross", i="L pubescens", j = "Hebloma spp", verbose=FALSE)
 ```
 
-Change the number of simulations. Try setting `global=TRUE` and see how both of those things change your understanding of what "significance" means.
+Try changing the number of simulations. Try setting `global=TRUE` and see how that changes your understanding of what "significance" means here.
 
-Write that up succinctly but thoroughly and make sure you are presenting a document that has all the code and analysis needed. Make good use of headers. Usage, spelling, and capitalization are important. Pay attention to your writing in everything you do. There is no more important skill a scientist can have.
+## Further Reading
 
-
-```{r, echo=FALSE, eval=FALSE}
-# Three levels, six comparisons. can do pairwise or use alltypes
-# L laccata, L pubescens, Hebloma spp
-sporophoresL <- alltypes(X = sporophores,fun = "Lcross",envelope=TRUE)
-# so ugly
-plot(sporophoresL)
-
-# vs going pairwise e.g.,
-# L pubescens, Hebloma spp
-heb_pub <- subset(sporophores, marks %in% c("L pubescens","Hebloma spp"), drop=TRUE)
-cross_heb_pub <- envelope(heb_pub, "Lcross", verbose=FALSE)
-plot(cross_heb_pub)
-# can use i and j args to envelope as well
-cross_heb_pub <- envelope(sporophores, "Lcross", i="L pubescens", j = "Hebloma spp", verbose=FALSE)
-plot(cross_heb_pub)
-```
+@bivand2008pointpattern, chapter 7 through section 7.5, is the standard reference for point pattern analysis in R. It covers the theory behind the functions we used here and goes deeper on edge corrections and marked patterns. @fortin2016spatial is an accessible overview of spatial analysis broadly that pairs well with this chapter and the ones that follow.
 
 
-## Extra: Rolling K by Hand
+## Postscript: Rolling K by Hand
 I made sure the notes as above are consistent with the `Kest` function. This is way more than you need to do but here is a handmade Ripley's K example.
 
 First, make some random points. I'll keep it small so you can look at the objects and have them be easy to examine.

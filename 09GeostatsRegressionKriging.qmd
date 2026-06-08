@@ -7,9 +7,6 @@ set.seed(733)
 ## Big Idea
 Plain kriging uses the spatial structure of the response variable itself to make predictions. That works well, but it ignores something we often have access to: variables that are cheap to measure everywhere and that correlate with the thing we care about. Distance to a river, elevation, soil type, and land cover can all be derived from GIS or remote sensing data across an entire study area, even when your expensive response variable is only measured at a handful of sample points. Regression kriging (RK) combines a regression model using those covariates with kriging of the regression residuals, giving you better predictions than either approach alone.
 
-## Reading
-@meng2013 provide a (mostly) readable description of regression kriging and compare it to the kind of interpolation approaches we've looked at already. Give it a heavy skim.
-
 ## Packages
 The `gstat`[@R-gstat] package is your friend. But we will need some of our recent collaborators as well including `terra`[@R-terra] and `tidyterra`[@R-tidyterra], plus `sf`[@R-sf] and `tidyverse`[@R-tidyverse] for the usual data wrangling. We'll use `cowplot`[@R-cowplot] to arrange plots at the end.
 
@@ -89,6 +86,7 @@ Distance to the river explains about half the variance in organic matter. Now, a
 ```{r}
 meuseGrid_sf$omHat <- predict(om_lm, newdata=meuseGrid_sf)
 
+# same sf_2_rast function from the IDW notes -- write it once, use it everywhere
 sf_2_rast <- function(sfObject, variable2get = 1){
   tmp <- sfObject[,variable2get] %>% st_drop_geometry()
   dfObject <- data.frame(st_coordinates(sfObject), z=tmp)
@@ -209,21 +207,20 @@ ggplot() + geom_spatraster(data = omHatVar_rast,
 
 Compare the RK prediction surface to the OLS surface above. The overall gradient driven by distance to the river is still there, because that came from the regression, but the spatial detail is richer because the kriged residuals filled in structure that distance alone missed. Whether the added complexity translates to better predictive skill is a question for cross-validation.
 
-## Your Work
-Use `gstat.cv` to perform cross-validation on both the OLS-only model (`omGstat`) and the full RK model (`omGstat_w_variogram`). Compute RMSE and R$^2$ for each. Did RK improve the predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?
+## Wrapping Up
 
-This was a simple model using `om ~ log_dist`. What else might help?
+Regression kriging combines two things you already know: a regression model that uses covariates to explain the broad spatial trend, and kriging on the residuals to capture the local structure the regression missed. The result is a prediction surface with more spatial detail than OLS alone and an uncertainty estimate that kriging brings along for free.
 
-```{r, eval=FALSE,echo=FALSE,message=FALSE, warning=FALSE}
-# the rk
-out <- gstat.cv(object=omGstat_w_variogram)
-#r2
-cor(out$observed, out$observed - out$residual)^2
-cor(out$observed, out$omModel.pred)^2 # same
+The method is only as good as your covariates. If distance to the river explains most of the variation in organic matter, RK will do well. If your regression is weak, the residual surface carries most of the weight and you're basically back to ordinary kriging. Either way, the variance surface tells you where the predictions are most uncertain and that is information OLS will never give you.
 
-# the lm
-out2 <- gstat.cv(omGstat)
-#r2
-cor(out2$observed, out2$observed - out2$residual)^2
-cor(out2$observed, out2$omModel.pred)^2 # same
-```
+The next two chapters take a step back. Instead of predicting a surface, we return to regression and ask what happens when OLS residuals are spatially autocorrelated. Spoiler: the coefficients are fine but the standard errors aren't, and that matters for inference.
+
+## Exercises
+
+Use `gstat.cv` to cross-validate both the OLS-only model (`omGstat`) and the full RK model (`omGstat_w_variogram`). Compute RMSE and R$^2$ for each. Did RK improve predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?
+
+This was a simple model using `om ~ log_dist`. What else in `meuse.grid2` might be worth adding?
+
+## Further Reading
+
+@meng2013 give a readable description of regression kriging and compare it to ordinary kriging and cokriging. Worth a read once you've worked through the examples here and want to see how the method performs in practice across different datasets.
