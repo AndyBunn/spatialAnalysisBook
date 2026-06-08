@@ -12,23 +12,21 @@ The tools to do this right have existed for decades. What's changed is that they
 
 Spatial pattern is also information in its own right. Where something is happening, and where it isn't, tells you something about the processes driving it. Learning to read that structure is part of the fundamental job of environmental science: figuring out why things are patterned the way they are.
 
-## This Is Not a Textbook
+## How to Use This Book
 
-These are notes and tutorials for working with data. Think of them less like a textbook and more like notes left by someone who has gotten lost in these same woods and wants to help you find your way through.
+This is a hands-on book. You will write code, look at data, make maps, fit models, and interpret results. Each chapter builds on what came before. The math shows up when it needs to, but the emphasis throughout is on doing spatial analysis and understanding what you're doing. Not deriving things for their own sake.
 
-They are hands-on by design. You will write code, look at data, make maps, fit models, and interpret results. Each section builds on what came before. The math shows up when it needs to, but the emphasis throughout is on doing spatial analysis and understanding what you're doing. We aren't deriving things for their own sake.
+## How This Book Is Laid Out
 
-## How These Notes Are Laid Out
-
-Most chapters follow a natural progression, each building on the last. Scattered through the notes you'll find **Asides** which are side quests that dig into something that doesn't quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.
+Most chapters follow a natural progression, each building on the last. Scattered through the book you'll find **Asides** which are side quests that dig into something that doesn't quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.
 
 The Asides are linked from the chapters that depend on them. Skipping one will likely leave you confused when that chapter references it. They are separate from the main chapters not because they are less important, but because pulling them out keeps the main flow readable. When you hit a link to an Aside, follow it.
 
-## What's in These Notes
+## What's in This Book
 
-The notes are organized into four parts. Each builds on the one before it.
+The book is organized into four parts. Each builds on the one before it.
 
-**Foundations** gets you oriented on the two data types that show up everywhere in these notes: point observations and raster surfaces. We aren't a GIS-in-R course, so we won't linger here long.
+**Foundations** gets you oriented on the two data types that show up everywhere in this book: point observations and raster surfaces. This isn't a GIS-in-R book, so we won't linger here long.
 
 - **Spatial Data: A Quick Orientation** -- A fast introduction to `sf` for point data and `terra` for rasters. Enough to follow along with the rest of the book. For the full treatment, see [Geocomputation with R](https://r.geocompx.org/) or the [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/).
     - *Aside: Methods and Generics in R* -- A look under the hood at how R uses generic functions. Explains why `plot()` and `summary()` behave differently depending on what you hand them.
@@ -57,10 +55,12 @@ The notes are organized into four parts. Each builds on the one before it.
     - *Aside: OLS via Algebra and Matrices* -- Derives the OLS solution algebraically and in matrix form, then implements both in R. Background that makes the GLS chapter make more sense.
 - **Spatial Regression: Lag and Error Models** -- GLS treats space as nuisance in the residuals. SAR models let you go further: test whether the structure is in the errors or in the response itself, and fit accordingly.
 
+**What You Can Do Now** closes the book. A short synthesis of the three modes of spatial analysis -- description, prediction, inference -- and where to go from here.
+
 ::: {.callout-note}
 ## Points and Grids, Not Polygons
 
-One thing you will not find in these notes is areal data analysis. Watersheds, land cover polygons, census tracts, habitat patches: that world has its own analytical framework, its own vocabulary, and its own rabbit holes, and going there turns a spatial analysis course into a GIS course fast. The methods here are built around point observations and continuous raster surfaces, which is where most field-based environmental and ecological data lives anyway.
+One thing you will not find in this book is areal data analysis. Watersheds, land cover polygons, census tracts, habitat patches: that world has its own analytical framework, its own vocabulary, and its own rabbit holes, and going there turns a spatial analysis book into a GIS book fast. The methods here are built around point observations and continuous raster surfaces, which is where most field-based environmental and ecological data lives anyway.
 
 :::
 
@@ -87,10 +87,10 @@ update.packages()
 To follow along, you'll want a working RStudio project.
 
 1.  **Create a new RStudio project**\
-    Go to **File → New Project → New Directory → New Project**. Give it a name (something like `spatial-course`) and choose where to save it.
+    Go to **File → New Project → New Directory → New Project**. Give it a name (something like `spatial-analysis`) and choose where to save it.
 
 2.  **Download the `data/` folder**\
-    The datasets used in the examples are in the `data/` folder of the course repository. Download that folder and place it inside your project directory.
+    The datasets used in the examples are in the `data/` folder of the book's GitHub repository. Download that folder and place it inside your project directory.
 
     You can [download the data directly](https://github.com/AndyBunn/spatialNotes/releases/download/data-latest/data.zip) from the GitHub [repo](https://github.com/AndyBunn/spatialNotes):
 
@@ -101,12 +101,12 @@ To follow along, you'll want a working RStudio project.
     Once it's unzipped, your folder structure should look something like this:
 
     ```
-    spatial-course/
+    spatial-analysis/
     ├── data/
     │   ├── birdRichnessMexico.rds
     │   ├── prcpCA.rds
     │   └── ...
-    └── spatial-course.Rproj
+    └── spatial-analysis.Rproj
     ```
 
 3.  **Use relative paths in your code**\
@@ -120,11 +120,11 @@ To follow along, you'll want a working RStudio project.
     When you make a file for working through a chapter, save it in the project's root directory. Quarto (`.qmd`) and R Markdown (`.Rmd`) files are close cousins -- the syntax is nearly identical and either will work fine here. After finishing the point pattern chapter, your structure might look like this:
 
     ```
-    spatial-course/
+    spatial-analysis/
     ├── data/
     │   ├── birdRichnessMexico.rds
     │   ├── prcpCA.rds
     │   └── ...
     ├── pointPatternWork.qmd
-    └── spatial-course.Rproj
+    └── spatial-analysis.Rproj
     ```

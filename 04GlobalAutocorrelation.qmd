@@ -7,9 +7,6 @@ set.seed(1984)
 ## Big Idea
 Space matters: Spatial pattern lets us understand process. Where point patterns ask whether locations themselves are clustered or random, autocorrelation asks how a measured quantity (e.g., lead in soil, snow depth, bird diversity) varies across space and at what scale that variation operates. The methods in this chapter summarize that structure across the whole study area. Next module, we will ask where in the study area the structure is concentrated.
 
-## Reading
-Start with the Intro section of Hijmans's [Spatial autocorrelation](https://www.rspatial.org/raster/analysis/3-spauto.html). Move onto the Moran's I section as you work through this page. Also, go back to @fortin2016spatial from last module paying particular attention to Spatial Autocorrelation Coefficients section. You can start Ch 8 in Bivand [@bivand2008geostatistics] and read through 8.4.2 (Cutoﬀ, Lag Width, Direction Dependence).
-
 ::: {.callout-note}
 Before diving in, make sure you're comfortable with distance matrices. If you need a refresher, work through the [Distance Matrices aside](03xAsideDistanceMatrices.html). Also, check out the rant about correlation and regression in the [Correlation is not Regression aside](04xAsideCorrelationVersusRegression.html)
 :::
@@ -35,14 +32,14 @@ We covered point patterns already and that was fun and interesting in the kind o
 
 But what if your variable of interest isn't as well behaved as a forest stem plot or a map of star positions? And what if you want to know the magnitude of correlation in a continuous variable as it varies in space? For instance, you might want to measure metal deposition in snow on Mt. Baker. You could lay out a nice grid and sample that. You might run a transect up the mountain. Or you might give bags to skiers heading into the back/side/slack country and tell them to take a sample when the spirit moved them (citizen dirtbag science). These types of sampling schemes are more common in most environmental fields and are not point patterns. But all would have good information and likely have interesting spatial structure.
 
-With this module, we are going to start quantifying spatial structure for a variety of data types.
+This chapter starts quantifying spatial structure for a variety of data types.
 
 ## Space in Environmental Data
 In the first half of the 20th century, the pioneering ecologist Alex Watt gave us the "pattern-process paradigm" that we use today. Typically, in environmental science, and especially in ecology, we make a huge effort to understand ecological processes by understanding the patterns they produce. 
 
 Environmental data are typically characterized by a pattern: observations from nearby locations are more likely to have similar magnitude than by chance alone. This is spatial autocorrelation and the first challenge we have with environmental data is to quantify the magnitude, intensity, and extent of spatial structure in the data.
 
-The two tools we are going to cover in this module are variograms and global Moran's I.
+The two tools covered here are variograms and global Moran's I.
 
 ## From Correlation to Autocorrelation
 
@@ -221,7 +218,7 @@ plot(leadVar,pch=20,cex=1.5,col="black",
      xlab="Distance (m)", main = "Log lead concentrations")
 ```
 
-This is a lot cleaner. Note the change in the y-axis range. We got rid of an awful lot of noise by averaging the $\gamma$ values. Just by eyeballing this we would likely think that log lead concentrations in this data set are autocorrelated out to a distance of about 750m because $\gamma$ is small at distances less than 750m. We will learn how to fit curves (models) to variograms later in class. The models let us estimate the value of $\gamma$ for any distance.
+This is a lot cleaner. Note the change in the y-axis range. We got rid of an awful lot of noise by averaging the $\gamma$ values. Just by eyeballing this we would likely think that log lead concentrations in this data set are autocorrelated out to a distance of about 750m because $\gamma$ is small at distances less than 750m. The next step is to fit a curve (model) to the variogram, which lets us estimate $\gamma$ for any distance. We will cover that in the Kriging chapter.
 
 
 #### What up with the `~1` construct?
@@ -240,11 +237,11 @@ mean(meuse_sf$log_lead)
 sd(meuse_sf$log_lead)/sqrt(nrow(meuse_sf))
 ```
 
-So, when we use variogram above as `variogram(log_lead~1, locations = meuse_sf)` we are asking for the autocorrelation of log lead with no other predictor variables. Later in the class, we will look at ways of assessing spatial structure in the presence of predictors but for now we will leave it as an intercept-only model.
+So, when we use variogram above as `variogram(log_lead~1, locations = meuse_sf)` we are asking for the autocorrelation of log lead with no other predictor variables. Later chapters cover ways of assessing spatial structure in the presence of predictors, but for now we leave it as an intercept-only model.
 
 
 ## Global Moran's I
-Variograms are nifty tools, but it would be nice to work with a technique that gave us more familiar numbers. Fortunately, there are other methods of measuring spatial autocorrelation beyond the variogram. The text introduces the idea of measuring spatial autocorrelation and explains how it is trickier than temporal autocorrelation because it is multi-dimensional and multi-directional. The reading starts you out with measuring spatial autocorrelation using Geary's C. The statistic used more commonly is global Moran's I which is close to the inverse of Geary's C (but is not identical).  Values of Moran's I greater than zero indicate positive spatial autocorrelation and values below zero indicate negative autocorrelation. Values range from minus one (perfect dispersion like a chessboard) to values near one (strong clustering or gradients). A zero value indicates spatial randomness.
+Variograms are nifty tools, but it would be nice to work with a technique that gave us more familiar numbers. Fortunately, there are other methods of measuring spatial autocorrelation beyond the variogram. Spatial autocorrelation is trickier than temporal autocorrelation because it is multi-dimensional and multi-directional. @bivand2008geostatistics covers Geary's C as an entry point. The statistic used more commonly is global Moran's I which is close to the inverse of Geary's C (but is not identical).  Values of Moran's I greater than zero indicate positive spatial autocorrelation and values below zero indicate negative autocorrelation. Values range from minus one (perfect dispersion like a chessboard) to values near one (strong clustering or gradients). A zero value indicates spatial randomness.
 
 ```{r,echo=FALSE,fig.width=9,fig.height=3}
 n <- 20
@@ -834,73 +831,63 @@ pGradBumpsI
 You could imagine detrending this final surface with a model and then replotting Moran's I. That is, if you modeled z~x, you could take the residuals from that model and remove the gradient. If you did that you'd wind up with the random bumps scenario or something very close to it.
 
 
-## Your Work
-I have a `sf` object in the file named `birdRichnessMexico.rds`.  That file contains points of bird richness (number of species) at a bunch of points in Mexico. The column `nSpecies` is the number of bird species occurring within a kilometer of that location. 
+## Wrapping Up
 
-The data are projected onto a plane (not a sphere) using the North America Albers Equal Area Conic, centered on Mexico ([SR-ORG:38](http://spatialreference.org/ref/sr-org/mexico-albers-equal-area-conic/)) which is an equal area projection suitable for the area. Using this projection allows us to have units in kilometers. Here is a simple map of the data using `tmap`. It's nice to visualize your data even if what you do is as simple as  `ggplot(data=birds_sf) + geom_sf()`. The more I learn about using `tmap` the more I like it. Setting `tmap_mode("view")` gives you an interactive map which is kind of fun. There is a lot more you can do with this if you like this kind of stuff.
+You now have two tools for measuring spatial dependence in a continuous variable: the variogram and the correlogram. They're asking the same question from slightly different angles. The variogram focuses on variance between pairs; the correlogram focuses on correlation. Both tell you whether nearby values are more similar than distant ones, and how far that similarity extends.
+
+Moran's I gives you a single number summarizing that structure globally. It's a useful diagnostic as it's asking "is there signal here worth modeling?" but it stops just when things get interesting. Two datasets can have identical Moran's I values and look nothing alike spatially. That's what the next chapter addresses. LISA breaks the global statistic apart and maps where the structure lives: the hot spots, cold spots, and spatial outliers. If this chapter made you ask "is there spatial structure?", the next one makes you ask "where?"
+
+## Exercises
+
+The file `birdRichnessMexico.rds` contains an `sf` object with bird species richness at locations across Mexico. The column `nSpecies` is the number of bird species occurring within a kilometer of each location. The data are projected using the North America Albers Equal Area Conic centered on Mexico ([SR-ORG:38](http://spatialreference.org/ref/sr-org/mexico-albers-equal-area-conic/)), which gives units in kilometers.
 
 ```{r, message=FALSE}
 library(tmap)
 birds_sf <- readRDS("data/birdRichnessMexico.rds")
 tmap_mode("view")
-tm_shape(birds_sf) + 
+tm_shape(birds_sf) +
   tm_symbols(col="nSpecies", alpha = 0.7)
 ```
 
-Ok. With the mapping done, take a minute to look at the patterns you see. Some areas are hotspots of richness like in southern Veracruz. Others, like northern Baja, are less rich. Richness is quite a bit higher all over though when compared to the biological desert that is western Washington! 
+Take a minute to look at the patterns. Some areas are hotspots of richness, like southern Veracruz. Others, like northern Baja, are less rich.
 
-Look at spatial autocorrelation in the bird data using Moran's I (use `correlog` or `spline.correlog`) and look at a variogram. 
+Look at spatial autocorrelation in the bird data using Moran's I (use `correlog` or `spline.correlog`) and fit a variogram.
 
-Some tips.
+A few notes on the data handling:
 
-1. You can bust the `birds_sf` out of `sf` and into a regular `data.frame` with something like this, which might be easier to use for the `correlog` functions. That's up to you.
+1. You can pull `birds_sf` out of `sf` into a plain data frame for use with `correlog`:
 
 ```{r}
 birdsDF <- data.frame(st_coordinates(birds_sf),nSpecies=birds_sf$nSpecies)
 ```
 
-2. For `correlog`, watch out for edge effects. You'll want to limit your analysis to about 1/3 of the maximum distance. So, 1/3 of the maximum distance between points is:
+2. For `correlog`, watch edge effects. Limit your interpretation to about 1/3 of the maximum distance between points:
 
 ```{r}
 max(dist(st_coordinates(birds_sf)))/3
 ```
 
-Given that, I'd limit interpretation of the correlograms to a thousand km.
+That puts the safe limit around 1000 km.
 
-4. For the variogram, you can try different widths and cutoffs.
+3. For the variogram, experiment with different bin widths and cutoffs.
 
 ### Interpret
-What can you learn by comparing the approaches? Maybe more importantly what are we missing with this approach? Where does this understanding of pattern help us with process and where is it lacking? We will take this question up directly in the next module.
+What can you learn by comparing the two approaches? More importantly, what are we missing with this global view? Where does understanding pattern help us reason about process, and where does it fall short? That question comes up directly in the next chapter.
 
 ### Directional Variograms
-We have been quantifying this spatial structure as being direction independent (isotropic). Read up on the concept of anisotropy in spatial autocorrelation. Where do you see that here? In many spatial data the direction of anisotropy relates to process. For example, pollution plumes move down head or down wind. Again, section 8.4.2 (Cutoﬀ, Lag Width, Direction Dependence) in @bivand2008geostatistics has some good stuff. 
+Everything above treats spatial structure as direction-independent (isotropic). That isn't always a safe assumption. Pollution plumes move downwind; species distributions follow latitudinal gradients. The `variogram` function can calculate directional variograms with the `alpha` argument -- try north-south vs. east-west for the bird data:
 
-Got the idea that direction can be important in determining spatial structure? Play with the `variogram` function and explore anisotropy by calculating directional variograms for the bird data (read help file for details) and try something like:
 ```{r eval=FALSE}
 birdVar <- variogram(nSpecies~1, data = birds_sf, alpha=c(0,90))
 ```
 
-Think about gradients! Put on a biogeography hat and explain what might be happening here.
+Think about gradients and what biogeographic processes might be driving any anisotropy you find.
 
+## Further Reading
 
+Hijmans's [Spatial autocorrelation](https://www.rspatial.org/raster/analysis/3-spauto.html) is a free online resource with good worked examples in R, including Moran's I and variograms on familiar data. @fortin2016spatial covers spatial autocorrelation coefficients concisely and is worth reading alongside this chapter. @bivand2008geostatistics chapter 8 through section 8.4.2 goes deeper on variogram fitting, cutoff selection, lag width, and directional effects.
 
-```{r,echo=FALSE,eval=FALSE}
-birdsDF <- data.frame(st_coordinates(birds_sf),nSpecies=birds_sf$nSpecies)
-foo <- correlog(x=birdsDF[,1],y=birdsDF[,2],
-                z =birds_sf$nSpecies,increment = 50,resamp = 200)
-plot(foo) # yucky!
-plot(foo,xlim=c(0,1e3))
-abline(h=0)
-# classic gradient!
-
-birdVar<-variogram(nSpecies~1, data = birds_sf)
-plot(birdVar,pch=20)
-# look at NS vs EW
-birdVar<-variogram(nSpecies~1, data = birds_sf, alpha=c(0,90))
-plot(birdVar,pch=20)
-```
-
-## Postscript: Continuous correlogram
+## Postscript: Continuous Correlogram
 
 The correlograms above using `correlog::ncf` are discrete. They show autocorrelation in distance categories. We can also calculate Moran's I continuously using the function `correlog::spline.correlog`:
 
@@ -911,4 +898,4 @@ leadI <- spline.correlog(x=meuseX, y=meuseY, z=meuse_sf$log_lead,
 plot(leadI)
 ```
 
-You can read up on both these functions to learn the subtleties. I'll unpack this in greater detail in the lecture. 
+Both `correlog` and `spline.correlog` have additional arguments worth exploring -- the help files are informative.

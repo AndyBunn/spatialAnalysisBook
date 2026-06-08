@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Aside: Predicting New Data with a Fitted Model – Spatial Analysis for Environmental Science</title>
+<title>Aside: Predicting New Data with a Fitted Model – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -407,7 +412,7 @@ window.Quarto = {
 <p>This is likely review for most of you, so roll your eyes as needed. The idea is simple: once you have a fitted model in R, you can use it to predict values for data the model has never seen. This comes up constantly in regression kriging, where you fit a model to your sample points and then predict across an entire grid. Let’s walk through it.</p>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>We’ll use <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for data wrangling.</p>
+<p>We’ll use <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for data wrangling.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>

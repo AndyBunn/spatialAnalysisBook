@@ -54,7 +54,7 @@ Here’s what R does when you call `summary(fit)`:
 3. If it finds that method, it runs it.
 4. If not, it falls back to `summary.default()`.
 
-This system is called S3. It's the oldest and most common object system in R, and it's what you'll encounter in almost every package you use in this course.
+This system is called S3. It's the oldest and most common object system in R, and it's what you'll encounter in almost every package you use.
 
 You can look under the hood:
 
@@ -207,4 +207,4 @@ class(fit)
 
 Understanding how generics and methods work helps you read other people's code, write better functions, and make sense of R's behavior when things feel a little magic.
 
-You'll see this pattern come up throughout the course. When we work with spatial objects — things like `sf` features or `ppp` point patterns — the same idea applies. `plot()`, `summary()`, `print()` all do the right thing because someone wrote a method for that class. Now you know how.
+You'll see this pattern come up throughout the book. When we work with spatial objects — things like `sf` features or `ppp` point patterns — the same idea applies. `plot()`, `summary()`, `print()` all do the right thing because someone wrote a method for that class. Now you know how.

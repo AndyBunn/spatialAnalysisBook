@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Spatial Regression: Lag and Error Models – Spatial Analysis for Environmental Science</title>
+<title>Spatial Regression: Lag and Error Models – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -88,7 +88,7 @@ div.csl-indent {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./12References.html" rel="next">
+<link href="./12Conclusion.html" rel="next">
 <link href="./10xAsideOLS-Algebra-Matrix.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -378,7 +383,6 @@ window.Quarto = {
    
   <ul>
   <li><a href="#big-idea" id="toc-big-idea" class="nav-link active" data-scroll-target="#big-idea">Big Idea</a></li>
-  <li><a href="#reading" id="toc-reading" class="nav-link" data-scroll-target="#reading">Reading</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#two-models-two-questions" id="toc-two-models-two-questions" class="nav-link" data-scroll-target="#two-models-two-questions">Two Models, Two Questions</a></li>
   <li><a href="#choosing-between-them-lm-tests" id="toc-choosing-between-them-lm-tests" class="nav-link" data-scroll-target="#choosing-between-them-lm-tests">Choosing Between Them: LM Tests</a></li>
@@ -393,7 +397,9 @@ window.Quarto = {
   <li><a href="#back-to-the-bird-data" id="toc-back-to-the-bird-data" class="nav-link" data-scroll-target="#back-to-the-bird-data">Back to the Bird Data</a></li>
   <li><a href="#a-note-on-interpreting-lag-model-coefficients" id="toc-a-note-on-interpreting-lag-model-coefficients" class="nav-link" data-scroll-target="#a-note-on-interpreting-lag-model-coefficients">A Note on Interpreting Lag Model Coefficients</a></li>
   <li><a href="#gls-vs.-sar-when-to-use-which" id="toc-gls-vs.-sar-when-to-use-which" class="nav-link" data-scroll-target="#gls-vs.-sar-when-to-use-which">GLS vs.&nbsp;SAR: When to Use Which</a></li>
-  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your Work</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/11SpatialRegressionSAR.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -423,10 +429,6 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="big-idea">Big Idea</h2>
 <p>The GLS chapter gave us one tool for handling spatially autocorrelated residuals: specify the correlation structure with a variogram and let GLS down-weight correlated observations. That works well. But there is a whole family of spatial regression models that take a different approach, and understanding them will round out your toolkit and sharpen your thinking about what spatial structure in a regression actually means.</p>
 <p>GLS models the error correlation structure using a variogram – a continuous function of distance. The SAR (Simultaneous AutoRegressive) family instead uses an explicit spatial weights matrix: the same neighbor structure you built for Moran’s I and LISA. Two SAR models matter most for applied environmental work. The spatial error model says that the errors – the stuff your predictors don’t explain – are spatially correlated via a neighbor process. The spatial lag model says something more provocative: that the response variable at each location is directly influenced by the response at neighboring locations. These two models answer different questions, and it matters which one you fit.</p>
-</section>
-<section id="reading" class="level2">
-<h2 class="anchored" data-anchor-id="reading">Reading</h2>
-<p><span class="citation" data-cites="dormann2007methods"><span class="nocase">Dormann et al.</span> (<a href="12References.html#ref-dormann2007methods" role="doc-biblioref">2007</a>)</span> covers spatial error models and related approaches in section 3. You have already read the intro for the GLS chapter; go back and read sections 3.3 and 3.4 more carefully now. <span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="12References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> chapter 9 covers the SAR model family in detail, including the <code>spatialreg</code> functions we use here. It is a technical chapter; skim for concepts and return to the details when you need them.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -770,8 +772,12 @@ slmFit  4 206.7996</code></pre>
 <p>GLS uses a variogram – a continuous function of distance – to model the error correlation structure. It captures the range, sill, and nugget of the spatial dependence and is very flexible. SAR models use a discrete neighbor structure: you define who counts as a neighbor and the autocorrelation operates only among neighbors. GLS tends to work better when you have a clear distance-decay structure and a reasonable sample size to fit the variogram. SAR works better when your data are naturally defined by adjacency or neighborhood – watershed catchments, habitat patches, gridded climate data – and when you want to lean on the weights matrix you have already built for exploratory work like LISA.</p>
 <p>The spatial lag model has no real GLS equivalent. If the biology or ecology predicts a spillover or diffusion process, fit the lag model. Just be careful with the coefficients.</p>
 </section>
-<section id="your-work" class="level2">
-<h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>GLS and SAR are both corrections to the same problem: OLS residuals that carry spatial signal the model hasn’t explained. Which one you reach for depends on your data and your question. For most field-based environmental science, GLS is the workhorse. It’s flexible, connects directly to the variogram, and the output is easy to interpret. SAR is worth knowing when the spatial structure is better described by a neighbor graph than a continuous distance decay, or when you genuinely believe there’s a spillover process in the response itself. That’s a real mechanism sometimes – think about how disease spreads, or how animal behavior in one patch influences neighboring patches. But for lead in floodplain soil, space is probably just a proxy for flood exposure. Use GLS and sleep well.</p>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
 <p>The Meuse River data contains several candidate predictors for soil lead contamination. <code>river_dist_m</code> is the distance from the river channel in meters and <code>ffreq</code> is a flooding frequency class (a factor with three levels). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.</p>
 <div class="cell">
 <details open="" class="code-fold">
@@ -792,9 +798,13 @@ slmFit  4 206.7996</code></pre>
 <li><p>Fit OLS of <code>log_lead ~ river_dist_m + ffreq</code>. Run Moran’s I on the residuals.</p></li>
 <li><p>If the residuals are autocorrelated, run the LM tests. Which model do they recommend?</p></li>
 <li><p>Fit the recommended model. Check the residuals. Did the spatial structure get absorbed?</p></li>
-<li><p>Compare the coefficients on <code>dist</code> and <code>ffreq</code> between OLS and your SAR model. Do the substantive conclusions change, or mostly just the standard errors?</p></li>
-<li><p>Write one paragraph: is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in soil?</p></li>
+<li><p>Compare the coefficients on <code>river_dist_m</code> and <code>ffreq</code> between OLS and your SAR model. Do the substantive conclusions change, or mostly just the standard errors?</p></li>
+<li><p>Is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in floodplain soil?</p></li>
 </ol>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<p><span class="citation" data-cites="dormann2007methods"><span class="nocase">Dormann et al.</span> (<a href="13References.html#ref-dormann2007methods" role="doc-biblioref">2007</a>)</span> sections 3.3 and 3.4 cover spatial error models and related approaches. <span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> chapter 9 goes deep on the SAR model family and the <code>spatialreg</code> functions; it’s a technical chapter, but worth returning to once you’ve worked through the examples here.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
@@ -1215,8 +1225,8 @@ Bivand, Roger. 2008. <span>“Interpolation and Geostatistics.”</span> In <em>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./12References.html" class="pagination-link" aria-label="References">
-        <span class="nav-page-text"><span class="chapter-title">References</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./12Conclusion.html" class="pagination-link" aria-label="What You Can Do Now">
+        <span class="nav-page-text"><span class="chapter-title">What You Can Do Now</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Probabilistic Interpolation: Kriging – Spatial Analysis for Environmental Science</title>
+<title>Probabilistic Interpolation: Kriging – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -377,8 +382,7 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#reading" id="toc-reading" class="nav-link active" data-scroll-target="#reading">Reading</a></li>
-  <li><a href="#big-idea" id="toc-big-idea" class="nav-link" data-scroll-target="#big-idea">Big Idea</a></li>
+  <li><a href="#big-idea" id="toc-big-idea" class="nav-link active" data-scroll-target="#big-idea">Big Idea</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#some-kriging-theory" id="toc-some-kriging-theory" class="nav-link" data-scroll-target="#some-kriging-theory">Some Kriging Theory</a></li>
   <li><a href="#variogram-redux" id="toc-variogram-redux" class="nav-link" data-scroll-target="#variogram-redux">Variogram Redux</a></li>
@@ -394,8 +398,9 @@ window.Quarto = {
   <li><a href="#other-variogram-models" id="toc-other-variogram-models" class="nav-link" data-scroll-target="#other-variogram-models">Other Variogram Models</a></li>
   <li><a href="#other-types-of-kriging" id="toc-other-types-of-kriging" class="nav-link" data-scroll-target="#other-types-of-kriging">Other Types of Kriging</a></li>
   <li><a href="#cross-validation" id="toc-cross-validation" class="nav-link" data-scroll-target="#cross-validation">Cross Validation</a></li>
-  <li><a href="#the-payoff" id="toc-the-payoff" class="nav-link" data-scroll-target="#the-payoff">The Payoff</a></li>
-  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your Work</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
   <li><a href="#postscript-automap" id="toc-postscript-automap" class="nav-link" data-scroll-target="#postscript-automap">Postscript: Automap</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/08GeostatsKriging.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -422,17 +427,13 @@ window.Quarto = {
 </header>
 
 
-<section id="reading" class="level2">
-<h2 class="anchored" data-anchor-id="reading">Reading</h2>
-<p>We will finish Ch 8 in Bivand <span class="citation" data-cites="bivand2008geostatistics">(<a href="12References.html#ref-bivand2008geostatistics" role="doc-biblioref">Bivand 2008</a>)</span>. Sections 8.4 and 8.5 are the most important for this module. It’s fairly dense after that. Review <span class="citation" data-cites="fortin2016spatial">Fortin et al. (<a href="12References.html#ref-fortin2016spatial" role="doc-biblioref">2016</a>)</span> as well, especially 4.3 to 4.5</p>
-</section>
 <section id="big-idea" class="level2">
 <h2 class="anchored" data-anchor-id="big-idea">Big Idea</h2>
-<p>We often want to estimate phenomena at locations where we do not have measurements. Geostatistics is the field that we use to make (hopefully) accurate and reliable models of spatial data. We will use these models for prediction. We can use both deterministic and probabilistic models and this module will focus on probabilistic methods. Kriging is a probabilistic method that finds spatial pattern and predicts unknown values based on that spatial pattern. Unlike IDW, kriging generates a measure of uncertainty allowing us to estimate confidence in the predictions.</p>
+<p>We often want to estimate phenomena at locations where we do not have measurements. Geostatistics is the field that we use to make (hopefully) accurate and reliable models of spatial data. We will use these models for prediction. We can use both deterministic and probabilistic models. This chapter focuses on probabilistic methods. Kriging is a probabilistic method that finds spatial pattern and predicts unknown values based on that spatial pattern. Unlike IDW, kriging generates a measure of uncertainty allowing us to estimate confidence in the predictions.</p>
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="12References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. And I’m going to plot in <code>ggplot</code> via <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="12References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="12References.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>. We’ll also use <code>automap</code><span class="citation" data-cites="R-automap">(<a href="12References.html#ref-R-automap" role="doc-biblioref">Hiemstra et al. 2008</a>)</span> for automatic variogram fitting.</p>
+<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="13References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. And I’m going to plot in <code>ggplot</code> via <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> with <code>sf</code><span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="13References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="13References.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>. We’ll also use <code>automap</code><span class="citation" data-cites="R-automap">(<a href="13References.html#ref-R-automap" role="doc-biblioref">Hiemstra et al. 2008</a>)</span> for automatic variogram fitting.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -462,7 +463,7 @@ Note
 </div>
 </div>
 <p>Kriging is a geostatistical method of interpolation that uses spatial autocorrelation, and it works best when there is strong autocorrelation in the data. When kriging we use the distance between sample points (and sometimes direction) to explain variation in a variable. We then fit a mathematical model to a specified number of points (or points within a certain distance) to determine the output value for each location.</p>
-<p>The approach will make heavy use of the variograms that we started with earlier in the class. They are how we are going to determine the parameter <span class="math inline">\(\lambda\)</span> in the formula for kriging:</p>
+<p>The approach makes heavy use of variograms, which we introduced in the Global Autocorrelation chapter. They are how we determine the parameter <span class="math inline">\(\lambda\)</span> in the formula for kriging:</p>
 <p><span class="math display">\[\hat{Z}(s_0)=\sum_{i=1}^n \lambda_i Z(s_i)\]</span></p>
 <p>where <span class="math inline">\(\hat{Z}\)</span> will be an estimate of a variable at a spatial location <span class="math inline">\(s_0\)</span> where we haven’t measured <span class="math inline">\(Z\)</span> and <span class="math inline">\(s_i\)</span> a location, <span class="math inline">\(i\)</span>, where we have measured <span class="math inline">\(Z\)</span>. There are <span class="math inline">\(n\)</span> measurements. Analogous to the <span class="math inline">\(w\)</span> terms for IDW, <span class="math inline">\(\lambda_i\)</span> is a weight for the measured value at location <span class="math inline">\(s_i\)</span>. With IDW the weight was a deterministic function of distance. With kriging, we use the distance between the measured points and the prediction location as well as the overall spatial structure of the measured points themselves. That spatial structure is the spatial autocorrelation measured by the variogram. Let’s review variograms.</p>
 </section>
@@ -507,16 +508,16 @@ First 10 features:
 10    1     1 33.20650 0.8437299   61.19775  0.0001220703  8.316219        40
 11    1     1 32.86385 0.9081502   57.88412  0.0022110939  9.335344        40
    river_dist_m              geometry
-2     29.293732 POINT (181140 333700)
-3     10.681183 POINT (181180 333700)
-4     46.620703 POINT (181220 333700)
-5     52.864155 POINT (181100 333660)
-6     42.749943 POINT (181140 333660)
-7      7.672836 POINT (181180 333660)
-8     26.352750 POINT (181220 333660)
-9     56.160948 POINT (181060 333620)
-10    83.711407 POINT (181100 333620)
-11    62.389789 POINT (181140 333620)</code></pre>
+2      47.48153 POINT (181140 333700)
+3      72.94615 POINT (181180 333700)
+4      98.41078 POINT (181220 333700)
+5      52.86416 POINT (181100 333660)
+6      78.32878 POINT (181140 333660)
+7     103.79340 POINT (181180 333660)
+8     129.25803 POINT (181220 333660)
+9      56.16095 POINT (181060 333620)
+10     83.71141 POINT (181100 333620)
+11    109.17603 POINT (181140 333620)</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -797,7 +798,7 @@ First 10 features:
 </div>
 <p>Note that <code>leadKrige</code> is a <code>sf</code> object that has the predicted surface <code>var1.pred</code> but there is another surface in there too, <code>var1.var</code>, which contains the variance around those predictions. Let’s take a look at the predictions first and then spend some time with the variance surface.</p>
 <p>Here is the prediction surface. Note how we specify what <code>attribute</code> we want to plot via <code>leadKrige["var1.pred"]</code>.</p>
-<p>I’ll use the little function from the IDW notes to get a <code>rast</code> object from the <code>sf</code> object.</p>
+<p>I’ll use the little function from the IDW chapter to get a <code>rast</code> object from the <code>sf</code> object. Remember, this is one of the reasons to write a function in the first place – define it once, reuse it across chapters.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -946,11 +947,11 @@ max value   :     0.6503917 </code></pre>
 <p><strong>Simple kriging (SK)</strong> assumes the mean of the process is known rather than estimated from the data. In practice that assumption is almost never defensible, so SK sees limited use outside of simulation studies and textbooks. If you are curious how the math differs from OK, the <a href="08xAsideGeostatsKrigingVariance.html">Kriging Variance By Hand aside</a> works through both side by side. In <code>gstat</code> you get SK by passing <code>beta = mean(dat$z)</code> to <code>krige</code>.</p>
 <p><strong>Universal kriging (UK)</strong> and <strong>regression kriging (RK)</strong> both handle the situation where your response variable has a large-scale spatial trend driven by covariates, elevation gradients, distance-to-river effects, and so on. OK assumes the mean is constant across the study area (stationarity). If that assumption is badly violated, OK will struggle. UK folds the trend and the spatial structure into one system of equations. RK does it in two steps: fit an OLS regression on covariates first, then krige the residuals. The two approaches tend to give similar predictions in practice, but RK lets you inspect each step separately, which is usually worth the trouble. We cover RK in the next module. In <code>gstat</code>, UK looks like <code>formula = logLead~dist</code>, where <code>dist</code> is a covariate available at both your sample points and your prediction grid.</p>
 <p><strong>Anisotropic kriging</strong> relaxes the assumption that spatial correlation is the same in all directions. If your variable has stronger autocorrelation along a river valley than across it, for example, a standard isotropic variogram will misrepresent that structure. You can model anisotropy by fitting an elliptical rather than circular variogram, via the <code>anis</code> argument to <code>vgm</code>. It adds complexity and you need enough data to justify it, but for strongly directional processes it can matter.</p>
-<p>As with many topics in this class, you could spend a whole quarter on kriging alone. Think of the pleasures involved!</p>
+<p>You could spend a whole semester on kriging alone. Think of the pleasures involved!</p>
 </section>
 <section id="cross-validation" class="level2">
 <h2 class="anchored" data-anchor-id="cross-validation">Cross Validation</h2>
-<p>I showed an example of using the built in cross validation function at the end of the last module. We can do the same with kriging. Instead of a straight call to <code>krige</code> we can call <code>krige.cv</code> for either k-fold or leave-one-out cross validation (LOOCV). It defaults to LOOCV so the predicted values are from the time they were left out the model.</p>
+<p>The IDW chapter showed an example of using the built-in cross validation function. We can do the same with kriging. Instead of a straight call to <code>krige</code> we can call <code>krige.cv</code> for either k-fold or leave-one-out cross validation (LOOCV). It defaults to LOOCV so the predicted values are from the time they were left out the model.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -1003,13 +1004,13 @@ First 10 features:
 </div>
 <p>The LOOCV R<span class="math inline">\(^2\)</span> is 0.619 and the RMSE is 0.414 which we get from the observed vs predicted values. But note all the fields we get from the <code>krige.cv</code> function. We get the prediction and prediction variance of the cross-validated data points and we also get the observed values. We also get the residuals (observed minus predicted), the z-score (the residual divided by kriging standard error), and the fold (in this case we have as many folds as rows in meuse because it is LOOCV).</p>
 </section>
-<section id="the-payoff" class="level2">
-<h2 class="anchored" data-anchor-id="the-payoff">The Payoff</h2>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>Recall that IDW and TPS gave us a prediction surface with no uncertainty attached. Every grid cell got a number and that was that. Kriging gives us the same prediction surface, but also the variance surface we just looked at, and that second surface is where probability theory earns its keep. Imagine you’re deciding where to put additional soil sampling stations to reduce uncertainty in your lead concentration map. With IDW you have no principled way to answer that question, because IDW has no model of uncertainty to begin with. With kriging, you look at the variance surface and put your next sample where the variance is highest. Or imagine you need to flag grid cells where the predicted lead concentration exceeds a regulatory threshold: with a variance surface you can attach a probability to that exceedance rather than just a point estimate. The deterministic methods we covered earlier are fast and intuitive, but they borrow nothing from probability theory, so there is no statistically grounded way to quantify how much you should trust the predictions. Kriging trades some of that simplicity for something genuinely useful: a map of your own ignorance.</p>
 </section>
-<section id="your-work" class="level2">
-<h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
-<p>Let’s turn again to the California precipitation data that you used for the IDW module. Like with IDW, you’ll make a continuous 10x10 km surface of precipitation from the 432 locations of long-term precipitation records. But this time you’ll krige the surface rather than use IDW.</p>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<p>Return to the California precipitation data from the IDW chapter. This time, krige the surface rather than use IDW.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -1021,10 +1022,10 @@ First 10 features:
 <span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>prcpCAsf <span class="ot">&lt;-</span> prcpCA <span class="sc">%&gt;%</span> <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_crs</span>(<span class="at">value =</span> <span class="dv">3310</span>)</span>
 <span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>prcpCAsf <span class="sc">%&gt;%</span> <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>prcpCAsf <span class="sc">%&gt;%</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
 <span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill=</span>ANNUAL,<span class="at">size=</span>ANNUAL),<span class="at">color=</span><span class="st">"white"</span>,</span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">shape=</span><span class="dv">21</span>,<span class="at">alpha=</span><span class="fl">0.8</span>) <span class="sc">+</span> </span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_continuous</span>(<span class="at">type =</span> <span class="st">"viridis"</span>,<span class="at">name=</span><span class="st">"mm"</span>) <span class="sc">+</span> </span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">shape=</span><span class="dv">21</span>,<span class="at">alpha=</span><span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_continuous</span>(<span class="at">type =</span> <span class="st">"viridis"</span>,<span class="at">name=</span><span class="st">"mm"</span>) <span class="sc">+</span></span>
 <span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"Total Annual Precipitation"</span>) <span class="sc">+</span></span>
 <span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size</span>(<span class="at">guide=</span><span class="st">"none"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
@@ -1036,7 +1037,11 @@ First 10 features:
 </div>
 </div>
 </div>
-<p>Use kriging to create a surface of total annual precipitation in California – do not use <code>automap</code> but fit the models using <code>variogram</code>, <code>vgm</code>, and <code>fit.variogram</code> as above. Compare at least two variogram models and assess the surface fit in a sensible way. Interpret and explain your surface and anything you notice in particular about it.</p>
+<p>Fit the variogram manually using <code>variogram</code>, <code>vgm</code>, and <code>fit.variogram</code> – skip <code>automap</code> for this one. Compare at least two variogram models. Assess the surface using cross-validation and interpret what you find. How does the kriged surface compare to the IDW surface you made earlier? Does the kriging variance surface (<code>var1.var</code>) tell you anything useful about where you should trust the predictions?</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<p><span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> chapter 8, sections 8.4 and 8.5, covers kriging theory and implementation in R in detail. <span class="citation" data-cites="fortin2016spatial">Fortin et al. (<a href="13References.html#ref-fortin2016spatial" role="doc-biblioref">2016</a>)</span> sections 4.3 to 4.5 provide a more accessible treatment of the same material. Both are worth having at hand when fitting variograms for the first time.</p>
 </section>
 <section id="postscript-automap" class="level2">
 <h2 class="anchored" data-anchor-id="postscript-automap">Postscript: Automap</h2>

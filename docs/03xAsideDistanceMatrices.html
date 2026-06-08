@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Aside: Distance Matrices – Spatial Analysis for Environmental Science</title>
+<title>Aside: Distance Matrices – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -415,12 +420,12 @@ window.Quarto = {
 
 <section id="why-this-matters" class="level2">
 <h2 class="anchored" data-anchor-id="why-this-matters">Why This Matters</h2>
-<p>Distance matrices show up everywhere in this course: point pattern analysis, variograms, spatial weights, IDW, kriging, and nearest-neighbor analyses. You will use them so often and in so many different forms that it’s worth slowing down and really understanding what they are, how R stores them, and what they’re doing under the hood before you need to rely on them for something more complex.</p>
+<p>Distance matrices show up everywhere in this book: point pattern analysis, variograms, spatial weights, IDW, kriging, and nearest-neighbor analyses. You will use them so often and in so many different forms that it’s worth slowing down and really understanding what they are, how R stores them, and what they’re doing under the hood before you need to rely on them for something more complex.</p>
 <p>None of it is hard. But the details matter more here, because a lot of subtle bugs in spatial analysis can come from misunderstanding the structure of a distance matrix.</p>
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>We’ll use <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> and <code>sf</code><span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> for the usual data wrangling.</p>
+<p>We’ll use <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> and <code>sf</code><span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> for the usual data wrangling.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -639,7 +644,7 @@ up    700  400    0</code></pre>
 <li>They can be <strong>asymmetric</strong> if the cost surface is directional. Traveling uphill costs more than traveling downhill, so a path across rugged terrain may have different cost depending on which direction you go.</li>
 <li>The <code>gdistance</code> package is the standard tool for this in R. It takes a cost raster, builds a transition matrix between neighboring cells, and then uses graph algorithms to find minimum cost paths between any pair of points.</li>
 </ul>
-<p>We won’t implement LCP analyses in this course, but you should know the concept exists and why it matters. When you’re thinking about habitat connectivity, dispersal corridors, or movement between patches, Euclidean distance is often a poor proxy for what’s actually constraining your organisms. Cost distances, even rough ones based on broad land cover classes, tend to do much better.</p>
+<p>LCP analyses are outside the scope of this book, but worth knowing the concept exists and why it matters. When you’re thinking about habitat connectivity, dispersal corridors, or movement between patches, Euclidean distance is often a poor proxy for what’s actually constraining your organisms. Cost distances, even rough ones based on broad land cover classes, tend to do much better.</p>
 </section>
 <section id="the-scale-problem" class="level2">
 <h2 class="anchored" data-anchor-id="the-scale-problem">The Scale Problem</h2>
@@ -778,7 +783,7 @@ Anacortes        28.3    65.5     63.6       0.0</code></pre>
 </section>
 <section id="quick-reference" class="level2">
 <h2 class="anchored" data-anchor-id="quick-reference">Quick Reference</h2>
-<p>Here’s a cheat sheet for some of the distance-related functions you’ll use in this course:</p>
+<p>Here’s a cheat sheet for some of the distance-related functions you’ll use in this book:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">

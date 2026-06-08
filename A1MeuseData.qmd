@@ -1,14 +1,14 @@
 # Appendix: The Meuse Dataset
 
-We use the Meuse River dataset throughout these notes, so it's worth saying clearly where it comes from, what's in it, and how the version you're working with was assembled.
+We use the Meuse River dataset throughout this book, so it's worth saying clearly where it comes from, what's in it, and how the version you're working with was assembled.
 
-The original `meuse.all` from the `gstat` package has 17 columns, most of which we never touch - landuse codes, indicator variables for which survey the row came from, a lime field test result. Handing students a 17-column data frame when you only ever use 7 of those columns is a tax on attention. Same problem with the original `meuse.grid`: it had a normalized distance column and two arbitrary area-split columns (`part.a`, `part.b`) that served no purpose in these notes. So we stripped both down. `meuse2` has the coordinates and the metals plus organic matter. `meuse.grid2` has the grid coordinates and a set of modern, interpretable covariates. The covariates that matter for the regression kriging chapter - soil type, flooding frequency, river distance - live in `meuse.grid2` and get extracted onto the point data when needed using `terra::extract()`. That workflow is more realistic than having covariates pre-joined into the point dataset anyway.
+The original `meuse.all` from the `gstat` package has 17 columns, most of which we never touch - landuse codes, indicator variables for which survey the row came from, a lime field test result. Handing students a 17-column data frame when you only ever use 7 of those columns is a tax on attention. Same problem with the original `meuse.grid`: it had a normalized distance column and two arbitrary area-split columns (`part.a`, `part.b`) that served no purpose in this book. So we stripped both down. `meuse2` has the coordinates and the metals plus organic matter. `meuse.grid2` has the grid coordinates and a set of modern, interpretable covariates. The covariates that matter for the regression kriging chapter - soil type, flooding frequency, river distance - live in `meuse.grid2` and get extracted onto the point data when needed using `terra::extract()`. That workflow is more realistic than having covariates pre-joined into the point dataset anyway.
 
 ## Origin
 
 The original data were collected in the early 1990s near the village of Stein in the Netherlands, in the floodplain of the Meuse River. The data include topsoil heavy metal concentrations (cadmium, copper, lead, zinc) at 155 sample locations, along with a handful of environmental covariates. The dataset was published and distributed with the `sp` package in R by Edzer Pebesma and Roger Bivand, and it has been a workhorse teaching dataset in spatial statistics ever since.
 
-The original dataset comes in two objects from the `sp` package: `meuse` (155 sample points) and `meuse.grid` (the prediction grid). In these notes we use trimmed versions of both. For the point data we use `meuse2`, and for the prediction grid we use `meuse.grid2`. Load them like this:
+The original dataset comes in two objects from the `sp` package: `meuse` (155 sample points) and `meuse.grid` (the prediction grid). In this book we use trimmed versions of both. For the point data we use `meuse2`, and for the prediction grid we use `meuse.grid2`. Load them like this:
 
 ```r
 meuse2 <- readRDS("data/meuse2.Rds")            # 164 sample points

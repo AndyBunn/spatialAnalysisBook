@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Deterministic Interpolation: Thin-Plate Splines – Spatial Analysis for Environmental Science</title>
+<title>Deterministic Interpolation: Thin-Plate Splines – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -377,8 +382,7 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#reading" id="toc-reading" class="nav-link active" data-scroll-target="#reading">Reading</a></li>
-  <li><a href="#big-idea" id="toc-big-idea" class="nav-link" data-scroll-target="#big-idea">Big Idea</a></li>
+  <li><a href="#big-idea" id="toc-big-idea" class="nav-link active" data-scroll-target="#big-idea">Big Idea</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#theory" id="toc-theory" class="nav-link" data-scroll-target="#theory">Theory</a></li>
   <li><a href="#application" id="toc-application" class="nav-link" data-scroll-target="#application">Application</a>
@@ -391,8 +395,9 @@ window.Quarto = {
   <ul>
   <li><a href="#null-model" id="toc-null-model" class="nav-link" data-scroll-target="#null-model">Null Model</a></li>
   </ul></li>
-  <li><a href="#is-this-an-improvement" id="toc-is-this-an-improvement" class="nav-link" data-scroll-target="#is-this-an-improvement">Is This an Improvement?</a></li>
-  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your Work</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/07Geostat2TPS.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -418,10 +423,6 @@ window.Quarto = {
 </header>
 
 
-<section id="reading" class="level2">
-<h2 class="anchored" data-anchor-id="reading">Reading</h2>
-<p>In Hijmans’s <a href="https://rspatial.org/analysis/4-interpolation.html">Interpolation</a> he covers thin-plate splines using an example but doesn’t discuss the theory at all. Bivand also waves at it in Ch 8. ESRI has a decent reading on <a href="https://pro.arcgis.com/en/pro-app/help/analysis/geostatistical-analyst/how-radial-basis-functions-work.htm">radial basis functions</a> that is worth a look.</p>
-</section>
 <section id="big-idea" class="level2">
 <h2 class="anchored" data-anchor-id="big-idea">Big Idea</h2>
 <p>IDW was our first crack at spatial interpolation. Simple, transparent, and completely deterministic. Thin-plate splines (TPS) are also deterministic, but the philosophy is different. Instead of weighting nearby points by distance, TPS fits a single smooth surface to all the data at once, penalizing roughness globally rather than reasoning locally from neighbors. The payoff is a smoother surface with none of the bullseye artifacts IDW made in sparse areas. The cost is that TPS is a black box. The math is complex, the fitting is automatic, and the surface can over-smooth in ways that are hard to diagnose.</p>
@@ -429,8 +430,8 @@ window.Quarto = {
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>The <code>fields</code> package <span class="citation" data-cites="R-fields">(<a href="12References.html#ref-R-fields" role="doc-biblioref">Nychka et al. 2025</a>)</span> is your friend.</p>
-<p>The <code>fields</code><span class="citation" data-cites="R-fields">(<a href="12References.html#ref-R-fields" role="doc-biblioref">Nychka et al. 2025</a>)</span> package is the main package we’ll use for thin-plate splines. We’ll lean on our usual spatial toolkit as well: <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span>, <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="12References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>, <code>sf</code><span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="12References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span>, and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="12References.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>.</p>
+<p>The <code>fields</code> package <span class="citation" data-cites="R-fields">(<a href="13References.html#ref-R-fields" role="doc-biblioref">Nychka et al. 2025</a>)</span> is your friend.</p>
+<p>The <code>fields</code><span class="citation" data-cites="R-fields">(<a href="13References.html#ref-R-fields" role="doc-biblioref">Nychka et al. 2025</a>)</span> package is the main package we’ll use for thin-plate splines. We’ll lean on our usual spatial toolkit as well: <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span>, <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="13References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span>, <code>sf</code><span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span>, <code>terra</code><span class="citation" data-cites="R-terra">(<a href="13References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span>, and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="13References.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -575,7 +576,7 @@ Note
 </div>
 </div>
 </div>
-<p>Compare that to the IDW surface from the last module. No craters. The sparse center of the study area gets a smooth interpolation rather than bullseyes around each isolated point. That’s the global nature of TPS doing its job.</p>
+<p>Compare that to the IDW surface from the IDW chapter. No craters. The sparse center of the study area gets a smooth interpolation rather than bullseyes around each isolated point. That’s the global nature of TPS doing its job.</p>
 </section>
 </section>
 <section id="skill" class="level2">
@@ -718,11 +719,11 @@ REML       0.0007638656 35.12587 0.1834245 0.3668982     85.76721        6</code
 <pre><code>[1] 0.40923</code></pre>
 </div>
 </div>
-<p>TPS beats the null. The skill score here (0.409) usually lands around 0.35-0.45 depending on the random split. Compare that to IDW from the last module, where the skill score was around 0.22-0.25. TPS is doing better, though not dramatically. For a full treatment of how to interpret these skill scores, see the <a href="06xAsideModelSkill.html">Model Skill and Cross Validation aside</a>.</p>
+<p>TPS beats the null. The skill score here (0.409) usually lands around 0.35-0.45 depending on the random split. Compare that to the IDW chapter, where the skill score was around 0.22-0.25. TPS is doing better, though not dramatically. For a full treatment of how to interpret these skill scores, see the <a href="06xAsideModelSkill.html">Model Skill and Cross Validation aside</a>.</p>
 </section>
 </section>
-<section id="is-this-an-improvement" class="level2">
-<h2 class="anchored" data-anchor-id="is-this-an-improvement">Is This an Improvement?</h2>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <p>In terms of skill scores, TPS and IDW are in the same neighborhood on the Meuse data. TPS tends to do a bit better out-of-sample, but the margins are not large.</p>
 <p>What is clearly different is how the two methods fail. IDW made craters in the sparse center of the study area. TPS smoothed those away, which looks better. But look at what TPS does instead: it consistently overpredicts the low values. The smooth surface can’t simultaneously honor the low values in the sparse center and the high values near the river without distorting everything in between. So it splits the difference, and the extremes lose.</p>
 <p>You could make the case either way. If you need a smooth-looking surface that gets the broad spatial pattern right, TPS is probably the better choice. If the extreme values matter – if the low-lead areas in the center of the floodplain are scientifically important, say – then IDW’s craters are at least clear about how little information the model has there. TPS hides that uncertainty under a plausible-looking surface.</p>
@@ -731,9 +732,13 @@ REML       0.0007638656 35.12587 0.1834245 0.3668982     85.76721        6</code
 <p>Both IDW and TPS produce a surface but tell you nothing about how wrong it might be. If you want to know whether a predicted value of 4.8 log(ppm) at some unsampled location could plausibly be 3.8 or 5.8, IDW and TPS have nothing to say. You just get the 4.8 and are expected to be satisfied with it.</p>
 <p>That’s what kriging fixes. Kriging is a probabilistic method that uses the variogram (which you already know from the autocorrelation module) to model the spatial structure of the data and produce a prediction surface with an actual uncertainty estimate alongside it. That <code>var1.var</code> column that was full of NAs in the IDW output? Kriging fills it in, and it means something. That’s the next chapter.</p>
 </section>
-<section id="your-work" class="level2">
-<h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
-<p>None for this module. This is meant as an add-on to introduce you to TPS before we move on to kriging. That said, you should be able to apply this to the California precipitation data from the IDW assignment by following the workflow above.</p>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<p>Try applying the TPS workflow to the California precipitation data from the IDW chapter. The setup is the same – <code>prcpCA.rds</code> for the point data, <code>gridCA.rds</code> for the prediction grid. Compare your TPS surface to the IDW surface you made there. Where do they differ? Does TPS handle the sparse regions of the state better, and does cross-validation skill reflect that?</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<p>Hijmans’s <a href="https://rspatial.org/analysis/4-interpolation.html">Interpolation</a> covers TPS with worked examples. ESRI has a readable conceptual overview of <a href="https://pro.arcgis.com/en/pro-app/help/analysis/geostatistical-analyst/how-radial-basis-functions-work.htm">radial basis functions</a> that situates TPS in the broader RBF family. For the mathematical details of the <code>fields</code> implementation, the <a href="https://github.com/NCAR/fields/blob/master/fieldsVignette.pdf">package vignette</a> by Ashton Wiens and Mitch Krock is the place to go.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">

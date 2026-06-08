@@ -10,10 +10,6 @@ The GLS chapter gave us one tool for handling spatially autocorrelated residuals
 
 GLS models the error correlation structure using a variogram -- a continuous function of distance. The SAR (Simultaneous AutoRegressive) family instead uses an explicit spatial weights matrix: the same neighbor structure you built for Moran's I and LISA. Two SAR models matter most for applied environmental work. The spatial error model says that the errors -- the stuff your predictors don't explain -- are spatially correlated via a neighbor process. The spatial lag model says something more provocative: that the response variable at each location is directly influenced by the response at neighboring locations. These two models answer different questions, and it matters which one you fit.
 
-## Reading
-
-@dormann2007methods covers spatial error models and related approaches in section 3. You have already read the intro for the GLS chapter; go back and read sections 3.3 and 3.4 more carefully now. @bivand2008geostatistics chapter 9 covers the SAR model family in detail, including the `spatialreg` functions we use here. It is a technical chapter; skim for concepts and return to the details when you need them.
-
 ::: {.callout-note}
 This module follows directly from the [Regression: GLS](10RegressionGLS.html) chapter and assumes you are comfortable with the OLS-to-GLS workflow there. The spatial weights machinery is the same as in the [LISA](05LISA.html) chapter.
 :::
@@ -210,7 +206,11 @@ GLS uses a variogram -- a continuous function of distance -- to model the error 
 
 The spatial lag model has no real GLS equivalent. If the biology or ecology predicts a spillover or diffusion process, fit the lag model. Just be careful with the coefficients.
 
-## Your Work
+## Wrapping Up
+
+GLS and SAR are both corrections to the same problem: OLS residuals that carry spatial signal the model hasn't explained. Which one you reach for depends on your data and your question. For most field-based environmental science, GLS is the workhorse. It's flexible, connects directly to the variogram, and the output is easy to interpret. SAR is worth knowing when the spatial structure is better described by a neighbor graph than a continuous distance decay, or when you genuinely believe there's a spillover process in the response itself. That's a real mechanism sometimes -- think about how disease spreads, or how animal behavior in one patch influences neighboring patches. But for lead in floodplain soil, space is probably just a proxy for flood exposure. Use GLS and sleep well.
+
+## Exercises
 
 The Meuse River data contains several candidate predictors for soil lead contamination. `river_dist_m` is the distance from the river channel in meters and `ffreq` is a flooding frequency class (a factor with three levels). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.
 
@@ -234,49 +234,10 @@ meuse_sf <- st_join(meuse_sf, covars_sf, join = st_nearest_feature) %>%
 
 4. Fit the recommended model. Check the residuals. Did the spatial structure get absorbed?
 
-5. Compare the coefficients on `dist` and `ffreq` between OLS and your SAR model. Do the substantive conclusions change, or mostly just the standard errors?
+5. Compare the coefficients on `river_dist_m` and `ffreq` between OLS and your SAR model. Do the substantive conclusions change, or mostly just the standard errors?
 
-6. Write one paragraph: is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in soil?
+6. Is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in floodplain soil?
 
-```{r, echo=FALSE, eval=FALSE}
-# --- instructor key ---
-meuse2      <- readRDS("data/meuse2.Rds")
-meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
-meuse_sf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
-meuse_sf$log_lead <- log(meuse_sf$lead)
-covars_sf <- st_as_sf(meuse.grid2, coords = c("x","y"), crs = 28992) %>%
-  select(ffreq, river_dist_m)
-meuse_sf <- st_join(meuse_sf, covars_sf, join = st_nearest_feature) %>%
-  mutate(ffreq = factor(ffreq))
-coords <- st_coordinates(meuse_sf)
+## Further Reading
 
-nb_k8 <- knn2nb(knearneigh(coords, k = 8))
-W <- nb2listw(nb_k8, style = "W")
-
-# OLS
-ols_lead <- lm(log_lead ~ river_dist_m + ffreq, data = as.data.frame(meuse_sf))
-moran.test(residuals(ols_lead), W)  # significant
-
-# LM tests -- expect LMerr to dominate
-lm.LMtests(ols_lead, listw = W, test = "all")
-
-# SEM
-sem_lead <- errorsarlm(log_lead ~ river_dist_m + ffreq,
-                       data = as.data.frame(meuse_sf), listw = W)
-summary(sem_lead)
-moran.test(residuals(sem_lead), W)  # should be clean
-
-# SLM for comparison
-slm_lead <- lagsarlm(log_lead ~ river_dist_m + ffreq,
-                     data = as.data.frame(meuse_sf), listw = W)
-summary(slm_lead)
-
-AIC(sem_lead, slm_lead)
-
-# The lag model would imply that lead contamination at one location
-# spatially drives contamination at neighboring locations --
-# a diffusion or contagion process. For inert fluvial sediment,
-# that mechanism is not ecologically compelling. The error model
-# (shared unmeasured drivers: flood frequency variation, sediment
-# texture, proximity to historical channel features) is more defensible.
-```
+@dormann2007methods sections 3.3 and 3.4 cover spatial error models and related approaches. @bivand2008geostatistics chapter 9 goes deep on the SAR model family and the `spatialreg` functions; it's a technical chapter, but worth returning to once you've worked through the examples here.

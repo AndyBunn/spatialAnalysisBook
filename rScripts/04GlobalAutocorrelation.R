@@ -599,7 +599,7 @@ pGradBumpsI
 library(tmap)
 birds_sf <- readRDS("../data/birdRichnessMexico.rds")
 tmap_mode("view")
-tm_shape(birds_sf) + 
+tm_shape(birds_sf) +
   tm_symbols(col="nSpecies", alpha = 0.7)
 
 
@@ -613,22 +613,6 @@ max(dist(st_coordinates(birds_sf)))/3
 
 ## ----eval=FALSE---------------------------------------------------------------
 # birdVar <- variogram(nSpecies~1, data = birds_sf, alpha=c(0,90))
-
-
-## ----echo=FALSE,eval=FALSE----------------------------------------------------
-# birdsDF <- data.frame(st_coordinates(birds_sf),nSpecies=birds_sf$nSpecies)
-# foo <- correlog(x=birdsDF[,1],y=birdsDF[,2],
-#                 z =birds_sf$nSpecies,increment = 50,resamp = 200)
-# plot(foo) # yucky!
-# plot(foo,xlim=c(0,1e3))
-# abline(h=0)
-# # classic gradient!
-# 
-# birdVar<-variogram(nSpecies~1, data = birds_sf)
-# plot(birdVar,pch=20)
-# # look at NS vs EW
-# birdVar<-variogram(nSpecies~1, data = birds_sf, alpha=c(0,90))
-# plot(birdVar,pch=20)
 
 
 ## -----------------------------------------------------------------------------

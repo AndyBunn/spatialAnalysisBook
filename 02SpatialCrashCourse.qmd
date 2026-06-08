@@ -1,6 +1,6 @@
 # Spatial Data in R: A Quick Orientation
 
-There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It goes deep fast. We aren't going to go there. This is not a GIS-in-R course, and these notes are not a substitute for one.
+There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It goes deep fast. We aren't going to go there. This is not a GIS-in-R book, and it is not a substitute for one.
 
 If you want the full treatment, two resources will serve you well. [Geocomputation with R](https://r.geocompx.org/) by Lovelace, Nowosad, and Muenchow is the best book on the subject and it's free online. The [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/) covers the fundamentals in a hands-on workshop format. Work through either of those and you'll come out knowing a lot more than we need here.
 
@@ -134,7 +134,7 @@ You'll notice the resolution changes when you reproject a raster. `terra` has to
 
 From here on, we'll work in projected coordinates. If you load data in geographic coordinates, reproject it before doing any analysis. Make it a habit.
 
-## What's Next
+## Wrapping Up
 
 You now know enough to follow along. We have `sf` for our point observations and `terra` for our gridded surfaces. The chapters ahead use both, and you'll get more comfortable with them as we go.
 

@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Spatial analysis notes and exercises">
+<meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Probabilistic Interpolation: Regression Kriging – Spatial Analysis for Environmental Science</title>
+<title>Probabilistic Interpolation: Regression Kriging – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -348,7 +348,12 @@ window.Quarto = {
   </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./12References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
+  <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -378,7 +383,6 @@ window.Quarto = {
    
   <ul>
   <li><a href="#big-idea" id="toc-big-idea" class="nav-link active" data-scroll-target="#big-idea">Big Idea</a></li>
-  <li><a href="#reading" id="toc-reading" class="nav-link" data-scroll-target="#reading">Reading</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#overview-of-rk" id="toc-overview-of-rk" class="nav-link" data-scroll-target="#overview-of-rk">Overview of RK</a></li>
   <li><a href="#back-to-the-netherlands" id="toc-back-to-the-netherlands" class="nav-link" data-scroll-target="#back-to-the-netherlands">Back to the Netherlands</a>
@@ -388,7 +392,9 @@ window.Quarto = {
   <li><a href="#ols" id="toc-ols" class="nav-link" data-scroll-target="#ols">OLS</a></li>
   <li><a href="#rk-application" id="toc-rk-application" class="nav-link" data-scroll-target="#rk-application">RK Application</a></li>
   </ul></li>
-  <li><a href="#your-work" id="toc-your-work" class="nav-link" data-scroll-target="#your-work">Your Work</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/09GeostatsRegressionKriging.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -418,13 +424,9 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="big-idea">Big Idea</h2>
 <p>Plain kriging uses the spatial structure of the response variable itself to make predictions. That works well, but it ignores something we often have access to: variables that are cheap to measure everywhere and that correlate with the thing we care about. Distance to a river, elevation, soil type, and land cover can all be derived from GIS or remote sensing data across an entire study area, even when your expensive response variable is only measured at a handful of sample points. Regression kriging (RK) combines a regression model using those covariates with kriging of the regression residuals, giving you better predictions than either approach alone.</p>
 </section>
-<section id="reading" class="level2">
-<h2 class="anchored" data-anchor-id="reading">Reading</h2>
-<p><span class="citation" data-cites="meng2013">Meng et al. (<a href="12References.html#ref-meng2013" role="doc-biblioref">2013</a>)</span> provide a (mostly) readable description of regression kriging and compare it to the kind of interpolation approaches we’ve looked at already. Give it a heavy skim.</p>
-</section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="12References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. But we will need some of our recent collaborators as well including <code>terra</code><span class="citation" data-cites="R-terra">(<a href="12References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="12References.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>, plus <code>sf</code><span class="citation" data-cites="R-sf">(<a href="12References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> and <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="12References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for the usual data wrangling. We’ll use <code>cowplot</code><span class="citation" data-cites="R-cowplot">(<a href="12References.html#ref-R-cowplot" role="doc-biblioref">Wilke 2025</a>)</span> to arrange plots at the end.</p>
+<p>The <code>gstat</code><span class="citation" data-cites="R-gstat">(<a href="13References.html#ref-R-gstat" role="doc-biblioref">Pebesma and Graeler 2026</a>)</span> package is your friend. But we will need some of our recent collaborators as well including <code>terra</code><span class="citation" data-cites="R-terra">(<a href="13References.html#ref-R-terra" role="doc-biblioref">Hijmans 2026</a>)</span> and <code>tidyterra</code><span class="citation" data-cites="R-tidyterra">(<a href="13References.html#ref-R-tidyterra" role="doc-biblioref">Hernangómez 2023</a>)</span>, plus <code>sf</code><span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> and <code>tidyverse</code><span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for the usual data wrangling. We’ll use <code>cowplot</code><span class="citation" data-cites="R-cowplot">(<a href="13References.html#ref-R-cowplot" role="doc-biblioref">Wilke 2025</a>)</span> to arrange plots at the end.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -535,18 +537,19 @@ F-statistic: 165.5 on 1 and 160 DF,  p-value: &lt; 2.2e-16</code></pre>
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>meuseGrid_sf<span class="sc">$</span>omHat <span class="ot">&lt;-</span> <span class="fu">predict</span>(om_lm, <span class="at">newdata=</span>meuseGrid_sf)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>sf_2_rast <span class="ot">&lt;-</span> <span class="cf">function</span>(sfObject, <span class="at">variable2get =</span> <span class="dv">1</span>){</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  tmp <span class="ot">&lt;-</span> sfObject[,variable2get] <span class="sc">%&gt;%</span> <span class="fu">st_drop_geometry</span>()</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  dfObject <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">st_coordinates</span>(sfObject), <span class="at">z=</span>tmp)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  rastObject <span class="ot">&lt;-</span> <span class="fu">rast</span>(dfObject, <span class="at">crs=</span><span class="fu">crs</span>(sfObject))</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(rastObject)</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>meuseGrid_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(meuseGrid_sf, <span class="at">variable2get =</span> <span class="st">"omHat"</span>)</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_spatraster</span>(<span class="at">data =</span> meuseGrid_rast,</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                           <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omHat)) <span class="sc">+</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>() <span class="sc">+</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"omHat"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># same sf_2_rast function from the IDW notes -- write it once, use it everywhere</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>sf_2_rast <span class="ot">&lt;-</span> <span class="cf">function</span>(sfObject, <span class="at">variable2get =</span> <span class="dv">1</span>){</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  tmp <span class="ot">&lt;-</span> sfObject[,variable2get] <span class="sc">%&gt;%</span> <span class="fu">st_drop_geometry</span>()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  dfObject <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">st_coordinates</span>(sfObject), <span class="at">z=</span>tmp)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  rastObject <span class="ot">&lt;-</span> <span class="fu">rast</span>(dfObject, <span class="at">crs=</span><span class="fu">crs</span>(sfObject))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(rastObject)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>meuseGrid_rast <span class="ot">&lt;-</span> <span class="fu">sf_2_rast</span>(meuseGrid_sf, <span class="at">variable2get =</span> <span class="st">"omHat"</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_spatraster</span>(<span class="at">data =</span> meuseGrid_rast,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                           <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">fill=</span>omHat)) <span class="sc">+</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_terrain_c</span>() <span class="sc">+</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"omHat"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -720,10 +723,20 @@ First 10 features:
 <p>Compare the RK prediction surface to the OLS surface above. The overall gradient driven by distance to the river is still there, because that came from the regression, but the spatial detail is richer because the kriged residuals filled in structure that distance alone missed. Whether the added complexity translates to better predictive skill is a question for cross-validation.</p>
 </section>
 </section>
-<section id="your-work" class="level2">
-<h2 class="anchored" data-anchor-id="your-work">Your Work</h2>
-<p>Use <code>gstat.cv</code> to perform cross-validation on both the OLS-only model (<code>omGstat</code>) and the full RK model (<code>omGstat_w_variogram</code>). Compute RMSE and R<span class="math inline">\(^2\)</span> for each. Did RK improve the predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?</p>
-<p>This was a simple model using <code>om ~ log_dist</code>. What else might help?</p>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>Regression kriging combines two things you already know: a regression model that uses covariates to explain the broad spatial trend, and kriging on the residuals to capture the local structure the regression missed. The result is a prediction surface with more spatial detail than OLS alone and an uncertainty estimate that kriging brings along for free.</p>
+<p>The method is only as good as your covariates. If distance to the river explains most of the variation in organic matter, RK will do well. If your regression is weak, the residual surface carries most of the weight and you’re basically back to ordinary kriging. Either way, the variance surface tells you where the predictions are most uncertain and that is information OLS will never give you.</p>
+<p>The next two chapters take a step back. Instead of predicting a surface, we return to regression and ask what happens when OLS residuals are spatially autocorrelated. Spoiler: the coefficients are fine but the standard errors aren’t, and that matters for inference.</p>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<p>Use <code>gstat.cv</code> to cross-validate both the OLS-only model (<code>omGstat</code>) and the full RK model (<code>omGstat_w_variogram</code>). Compute RMSE and R<span class="math inline">\(^2\)</span> for each. Did RK improve predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?</p>
+<p>This was a simple model using <code>om ~ log_dist</code>. What else in <code>meuse.grid2</code> might be worth adding?</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<p><span class="citation" data-cites="meng2013">Meng et al. (<a href="13References.html#ref-meng2013" role="doc-biblioref">2013</a>)</span> give a readable description of regression kriging and compare it to ordinary kriging and cokriging. Worth a read once you’ve worked through the examples here and want to see how the method performs in practice across different datasets.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
