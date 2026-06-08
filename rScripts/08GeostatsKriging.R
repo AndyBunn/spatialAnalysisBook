@@ -180,6 +180,21 @@ c(rsq=rsq, rmse = rmse)
 
 
 ## -----------------------------------------------------------------------------
+library(automap)
+leadVar <- autofitVariogram(formula = logLead~1,input_data = meuse_sf)
+summary(leadVar)
+plot(leadVar)
+
+
+## -----------------------------------------------------------------------------
+leadAutoKrigeLOOCV <- autoKrige.cv(formula = logLead~1, input_data = meuse_sf,
+                                   verbose = c(FALSE,FALSE))
+summary(leadAutoKrigeLOOCV)
+# R2
+cor(leadAutoKrigeLOOCV$krige.cv_output$observed,leadAutoKrigeLOOCV$krige.cv_output$var1.pred)^2
+
+
+## -----------------------------------------------------------------------------
 # precip point data
 prcpCA <- readRDS("../data/prcpCA.rds")
 # empty grid to interpolate into
@@ -194,19 +209,4 @@ prcpCAsf %>% ggplot() +
   scale_fill_continuous(type = "viridis",name="mm") +
   labs(title="Total Annual Precipitation") +
   scale_size(guide="none")
-
-
-## -----------------------------------------------------------------------------
-library(automap)
-leadVar <- autofitVariogram(formula = logLead~1,input_data = meuse_sf)
-summary(leadVar)
-plot(leadVar)
-
-
-## -----------------------------------------------------------------------------
-leadAutoKrigeLOOCV <- autoKrige.cv(formula = logLead~1, input_data = meuse_sf,
-                                   verbose = c(FALSE,FALSE))
-summary(leadAutoKrigeLOOCV)
-# R2
-cor(leadAutoKrigeLOOCV$krige.cv_output$observed,leadAutoKrigeLOOCV$krige.cv_output$var1.pred)^2
 

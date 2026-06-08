@@ -1,4 +1,4 @@
-# Welcome and How to Get Setup
+# Getting Started
 
 ## Why Spatial Analysis
 
@@ -72,15 +72,15 @@ The people who do this work well are not necessarily the ones who find it easies
 
 So: set up your project, download the data, and let's get to work.
 
-## Technical Setup
+## Setup
 
-This document was written in Markdown using [Quarto](https://quarto.org) and built with **R version `r getRversion()`**. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. Update them by running:
+The book is built around R, so you'll need a working R installation. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. If you're not sure, run:
 
 ``` r
 update.packages()
 ```
 
-**Run that now.** And anytime it occurs to you.
+Do it now, and anytime it occurs to you.
 
 ### Project Structure
 
@@ -117,7 +117,7 @@ To follow along, you'll want a working RStudio project.
     ```
 
 4.  **Save your `.qmd` or `.Rmd` files in the project root**\
-    When you make a file for working through a chapter, save it in the project's root directory. Quarto (`.qmd`) and R Markdown (`.Rmd`) files are close cousins -- the syntax is nearly identical and either will work fine here. After finishing the point pattern chapter, your structure might look like this:
+    Keep your working files in the project's root directory. Quarto (`.qmd`) and R Markdown (`.Rmd`) are close cousins -- the syntax is nearly identical and either will work fine here. After working through the point pattern chapter, your structure might look like this:
 
     ```
     spatial-analysis/

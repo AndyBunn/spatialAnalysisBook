@@ -25,6 +25,7 @@ book:
       chapters:
         - 03Point_Patterns.qmd
         - 03xAsideDistanceMatrices.qmd
+        - 03xAsideRipleyK.qmd
         - 04GlobalAutocorrelation.qmd
         - 04xAsideCorrelationVersusRegression.qmd
         - 05LISA.qmd
@@ -42,7 +43,9 @@ book:
         - 10RegressionGLS.qmd
         - 10xAsideOLS-Algebra-Matrix.qmd
         - 11SpatialRegressionSAR.qmd
-    - 12Conclusion.qmd
+    - part: "Conclusion"
+      chapters:
+        - 12Conclusion.qmd
     - 13References.qmd
     - part: "Appendices"
       chapters:

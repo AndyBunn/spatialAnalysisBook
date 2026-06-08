@@ -216,7 +216,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01Welcome.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Welcome and How to Get Setup</span></a>
+  <a href="./01Welcome.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Getting Started</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -250,6 +250,12 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="./03xAsideDistanceMatrices.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Aside: Distance Matrices</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03xAsideRipleyK.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Aside: Ripley’s K by Hand</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -346,11 +352,22 @@ window.Quarto = {
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Conclusion</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
   </div>
 </li>
+      </ul>
+  </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
@@ -358,13 +375,13 @@ window.Quarto = {
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Appendices</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
@@ -398,10 +415,10 @@ window.Quarto = {
   <li><a href="#other-variogram-models" id="toc-other-variogram-models" class="nav-link" data-scroll-target="#other-variogram-models">Other Variogram Models</a></li>
   <li><a href="#other-types-of-kriging" id="toc-other-types-of-kriging" class="nav-link" data-scroll-target="#other-types-of-kriging">Other Types of Kriging</a></li>
   <li><a href="#cross-validation" id="toc-cross-validation" class="nav-link" data-scroll-target="#cross-validation">Cross Validation</a></li>
+  <li><a href="#automap" id="toc-automap" class="nav-link" data-scroll-target="#automap">Automap</a></li>
   <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
   <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
-  <li><a href="#postscript-automap" id="toc-postscript-automap" class="nav-link" data-scroll-target="#postscript-automap">Postscript: Automap</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/08GeostatsKriging.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -1004,55 +1021,16 @@ First 10 features:
 </div>
 <p>The LOOCV R<span class="math inline">\(^2\)</span> is 0.619 and the RMSE is 0.414 which we get from the observed vs predicted values. But note all the fields we get from the <code>krige.cv</code> function. We get the prediction and prediction variance of the cross-validated data points and we also get the observed values. We also get the residuals (observed minus predicted), the z-score (the residual divided by kriging standard error), and the fold (in this case we have as many folds as rows in meuse because it is LOOCV).</p>
 </section>
-<section id="wrapping-up" class="level2">
-<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
-<p>Recall that IDW and TPS gave us a prediction surface with no uncertainty attached. Every grid cell got a number and that was that. Kriging gives us the same prediction surface, but also the variance surface we just looked at, and that second surface is where probability theory earns its keep. Imagine you’re deciding where to put additional soil sampling stations to reduce uncertainty in your lead concentration map. With IDW you have no principled way to answer that question, because IDW has no model of uncertainty to begin with. With kriging, you look at the variance surface and put your next sample where the variance is highest. Or imagine you need to flag grid cells where the predicted lead concentration exceeds a regulatory threshold: with a variance surface you can attach a probability to that exceedance rather than just a point estimate. The deterministic methods we covered earlier are fast and intuitive, but they borrow nothing from probability theory, so there is no statistically grounded way to quantify how much you should trust the predictions. Kriging trades some of that simplicity for something genuinely useful: a map of your own ignorance.</p>
-</section>
-<section id="exercises" class="level2">
-<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
-<p>Return to the California precipitation data from the IDW chapter. This time, krige the surface rather than use IDW.</p>
+<section id="automap" class="level2">
+<h2 class="anchored" data-anchor-id="automap">Automap</h2>
+<p>You’ll find it anyway, so let’s get the cat out of the bag.</p>
+<p>Like other angry old men, I like to describe a bucolic youth spent milking at 4AM, walking to school in the snow, programming F77 in vi, and <strong>doing all my GIS with Arc on the command line</strong>. Kids these days like to do their geostatistics in ArcGIS by clicking “next, next, next, finish” and plotting their map without <code>ARCPLOT</code>. One of the many reasons I like using R is that you get to do things like fit variograms by hand the same way the pioneers did when they had to cross the prairie. But you can, if you like, automatically fit a variogram using the <code>automap</code> library which has a lot of nice wrappers for the <code>gstat</code> functions like <code>fit.variogram</code>.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># precip point data</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>prcpCA <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/prcpCA.rds"</span>)</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># empty grid to interpolate into</span></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>gridCA <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/gridCA.rds"</span>)</span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>prcpCAsf <span class="ot">&lt;-</span> prcpCA <span class="sc">%&gt;%</span> <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_crs</span>(<span class="at">value =</span> <span class="dv">3310</span>)</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>prcpCAsf <span class="sc">%&gt;%</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill=</span>ANNUAL,<span class="at">size=</span>ANNUAL),<span class="at">color=</span><span class="st">"white"</span>,</span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">shape=</span><span class="dv">21</span>,<span class="at">alpha=</span><span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_continuous</span>(<span class="at">type =</span> <span class="st">"viridis"</span>,<span class="at">name=</span><span class="st">"mm"</span>) <span class="sc">+</span></span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"Total Annual Precipitation"</span>) <span class="sc">+</span></span>
-<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size</span>(<span class="at">guide=</span><span class="st">"none"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="08GeostatsKriging_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Fit the variogram manually using <code>variogram</code>, <code>vgm</code>, and <code>fit.variogram</code> – skip <code>automap</code> for this one. Compare at least two variogram models. Assess the surface using cross-validation and interpret what you find. How does the kriged surface compare to the IDW surface you made earlier? Does the kriging variance surface (<code>var1.var</code>) tell you anything useful about where you should trust the predictions?</p>
-</section>
-<section id="further-reading" class="level2">
-<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
-<p><span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> chapter 8, sections 8.4 and 8.5, covers kriging theory and implementation in R in detail. <span class="citation" data-cites="fortin2016spatial">Fortin et al. (<a href="13References.html#ref-fortin2016spatial" role="doc-biblioref">2016</a>)</span> sections 4.3 to 4.5 provide a more accessible treatment of the same material. Both are worth having at hand when fitting variograms for the first time.</p>
-</section>
-<section id="postscript-automap" class="level2">
-<h2 class="anchored" data-anchor-id="postscript-automap">Postscript: Automap</h2>
-<p>You’ll find it anyways, so let’s get the cat out of the bag.</p>
-<p>Like other angry old men, I like to describe a bucolic youth spent milking at 4AM, walking to school in the snow, programming F77 in vi, and <strong>doing all my GIS with Arc on the command line</strong>. Kids these days like to do their geostatistics in ArcGIS by clicking “next, next, next, finish” and plotting their map without <code>ARCPLOT</code>. One of the many reasons I like using <code>R</code> is that you get to do things like fit variograms by hand the same way the pioneers did when they had to cross the prairie. But you can, if you like, automatically fit a variogram using the <code>automap</code> library which has a lot of nice wrappers for the <code>gstat</code> functions like <code>fit.variogram</code>.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(automap)</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>leadVar <span class="ot">&lt;-</span> <span class="fu">autofitVariogram</span>(<span class="at">formula =</span> logLead<span class="sc">~</span><span class="dv">1</span>,<span class="at">input_data =</span> meuse_sf)</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(leadVar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(automap)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>leadVar <span class="ot">&lt;-</span> <span class="fu">autofitVariogram</span>(<span class="at">formula =</span> logLead<span class="sc">~</span><span class="dv">1</span>,<span class="at">input_data =</span> meuse_sf)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(leadVar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Experimental variogram:
@@ -1077,12 +1055,12 @@ Sums of squares betw. var. model and sample var.[1] 2.920612e-05</code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(leadVar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(leadVar)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="08GeostatsKriging_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="08GeostatsKriging_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1094,9 +1072,9 @@ Sums of squares betw. var. model and sample var.[1] 2.920612e-05</code></pre>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>leadAutoKrigeLOOCV <span class="ot">&lt;-</span> <span class="fu">autoKrige.cv</span>(<span class="at">formula =</span> logLead<span class="sc">~</span><span class="dv">1</span>, <span class="at">input_data =</span> meuse_sf,</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">verbose =</span> <span class="fu">c</span>(<span class="cn">FALSE</span>,<span class="cn">FALSE</span>))</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(leadAutoKrigeLOOCV)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>leadAutoKrigeLOOCV <span class="ot">&lt;-</span> <span class="fu">autoKrige.cv</span>(<span class="at">formula =</span> logLead<span class="sc">~</span><span class="dv">1</span>, <span class="at">input_data =</span> meuse_sf,</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">verbose =</span> <span class="fu">c</span>(<span class="cn">FALSE</span>,<span class="cn">FALSE</span>))</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(leadAutoKrigeLOOCV)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>            [,1]      
@@ -1114,8 +1092,8 @@ iqr         0.4022    </code></pre>
 </div>
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R2</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(leadAutoKrigeLOOCV<span class="sc">$</span>krige.cv_output<span class="sc">$</span>observed,leadAutoKrigeLOOCV<span class="sc">$</span>krige.cv_output<span class="sc">$</span>var1.pred)<span class="sc">^</span><span class="dv">2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R2</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(leadAutoKrigeLOOCV<span class="sc">$</span>krige.cv_output<span class="sc">$</span>observed,leadAutoKrigeLOOCV<span class="sc">$</span>krige.cv_output<span class="sc">$</span>var1.pred)<span class="sc">^</span><span class="dv">2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.6242166</code></pre>
@@ -1123,6 +1101,45 @@ iqr         0.4022    </code></pre>
 </div>
 <p>Here we get a LOOCV R<span class="math inline">\(^2\)</span> of 0.6242 which is very (very) close to what we got with the cross validation we did manually above.</p>
 <p><strong>Use the tools in <code>automap</code> with caution however. Beware the black box.</strong></p>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>Recall that IDW and TPS gave us a prediction surface with no uncertainty attached. Every grid cell got a number and that was that. Kriging gives us the same prediction surface, but also the variance surface we just looked at, and that second surface is where probability theory earns its keep. Imagine you’re deciding where to put additional soil sampling stations to reduce uncertainty in your lead concentration map. With IDW you have no principled way to answer that question, because IDW has no model of uncertainty to begin with. With kriging, you look at the variance surface and put your next sample where the variance is highest. Or imagine you need to flag grid cells where the predicted lead concentration exceeds a regulatory threshold: with a variance surface you can attach a probability to that exceedance rather than just a point estimate. The deterministic methods we covered earlier are fast and intuitive, but they borrow nothing from probability theory, so there is no statistically grounded way to quantify how much you should trust the predictions. Kriging trades some of that simplicity for something genuinely useful: a map of your own ignorance.</p>
+</section>
+<section id="exercises" class="level2">
+<h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
+<p>Return to the California precipitation data from the IDW chapter. This time, krige the surface rather than use IDW.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># precip point data</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>prcpCA <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/prcpCA.rds"</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co"># empty grid to interpolate into</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>gridCA <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/gridCA.rds"</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>prcpCAsf <span class="ot">&lt;-</span> prcpCA <span class="sc">%&gt;%</span> <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"X"</span>, <span class="st">"Y"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_crs</span>(<span class="at">value =</span> <span class="dv">3310</span>)</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>prcpCAsf <span class="sc">%&gt;%</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill=</span>ANNUAL,<span class="at">size=</span>ANNUAL),<span class="at">color=</span><span class="st">"white"</span>,</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">shape=</span><span class="dv">21</span>,<span class="at">alpha=</span><span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_continuous</span>(<span class="at">type =</span> <span class="st">"viridis"</span>,<span class="at">name=</span><span class="st">"mm"</span>) <span class="sc">+</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"Total Annual Precipitation"</span>) <span class="sc">+</span></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size</span>(<span class="at">guide=</span><span class="st">"none"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="08GeostatsKriging_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Fit the variogram manually using <code>variogram</code>, <code>vgm</code>, and <code>fit.variogram</code> – skip <code>automap</code> for this one. Compare at least two variogram models. Assess the surface using cross-validation and interpret what you find. How does the kriged surface compare to the IDW surface you made earlier? Does the kriging variance surface (<code>var1.var</code>) tell you anything useful about where you should trust the predictions?</p>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
+<p><span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> chapter 8, sections 8.4 and 8.5, covers kriging theory and implementation in R in detail. <span class="citation" data-cites="fortin2016spatial">Fortin et al. (<a href="13References.html#ref-fortin2016spatial" role="doc-biblioref">2016</a>)</span> sections 4.3 to 4.5 provide a more accessible treatment of the same material. Both are worth having at hand when fitting variograms for the first time.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">

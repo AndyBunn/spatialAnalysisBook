@@ -216,7 +216,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01Welcome.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Welcome and How to Get Setup</span></a>
+  <a href="./01Welcome.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Getting Started</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -250,6 +250,12 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="./03xAsideDistanceMatrices.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Aside: Distance Matrices</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03xAsideRipleyK.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Aside: Ripley’s K by Hand</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -346,11 +352,22 @@ window.Quarto = {
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Conclusion</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./12Conclusion.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">What You Can Do Now</span></a>
   </div>
 </li>
+      </ul>
+  </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./13References.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">References</span></a>
@@ -358,13 +375,13 @@ window.Quarto = {
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Appendices</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
@@ -405,7 +422,6 @@ window.Quarto = {
   <li><a href="#mycorrhizal-fungi" id="toc-mycorrhizal-fungi" class="nav-link" data-scroll-target="#mycorrhizal-fungi">Mycorrhizal Fungi</a></li>
   </ul></li>
   <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">Further Reading</a></li>
-  <li><a href="#postscript-rolling-k-by-hand" id="toc-postscript-rolling-k-by-hand" class="nav-link" data-scroll-target="#postscript-rolling-k-by-hand">Postscript: Rolling K by Hand</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/03Point_Patterns.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -1196,153 +1212,7 @@ Fraction of frame area: 0.785</code></pre>
 <section id="further-reading" class="level2">
 <h2 class="anchored" data-anchor-id="further-reading">Further Reading</h2>
 <p><span class="citation" data-cites="bivand2008pointpattern">Bivand (<a href="13References.html#ref-bivand2008pointpattern" role="doc-biblioref">2008</a>)</span>, chapter 7 through section 7.5, is the standard reference for point pattern analysis in R. It covers the theory behind the functions we used here and goes deeper on edge corrections and marked patterns. <span class="citation" data-cites="fortin2016spatial">Fortin et al. (<a href="13References.html#ref-fortin2016spatial" role="doc-biblioref">2016</a>)</span> is an accessible overview of spatial analysis broadly that pairs well with this chapter and the ones that follow.</p>
-</section>
-<section id="postscript-rolling-k-by-hand" class="level2">
-<h2 class="anchored" data-anchor-id="postscript-rolling-k-by-hand">Postscript: Rolling K by Hand</h2>
-<p>I made sure the notes as above are consistent with the <code>Kest</code> function. This is way more than you need to do but here is a handmade Ripley’s K example.</p>
-<p>First, make some random points. I’ll keep it small so you can look at the objects and have them be easy to examine.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">12</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>area <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="co"># in m2</span></span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="at">n =</span> n, <span class="at">min =</span> <span class="dv">0</span>,<span class="at">max =</span> <span class="dv">10</span>)</span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="at">n =</span> n, <span class="at">min =</span> <span class="dv">0</span>,<span class="at">max =</span> <span class="dv">10</span>)</span>
-<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> </span>
-<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x=</span>x,<span class="at">y=</span>y),<span class="at">size=</span><span class="dv">3</span>) <span class="sc">+</span> </span>
-<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_fixed</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="03Point_Patterns_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Get distance matrix D.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>Dmat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">dist</span>(<span class="fu">cbind</span>(x,y)))</span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>Dmat</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>          1         2        3        4         5         6        7        8
-1  0.000000 7.4889152 1.490719 6.969653  8.876317  1.940595 4.468430 4.965382
-2  7.488915 0.0000000 6.000930 1.896587  4.589813  8.116568 5.663756 8.593979
-3  1.490719 6.0009296 0.000000 5.567101  7.689722  2.622940 3.740736 5.129129
-4  6.969653 1.8965872 5.567101 0.000000  2.967437  8.025080 4.142791 7.054691
-5  8.876317 4.5898131 7.689722 2.967437  0.000000 10.300168 4.819425 7.147672
-6  1.940595 8.1165677 2.622940 8.025080 10.300168  0.000000 6.235881 6.896550
-7  4.468430 5.6637563 3.740736 4.142791  4.819425  6.235881 0.000000 2.935008
-8  4.965382 8.5939788 5.129129 7.054691  7.147672  6.896550 2.935008 0.000000
-9  3.315340 5.4725180 2.487947 4.292989  5.648626  5.011182 1.253332 3.405674
-10 6.862198 0.6267345 5.374209 1.753882  4.651590  7.507536 5.176294 8.092125
-11 5.591011 2.6179606 4.210991 1.388473  3.771457  6.723803 3.045906 5.976580
-12 5.183888 9.8669381 5.725384 8.404665  8.574655  7.014644 4.262086 1.428804
-          9        10       11       12
-1  3.315340 6.8621981 5.591011 5.183888
-2  5.472518 0.6267345 2.617961 9.866938
-3  2.487947 5.3742091 4.210991 5.725384
-4  4.292989 1.7538820 1.388473 8.404665
-5  5.648626 4.6515895 3.771457 8.574655
-6  5.011182 7.5075361 6.723803 7.014644
-7  1.253332 5.1762936 3.045906 4.262086
-8  3.405674 8.0921246 5.976580 1.428804
-9  0.000000 4.9072420 2.969118 4.494515
-10 4.907242 0.0000000 2.146920 9.338243
-11 2.969118 2.1469195 0.000000 7.262679
-12 4.494515 9.3382428 7.262679 0.000000</code></pre>
-</div>
-</div>
-<p>Now, extract all the elements by combining the upper and lower triangles of the matrix, i.e., all <code>d_{ij}</code> where <code>i!=j</code></p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>Dvec <span class="ot">&lt;-</span> <span class="fu">c</span>(Dmat[<span class="fu">upper.tri</span>(Dmat)],Dmat[<span class="fu">lower.tri</span>(Dmat)])</span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>Dvec</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>  [1]  7.4889152  1.4907191  6.0009296  6.9696527  1.8965872  5.5671006
-  [7]  8.8763174  4.5898131  7.6897222  2.9674369  1.9405946  8.1165677
- [13]  2.6229395  8.0250797 10.3001684  4.4684301  5.6637563  3.7407364
- [19]  4.1427914  4.8194248  6.2358812  4.9653820  8.5939788  5.1291293
- [25]  7.0546911  7.1476724  6.8965504  2.9350082  3.3153401  5.4725180
- [31]  2.4879467  4.2929893  5.6486259  5.0111825  1.2533322  3.4056742
- [37]  6.8621981  0.6267345  5.3742091  1.7538820  4.6515895  7.5075361
- [43]  5.1762936  8.0921246  4.9072420  5.5910113  2.6179606  4.2109907
- [49]  1.3884731  3.7714565  6.7238032  3.0459060  5.9765804  2.9691182
- [55]  2.1469195  5.1838877  9.8669381  5.7253838  8.4046647  8.5746546
- [61]  7.0146444  4.2620859  1.4288044  4.4945150  9.3382428  7.2626791
- [67]  7.4889152  1.4907191  6.9696527  8.8763174  1.9405946  4.4684301
- [73]  4.9653820  3.3153401  6.8621981  5.5910113  5.1838877  6.0009296
- [79]  1.8965872  4.5898131  8.1165677  5.6637563  8.5939788  5.4725180
- [85]  0.6267345  2.6179606  9.8669381  5.5671006  7.6897222  2.6229395
- [91]  3.7407364  5.1291293  2.4879467  5.3742091  4.2109907  5.7253838
- [97]  2.9674369  8.0250797  4.1427914  7.0546911  4.2929893  1.7538820
-[103]  1.3884731  8.4046647 10.3001684  4.8194248  7.1476724  5.6486259
-[109]  4.6515895  3.7714565  8.5746546  6.2358812  6.8965504  5.0111825
-[115]  7.5075361  6.7238032  7.0146444  2.9350082  1.2533322  5.1762936
-[121]  3.0459060  4.2620859  3.4056742  8.0921246  5.9765804  1.4288044
-[127]  4.9072420  2.9691182  4.4945150  2.1469195  9.3382428  7.2626791</code></pre>
-</div>
-</div>
-<p>Make vector of radii to look at K. Because the data range from 0 to 10 on both axes I’ll look at radii from 0 to 2.5.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="fl">2.5</span>,<span class="at">by=</span><span class="fl">0.1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-<p>Now let’s loop through and calc K. And plot r against K. We will add the theoretical K under CSR too as <code>pir^2</code></p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>Kr <span class="ot">&lt;-</span> <span class="fu">numeric</span>()</span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(r)){</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  Kr[i] <span class="ot">=</span> (area<span class="sc">/</span>(n <span class="sc">*</span> (n<span class="dv">-1</span>))) <span class="sc">*</span> <span class="fu">sum</span>(Dvec <span class="sc">&lt;=</span> r[i])</span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x=</span>r,<span class="at">y=</span>pi<span class="sc">*</span>r<span class="sc">^</span><span class="dv">2</span>),<span class="at">color=</span><span class="st">"red"</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>) <span class="sc">+</span></span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x=</span>r,<span class="at">y=</span>Kr),<span class="at">color=</span><span class="st">"blue"</span>,<span class="at">linewidth=</span><span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y=</span><span class="st">"K(r)"</span>,<span class="at">x=</span><span class="st">"r"</span>)</span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>p1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="03Point_Patterns_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Cool. That’s it. But we can check this against the <code>Kest</code> function in <code>spatstat</code> as well.</p>
-<div class="cell">
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">as.ppp</span>(<span class="fu">cbind</span>(x,y),<span class="at">W=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">0</span>,<span class="dv">10</span>))</span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>xy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Planar point pattern: 12 points
-window: rectangle = [0, 10] x [0, 10] units</code></pre>
-</div>
-<details open="" class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>xyK <span class="ot">&lt;-</span> <span class="fu">Kest</span>(xy,<span class="at">r=</span>r,<span class="at">correction =</span> <span class="st">"none"</span>)</span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="co"># match </span></span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">data=</span>xyK,<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x=</span>r,<span class="at">y=</span>un),<span class="at">linetype=</span><span class="st">"dashed"</span>,<span class="at">color=</span><span class="st">"white"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="03Point_Patterns_files/figure-html/unnamed-chunk-37-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
+<p>If you want to see exactly what <code>Kest()</code> is computing under the hood, work through the <a href="03xAsideRipleyK.html">Ripley’s K by Hand aside</a>. It derives K from scratch on a small dataset and checks the result against <code>spatstat</code>.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">

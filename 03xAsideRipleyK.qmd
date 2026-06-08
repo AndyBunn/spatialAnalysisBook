@@ -1,0 +1,102 @@
+# Aside: Ripley's K by Hand {- .aside-chapter}
+
+```{r, echo=FALSE}
+set.seed(1984)
+```
+
+## Why This Matters
+
+`Kest()` from `spatstat` gives you Ripley's K in one line, which is great. But when a function does this much work invisibly, it's worth building it yourself at least once on a small example. Once you've done it by hand, the inputs and outputs stop being mysterious.
+
+This aside walks through the K function from scratch on a tiny random dataset, then checks the result against `Kest()`. The derivation also makes the connection to distance matrices concrete. If you haven't worked through the [Distance Matrix aside](03xAsideDistanceMatrices.html) yet, do that first.
+
+## Packages
+
+```{r, message=FALSE}
+library(tidyverse)
+library(spatstat)
+```
+
+## The Setup
+
+Start with a small random point pattern. Twelve points, a 10 by 10 unit window. Small enough that you can look at the intermediate objects and follow what's happening.
+
+```{r}
+n <- 12
+area <- 100  # 10 x 10 = 100 square units
+x <- runif(n = n, min = 0, max = 10)
+y <- runif(n = n, min = 0, max = 10)
+
+ggplot() +
+  geom_point(aes(x = x, y = y), size = 3) +
+  coord_fixed()
+```
+
+## Building K Step by Step
+
+Ripley's K at radius $r$ is:
+
+$$K(r) = \frac{A}{n(n-1)} \sum_{i \neq j} \mathbf{1}(d_{ij} \leq r)$$
+
+Read it out loud: for each pair of distinct points $i$ and $j$, count whether they're within distance $r$ of each other. Sum those up, then scale by the area divided by $n(n-1)$. That's it.
+
+So the first thing we need is all the pairwise distances. Build the distance matrix, then pull out every $d_{ij}$ where $i \neq j$ -- that means both the upper and lower triangles.
+
+```{r}
+Dmat <- as.matrix(dist(cbind(x, y)))
+Dmat
+```
+
+```{r}
+Dvec <- c(Dmat[upper.tri(Dmat)], Dmat[lower.tri(Dmat)])
+Dvec
+```
+
+Why both triangles? Because $d_{ij}$ and $d_{ji}$ are the same distance, but the formula counts each ordered pair separately. Including both is what makes the denominator $n(n-1)$ rather than $n(n-1)/2$.
+
+Now set a sequence of radii to evaluate K at, and loop.
+
+```{r}
+r <- seq(0, 2.5, by = 0.1)
+
+Kr <- numeric(length(r))
+for (i in seq_along(r)) {
+  Kr[i] <- (area / (n * (n - 1))) * sum(Dvec <= r[i])
+}
+```
+
+Plot it against the theoretical K under complete spatial randomness, which is $\pi r^2$.
+
+```{r}
+ggplot() +
+  geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
+  geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
+  labs(y = "K(r)", x = "r",
+       caption = "Blue = observed K. Red dashed = theoretical K under CSR.")
+```
+
+If the blue line runs above the red, points are more clustered than random at that scale. Below it, they're more dispersed. Random points should hover around the red line with some noise.
+
+## Checking Against `Kest()`
+
+Now verify the hand calculation against `spatstat`. Convert to a `ppp` object with the same window, pass the same radii, and use `correction = "none"` to match the uncorrected version we computed.
+
+```{r}
+xy <- as.ppp(cbind(x, y), W = c(0, 10, 0, 10))
+xyK <- Kest(xy, r = r, correction = "none")
+```
+
+Overlay the `spatstat` result on the plot. If everything is right, it should land exactly on our blue line.
+
+```{r}
+ggplot() +
+  geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
+  geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
+  geom_line(data = xyK, aes(x = r, y = un),
+            linetype = "dashed", color = "white") +
+  labs(y = "K(r)", x = "r")
+```
+
+The white dashed line from `Kest()` sits right on top of our hand-computed K. That's reassuring. It also means that when you use `Kest()` in the main chapter, you know exactly what it's computing.
+
+One thing `Kest()` does that we didn't do here: edge corrections. Points near the boundary of the study area have fewer neighbors within radius $r$ than interior points do, simply because part of the circle falls outside the window. Without a correction, K is systematically underestimated at larger radii. The `correction` argument in `Kest()` handles this. The default is `"isotropic"`, which is appropriate for most cases. Now that you understand the core calculation, the correction is a detail -- not a mystery.

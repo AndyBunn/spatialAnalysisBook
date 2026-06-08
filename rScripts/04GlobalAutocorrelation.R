@@ -595,6 +595,12 @@ pGradBumpsPersp
 pGradBumpsI
 
 
+## -----------------------------------------------------------------------------
+leadI <- spline.correlog(x=meuseX, y=meuseY, z=meuse_sf$log_lead,
+                         resamp=100, xmax=1500, quiet=TRUE)
+plot(leadI)
+
+
 ## ----message=FALSE------------------------------------------------------------
 library(tmap)
 birds_sf <- readRDS("../data/birdRichnessMexico.rds")
@@ -613,11 +619,4 @@ max(dist(st_coordinates(birds_sf)))/3
 
 ## ----eval=FALSE---------------------------------------------------------------
 # birdVar <- variogram(nSpecies~1, data = birds_sf, alpha=c(0,90))
-
-
-## -----------------------------------------------------------------------------
-# continuous
-leadI <- spline.correlog(x=meuseX, y=meuseY, z=meuse_sf$log_lead, 
-                         resamp=100, xmax=1500, quiet=TRUE)
-plot(leadI)
 
