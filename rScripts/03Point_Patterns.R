@@ -8,6 +8,8 @@ library(spatstat)
 
 
 ## -----------------------------------------------------------------------------
+#| fig-width: 9
+#| fig-height: 6
 n <- 100
 patternA <- data.frame(x=rnorm(n),y=rnorm(n),id="A")
 patternB <- data.frame(x=runif(n),y=runif(n),id="B")
@@ -78,6 +80,8 @@ summary(jp.den)
 
 
 ## -----------------------------------------------------------------------------
+#| fig-width: 7
+#| fig-height: 6
 persp(jp.den,theta = 30, phi = 30)
 
 

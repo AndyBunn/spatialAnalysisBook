@@ -39,6 +39,8 @@ Point patterns are a relatively simple form of spatial analysis but can really m
 Let's illustrate. I'll generate four maps. Each has 100 points. Your job is to figure out if the pattern is: random, clumped (clustered), or uniform (repulsed). Note that the code that goes into making these patterns is using random normal or random uniform distributions to accomplish this. I often simulate patterns in data that I know exist and then see if I can detect them using some method. If you look at `simDat` below you'll see that it is four `data.frame` objects bound together. Each one shows a different pattern.
 
 ```{r}
+#| fig-width: 9
+#| fig-height: 6
 n <- 100
 patternA <- data.frame(x=rnorm(n),y=rnorm(n),id="A")
 patternB <- data.frame(x=runif(n),y=runif(n),id="B")
@@ -136,6 +138,8 @@ summary(jp.den)
 This density object (class `density.ppp`) has methods for `summary`, `plot`, `contour` and `persp`. E.g., here is a perspective plot:
 
 ```{r}
+#| fig-width: 7
+#| fig-height: 6
 persp(jp.den,theta = 30, phi = 30)
 ```
 

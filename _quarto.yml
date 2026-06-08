@@ -72,3 +72,8 @@ execute:
   warning: false
   message: false
   freeze: auto
+
+knitr:
+  opts_chunk:
+    fig.width: 7
+    fig.height: 5

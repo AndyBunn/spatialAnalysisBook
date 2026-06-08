@@ -95,6 +95,8 @@ omHat_sf
 
 
 ## -----------------------------------------------------------------------------
+#| fig-width: 10
+#| fig-height: 9
 omHat_rast <- sf_2_rast(omHat_sf, variable2get = "omModel.pred")
 
 # kriged residual surface = RK prediction minus OLS trend

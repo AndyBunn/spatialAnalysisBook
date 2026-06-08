@@ -19,6 +19,10 @@ The emphasis is on building intuition and getting things done in R. Not on mathe
 
 Masters students in environmental sciences who need to handle spatial structure in their data. That said, if you're an ecologist or field scientist who wants a practical, R-based entry point to spatial analysis, these notes might work for you too.
 
+## License
+
+This material is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). You're free to use, adapt, and redistribute it for any purpose, including commercial, as long as you give appropriate credit.
+
 ## Built with
 
 [Quarto](https://quarto.org), rendered as a book. To build locally you'll need R, Quarto, and the packages loaded in the chapters.
