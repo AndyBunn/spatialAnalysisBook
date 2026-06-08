@@ -8,7 +8,7 @@
 
 <meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Preface – Applied Spatial Analysis for Environmental Science</title>
+<title>Aside: Ripley’s K by Hand – Applied Spatial Analysis for Environmental Science</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -24,26 +24,42 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
 }
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -53,8 +69,8 @@ div.csl-indent {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./01Welcome.html" rel="next">
-<link href="./index.html" rel="prev">
+<link href="./04GlobalAutocorrelation.html" rel="next">
+<link href="./03xAsideDistanceMatrices.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -93,6 +109,35 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="custom.css">
 </head>
@@ -119,7 +164,7 @@ div.csl-indent {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./00Preface.html"><span class="chapter-title">Preface</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./03Point_Patterns.html">Point Patterns &amp; Autocorrelation</a></li><li class="breadcrumb-item"><a href="./03xAsideRipleyK.html">Aside: Ripley’s K by Hand</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -138,7 +183,7 @@ div.csl-indent {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./00Preface.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Preface</span></a>
+  <a href="./00Preface.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Preface</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -190,7 +235,7 @@ div.csl-indent {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./03xAsideRipleyK.html" class="sidebar-item-text sidebar-link">
+  <a href="./03xAsideRipleyK.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Aside: Ripley’s K by Hand</span></a>
   </div>
 </li>
@@ -330,15 +375,25 @@ div.csl-indent {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#why-this-matters" id="toc-why-this-matters" class="nav-link active" data-scroll-target="#why-this-matters">Why This Matters</a></li>
+  <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
+  <li><a href="#the-setup" id="toc-the-setup" class="nav-link" data-scroll-target="#the-setup">The Setup</a></li>
+  <li><a href="#building-k-step-by-step" id="toc-building-k-step-by-step" class="nav-link" data-scroll-target="#building-k-step-by-step">Building K Step by Step</a></li>
+  <li><a href="#checking-against-kest" id="toc-checking-against-kest" class="nav-link" data-scroll-target="#checking-against-kest">Checking Against <code>Kest()</code></a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/03xAsideRipleyK.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default">
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./03Point_Patterns.html">Point Patterns &amp; Autocorrelation</a></li><li class="breadcrumb-item"><a href="./03xAsideRipleyK.html">Aside: Ripley’s K by Hand</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">Preface</span></h1>
+<h1 class="title">Aside: Ripley’s K by Hand</h1>
 </div>
 
 
@@ -355,26 +410,181 @@ div.csl-indent {
 </header>
 
 
-<p>This started as a weekly handout for a graduate course in spatial analysis at Western Washington University. This grew, as course notes sometimes do, into something closer to a short book. That process wasn’t really intentional, I’d fix a confusing explanation, add a section that answers a question, expand a toy example and so on. After two colleagues started using these as the text in their classes I felt I had something worth sharing more broadly.</p>
-<p>I am Andy Bunn. I am a professor of environmental sciences at Western Washington University in Bellingham, which sits in the northwest corner of the contiguous United States in a part of the world that is unreasonably beautiful. My research is mostly about paleoclimate and carbon cycling using tree rings. I have been writing R code since about 2000, including <code>dplR</code>, a package for dendrochronology that is part of the <a href="https://opendendro.org">openDendro</a> project. I am not a statistician. I am an environmental scientist and teacher who has spent a career working with spatial data.</p>
-<p>My own entry into this material came from two graduate courses at Duke University in the late 1990s, one in spatial analysis and one in landscape ecology, both taught by Dean Urban. Urban, who became a lifelong friend and mentor, had a way of making space feel like the most interesting thing in the data. He taught me that space was not a problem to correct for, but a signal worth understanding. That philosophy runs through this book. He has since published two books that are much broader in scope than what you’ll find here but are worth knowing about: <span class="citation" data-cites="urban2023agents">Urban (<a href="13References.html#ref-urban2023agents" role="doc-biblioref">2023</a>)</span> and <span class="citation" data-cites="urban2024landscape">Urban (<a href="13References.html#ref-urban2024landscape" role="doc-biblioref">2024</a>)</span>. Both are key texts if you want to go deeper into landscape ecology as a discipline.</p>
-<p>The students these notes were written for are masters students in environmental sciences at WWU. Most of them do applied work. They came to graduate school to better understand ecosystems, watersheds, climate, toxicology, or some other chunk of the world. They’ve taken an introductory stats class covering linear modeling but not math beyond calculus. And many of them are going to spend their careers working with data that have coordinates attached, which means they need to know about spatial analysis.</p>
-<p>The emphasis is on building intuition and getting things done in R, not on mathematical derivation. The scope is deliberately narrow: we work with point observations and continuous raster surfaces, not areal data or complex network structures. We often simulate known patterns before applying methods to real data, because the best way to trust a tool is to watch it find something you planted. We use the Meuse River dataset, a classic, and a few others that connect to problems environmental scientists actually care about.</p>
-<p>If you are an ecologist or environmental scientist who needs to handle spatial structure in your data and want a practical, R-based entry point, this is for you. There is no shortage of spatial analysis textbooks, but most of them are either deeply rooted in GIS workflows, pitched at geographers rather than ecologists, or written at a mathematical level that assumes more background than most field scientists have. This book tries to occupy the middle ground: rigorous enough to be clear about what the methods are doing, accessible enough that a first-year masters student can follow along and run the code.</p>
-<p>A few things this book is not. It is not a comprehensive treatment of spatial statistics. It is not a GIS manual. It says almost nothing about areal data (polygons, watersheds, administrative units) – a whole separate analytic world. And it is not a substitute for reading the other literature, which is why each chapter ends with a Further Reading section.</p>
-<p>This is a living document. If you find errors, have suggestions, or want to tell me that a particular explanation finally made something click, I’d love to hear from you.</p>
-<p><em>Andy Bunn</em><br>
-<em>Bellingham, Washington</em></p>
+<section id="why-this-matters" class="level2">
+<h2 class="anchored" data-anchor-id="why-this-matters">Why This Matters</h2>
+<p><code>Kest()</code> from <code>spatstat</code> gives you Ripley’s K in one line, which is great. But when a function does this much work invisibly, it’s worth building it yourself at least once on a small example. Once you’ve done it by hand, the inputs and outputs stop being mysterious.</p>
+<p>This aside walks through the K function from scratch on a tiny random dataset, then checks the result against <code>Kest()</code>. The derivation also makes the connection to distance matrices concrete. If you haven’t worked through the <a href="03xAsideDistanceMatrices.html">Distance Matrix aside</a> yet, do that first.</p>
+</section>
+<section id="packages" class="level2">
+<h2 class="anchored" data-anchor-id="packages">Packages</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(spatstat)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="the-setup" class="level2">
+<h2 class="anchored" data-anchor-id="the-setup">The Setup</h2>
+<p>Start with a small random point pattern. Twelve points, a 10 by 10 unit window. Small enough that you can look at the intermediate objects and follow what’s happening.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">12</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>area <span class="ot">&lt;-</span> <span class="dv">100</span>  <span class="co"># 10 x 10 = 100 square units</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="at">n =</span> n, <span class="at">min =</span> <span class="dv">0</span>, <span class="at">max =</span> <span class="dv">10</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="at">n =</span> n, <span class="at">min =</span> <span class="dv">0</span>, <span class="at">max =</span> <span class="dv">10</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y), <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_fixed</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="03xAsideRipleyK_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="building-k-step-by-step" class="level2">
+<h2 class="anchored" data-anchor-id="building-k-step-by-step">Building K Step by Step</h2>
+<p>Ripley’s K at radius <span class="math inline">\(r\)</span> is:</p>
+<p><span class="math display">\[K(r) = \frac{A}{n(n-1)} \sum_{i \neq j} \mathbf{1}(d_{ij} \leq r)\]</span></p>
+<p>Read it out loud: for each pair of distinct points <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, count whether they’re within distance <span class="math inline">\(r\)</span> of each other. Sum those up, then scale by the area divided by <span class="math inline">\(n(n-1)\)</span>. That’s it.</p>
+<p>So the first thing we need is all the pairwise distances. Build the distance matrix, then pull out every <span class="math inline">\(d_{ij}\)</span> where <span class="math inline">\(i \neq j\)</span> – that means both the upper and lower triangles.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Dmat <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">dist</span>(<span class="fu">cbind</span>(x, y)))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Dmat</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>          1        2         3        4        5         6         7         8
+1  0.000000 2.222417 5.7901007 7.580887 4.144280 2.0801135 6.6235779 5.4316749
+2  2.222417 0.000000 5.2117354 7.050732 5.168086 4.2919248 4.5209404 5.1412341
+3  5.790101 5.211735 0.0000000 1.847110 3.768878 6.7301604 7.9582213 0.7447778
+4  7.580887 7.050732 1.8471100 0.000000 4.918004 8.3349101 9.4716546 2.1712989
+5  4.144280 5.168086 3.7688780 4.918004 0.000000 3.8606926 9.4041687 3.0456167
+6  2.080113 4.291925 6.7301604 8.334910 3.860693 0.0000000 8.6903792 6.1860462
+7  6.623578 4.520940 7.9582213 9.471655 9.404169 8.6903792 0.0000000 8.2759710
+8  5.431675 5.141234 0.7447778 2.171299 3.045617 6.1860462 8.2759710 0.0000000
+9  1.957775 4.076644 6.1263306 7.713813 3.250424 0.6280597 8.5577818 5.5701207
+10 8.317389 7.504109 2.5490305 1.180277 6.010897 9.2606814 9.3641700 3.0895000
+11 2.424025 4.582457 6.5435977 8.082010 3.458473 0.5511205 9.0441544 5.9603369
+12 6.644890 4.470439 7.4887703 8.945120 9.159779 8.7243085 0.6641843 7.8476637
+           9       10        11        12
+1  1.9577745 8.317389 2.4240253 6.6448902
+2  4.0766438 7.504109 4.5824565 4.4704389
+3  6.1263306 2.549030 6.5435977 7.4887703
+4  7.7138132 1.180277 8.0820097 8.9451198
+5  3.2504243 6.010897 3.4584727 9.1597788
+6  0.6280597 9.260681 0.5511205 8.7243085
+7  8.5577818 9.364170 9.0441544 0.6641843
+8  5.5701207 3.089500 5.9603369 7.8476637
+9  0.0000000 8.649843 0.5285956 8.5448918
+10 8.6498428 0.000000 9.0484201 8.7901153
+11 0.5285956 9.048420 0.0000000 9.0454998
+12 8.5448918 8.790115 9.0454998 0.0000000</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Dvec <span class="ot">&lt;-</span> <span class="fu">c</span>(Dmat[<span class="fu">upper.tri</span>(Dmat)], Dmat[<span class="fu">lower.tri</span>(Dmat)])</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Dvec</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] 2.2224172 5.7901007 5.2117354 7.5808871 7.0507318 1.8471100 4.1442796
+  [8] 5.1680862 3.7688780 4.9180036 2.0801135 4.2919248 6.7301604 8.3349101
+ [15] 3.8606926 6.6235779 4.5209404 7.9582213 9.4716546 9.4041687 8.6903792
+ [22] 5.4316749 5.1412341 0.7447778 2.1712989 3.0456167 6.1860462 8.2759710
+ [29] 1.9577745 4.0766438 6.1263306 7.7138132 3.2504243 0.6280597 8.5577818
+ [36] 5.5701207 8.3173887 7.5041090 2.5490305 1.1802771 6.0108972 9.2606814
+ [43] 9.3641700 3.0895000 8.6498428 2.4240253 4.5824565 6.5435977 8.0820097
+ [50] 3.4584727 0.5511205 9.0441544 5.9603369 0.5285956 9.0484201 6.6448902
+ [57] 4.4704389 7.4887703 8.9451198 9.1597788 8.7243085 0.6641843 7.8476637
+ [64] 8.5448918 8.7901153 9.0454998 2.2224172 5.7901007 7.5808871 4.1442796
+ [71] 2.0801135 6.6235779 5.4316749 1.9577745 8.3173887 2.4240253 6.6448902
+ [78] 5.2117354 7.0507318 5.1680862 4.2919248 4.5209404 5.1412341 4.0766438
+ [85] 7.5041090 4.5824565 4.4704389 1.8471100 3.7688780 6.7301604 7.9582213
+ [92] 0.7447778 6.1263306 2.5490305 6.5435977 7.4887703 4.9180036 8.3349101
+ [99] 9.4716546 2.1712989 7.7138132 1.1802771 8.0820097 8.9451198 3.8606926
+[106] 9.4041687 3.0456167 3.2504243 6.0108972 3.4584727 9.1597788 8.6903792
+[113] 6.1860462 0.6280597 9.2606814 0.5511205 8.7243085 8.2759710 8.5577818
+[120] 9.3641700 9.0441544 0.6641843 5.5701207 3.0895000 5.9603369 7.8476637
+[127] 8.6498428 0.5285956 8.5448918 9.0484201 8.7901153 9.0454998</code></pre>
+</div>
+</div>
+<p>Why both triangles? Because <span class="math inline">\(d_{ij}\)</span> and <span class="math inline">\(d_{ji}\)</span> are the same distance, but the formula counts each ordered pair separately. Including both is what makes the denominator <span class="math inline">\(n(n-1)\)</span> rather than <span class="math inline">\(n(n-1)/2\)</span>.</p>
+<p>Now set a sequence of radii to evaluate K at, and loop.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">2.5</span>, <span class="at">by =</span> <span class="fl">0.1</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>Kr <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(r))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(r)) {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  Kr[i] <span class="ot">&lt;-</span> (area <span class="sc">/</span> (n <span class="sc">*</span> (n <span class="sc">-</span> <span class="dv">1</span>))) <span class="sc">*</span> <span class="fu">sum</span>(Dvec <span class="sc">&lt;=</span> r[i])</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Plot it against the theoretical K under complete spatial randomness, which is <span class="math inline">\(\pi r^2\)</span>.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> r, <span class="at">y =</span> pi <span class="sc">*</span> r<span class="sc">^</span><span class="dv">2</span>), <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> r, <span class="at">y =</span> Kr), <span class="at">color =</span> <span class="st">"blue"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"K(r)"</span>, <span class="at">x =</span> <span class="st">"r"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Blue = observed K. Red dashed = theoretical K under CSR."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="03xAsideRipleyK_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>If the blue line runs above the red, points are more clustered than random at that scale. Below it, they’re more dispersed. Random points should hover around the red line with some noise.</p>
+</section>
+<section id="checking-against-kest" class="level2">
+<h2 class="anchored" data-anchor-id="checking-against-kest">Checking Against <code>Kest()</code></h2>
+<p>Now verify the hand calculation against <code>spatstat</code>. Convert to a <code>ppp</code> object with the same window, pass the same radii, and use <code>correction = "none"</code> to match the uncorrected version we computed.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">as.ppp</span>(<span class="fu">cbind</span>(x, y), <span class="at">W =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">0</span>, <span class="dv">10</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>xyK <span class="ot">&lt;-</span> <span class="fu">Kest</span>(xy, <span class="at">r =</span> r, <span class="at">correction =</span> <span class="st">"none"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Overlay the <code>spatstat</code> result on the plot. If everything is right, it should land exactly on our blue line.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> r, <span class="at">y =</span> pi <span class="sc">*</span> r<span class="sc">^</span><span class="dv">2</span>), <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> r, <span class="at">y =</span> Kr), <span class="at">color =</span> <span class="st">"blue"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> xyK, <span class="fu">aes</span>(<span class="at">x =</span> r, <span class="at">y =</span> un),</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">"K(r)"</span>, <span class="at">x =</span> <span class="st">"r"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="03xAsideRipleyK_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The white dashed line from <code>Kest()</code> sits right on top of our hand-computed K. That’s reassuring. It also means that when you use <code>Kest()</code> in the main chapter, you know exactly what it’s computing.</p>
+<p>One thing <code>Kest()</code> does that we didn’t do here: edge corrections. Points near the boundary of the study area have fewer neighbors within radius <span class="math inline">\(r\)</span> than interior points do, simply because part of the circle falls outside the window. Without a correction, K is systematically underestimated at larger radii. The <code>correction</code> argument in <code>Kest()</code> handles this. The default is <code>"isotropic"</code>, which is appropriate for most cases. Now that you understand the core calculation, the correction is a detail – not a mystery.</p>
 
 
-<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-urban2023agents" class="csl-entry" role="listitem">
-Urban, Dean L. 2023. <em>Agents and Implications of Landscape Pattern: Working Models for Landscape Ecology</em>. Springer Nature Switzerland. <a href="https://doi.org/10.1007/978-3-031-40254-8">https://doi.org/10.1007/978-3-031-40254-8</a>.
-</div>
-<div id="ref-urban2024landscape" class="csl-entry" role="listitem">
-Urban, Dean L. 2024. <em>Landscape Ecology: A Task-Oriented Perspective</em>. Springer Nature Switzerland. <a href="https://doi.org/10.1007/978-3-031-72251-6">https://doi.org/10.1007/978-3-031-72251-6</a>.
-</div>
-</div>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -779,13 +989,13 @@ Urban, Dean L. 2024. <em>Landscape Ecology: A Task-Oriented Perspective</em>. Sp
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./index.html" class="pagination-link" aria-label="Cover">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Cover</span></span>
+      <a href="./03xAsideDistanceMatrices.html" class="pagination-link" aria-label="Aside: Distance Matrices">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Aside: Distance Matrices</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./01Welcome.html" class="pagination-link" aria-label="Getting Started">
-        <span class="nav-page-text"><span class="chapter-title">Getting Started</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./04GlobalAutocorrelation.html" class="pagination-link" aria-label="Global Spatial Autocorrelation">
+        <span class="nav-page-text"><span class="chapter-title">Global Spatial Autocorrelation</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -794,4 +1004,4 @@ Urban, Dean L. 2024. <em>Landscape Ecology: A Task-Oriented Perspective</em>. Sp
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/00Preface.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/AndyBunn/spatialNotes/edit/main/03xAsideRipleyK.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/AndyBunn/spatialNotes/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

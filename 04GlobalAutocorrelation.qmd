@@ -831,6 +831,22 @@ pGradBumpsI
 You could imagine detrending this final surface with a model and then replotting Moran's I. That is, if you modeled z~x, you could take the residuals from that model and remove the gradient. If you did that you'd wind up with the random bumps scenario or something very close to it.
 
 
+## The Continuous Correlogram
+
+You will find `spline.correlog` in the `ncf` package and you will be tempted to run it. Go ahead. It fits a spline smoother through the Moran's I values rather than binning them, giving you a continuous curve instead of discrete points.
+
+```{r}
+leadI <- spline.correlog(x=meuseX, y=meuseY, z=meuse_sf$log_lead,
+                         resamp=100, xmax=1500, quiet=TRUE)
+plot(leadI)
+```
+
+The grey band is a bootstrap confidence envelope, not a significance test. In `correlog`, the permutation test asks: could this Moran's I value at this distance bin have arisen by chance? The bootstrap envelope in `spline.correlog` asks something different: given the uncertainty in the spline estimate, where might the true curve plausibly fall? Where the envelope crosses zero you can't confidently say the correlation is different from zero, but that is not the same as saying it isn't. The envelope also tends to be wide, especially at longer distances, and that width reflects real uncertainty in the estimate rather than a problem with your data.
+
+The continuous version is not more correct than the discrete one. Think of it as a different lens on the same structure, one that can be useful for spotting subtleties that binning smooths over. Just know what you're looking at.
+
+Which brings up significance more broadly. The permutation tests in `correlog` flag individual distance bins, which feels clean. But each bin is tested independently, so the usual multiple comparison problem applies, and some of those flagged points will be noise. Don't read too much into a single significant spike. Look instead for consistent signal across a range of distances. A pattern that holds across several lags is a pattern worth taking seriously. One that pops up at 400 m and disappears at 500 m probably isn't.
+
 ## Wrapping Up
 
 You now have two tools for measuring spatial dependence in a continuous variable: the variogram and the correlogram. They're asking the same question from slightly different angles. The variogram focuses on variance between pairs; the correlogram focuses on correlation. Both tell you whether nearby values are more similar than distant ones, and how far that similarity extends.
@@ -851,7 +867,7 @@ tm_shape(birds_sf) +
 
 Take a minute to look at the patterns. Some areas are hotspots of richness, like southern Veracruz. Others, like northern Baja, are less rich.
 
-Look at spatial autocorrelation in the bird data using Moran's I (use `correlog` or `spline.correlog`) and fit a variogram.
+Look at spatial autocorrelation in the bird data using Moran's I and fit a variogram.
 
 A few notes on the data handling:
 
@@ -887,15 +903,3 @@ Think about gradients and what biogeographic processes might be driving any anis
 
 Hijmans's [Spatial autocorrelation](https://www.rspatial.org/raster/analysis/3-spauto.html) is a free online resource with good worked examples in R, including Moran's I and variograms on familiar data. @fortin2016spatial covers spatial autocorrelation coefficients concisely and is worth reading alongside this chapter. @bivand2008geostatistics chapter 8 through section 8.4.2 goes deeper on variogram fitting, cutoff selection, lag width, and directional effects.
 
-## Postscript: Continuous Correlogram
-
-The correlograms above using `correlog::ncf` are discrete. They show autocorrelation in distance categories. We can also calculate Moran's I continuously using the function `correlog::spline.correlog`:
-
-```{r}
-# continuous
-leadI <- spline.correlog(x=meuseX, y=meuseY, z=meuse_sf$log_lead, 
-                         resamp=100, xmax=1500, quiet=TRUE)
-plot(leadI)
-```
-
-Both `correlog` and `spline.correlog` have additional arguments worth exploring -- the help files are informative.
