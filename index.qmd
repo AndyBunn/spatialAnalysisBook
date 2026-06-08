@@ -275,7 +275,7 @@ date: ""
     <a href="00Preface.html" class="enter-button">Welcome →</a>
     <div class="banner-title">
       Applied Spatial <span class="accent-word">Analysis</span><br>
-      for Environmental Science
+      for Environmental Data
     </div>
     <div class="banner-subtitle">patterns, structure, and prediction in space</div>
     <div class="tags">

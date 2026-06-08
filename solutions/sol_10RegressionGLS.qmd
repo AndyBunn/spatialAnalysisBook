@@ -1,0 +1,87 @@
+# Solutions: Regression with Spatial Errors (GLS)
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(nlme)
+library(spdep)
+library(gstat)
+library(automap)
+library(tmap)
+```
+
+```{r, message=FALSE}
+birdDiv <- read.csv("data/birdDiv.csv")
+birdSF  <- st_as_sf(birdDiv, coords=c("UTME","UTMN"), crs=26912)
+coords  <- st_coordinates(birdSF)
+```
+
+## 1. Map the Data
+
+```{r}
+tmap_mode("view")
+tm_shape(birdSF) +
+  tm_symbols(col="birdDiv", palette="viridis", size=0.4, title.col="Bird Diversity")
+```
+
+Bird diversity follows a spatial gradient. There's a strong spatial pattern even before looking at the relationship with plant diversity -- high diversity plots tend to be adjacent to other high-diversity plots.
+
+## 2. OLS
+
+```{r}
+ols <- lm(birdDiv ~ plantDiv, data=birdDiv)
+summary(ols)
+```
+
+OLS gives a significant positive relationship: slope = 1.136, SE = 0.130, p < 0.0001. Looks compelling. But OLS assumes residuals are independent. Let's check that.
+
+## 3. Check OLS Residuals
+
+```{r}
+birdSF$olsResid <- residuals(ols)
+
+nb <- knn2nb(knearneigh(coords, k=8))
+W  <- nb2listw(nb, style="W")
+moran.test(birdSF$olsResid, W)
+```
+
+The OLS residuals are strongly autocorrelated. Moran's I for OLS residuals is well above zero with a tiny p-value. The independence assumption is blown.
+
+## 4. Automap for Correlation Structure
+
+```{r}
+avf <- autofitVariogram(olsResid ~ 1, input_data=birdSF)
+avf$var_model
+```
+
+Automap selects a Gaussian variogram model. The range gives a sense of the spatial scale of residual autocorrelation.
+
+## 5. GLS with Spatial Correlation
+
+```{r}
+glsNaive  <- gls(birdDiv ~ plantDiv, data=birdDiv)
+csSpatial <- corGaus(form = ~UTME + UTMN, nugget=TRUE)
+glsFit    <- update(glsNaive, correlation=csSpatial)
+summary(glsFit)
+```
+
+The GLS results are dramatic. After accounting for spatial correlation:
+
+- Slope: 0.122 (down from 1.136 in OLS)
+- p-value: 0.454 (up from < 0.0001 in OLS)
+
+The relationship between plant diversity and bird diversity is not significant once you account for the fact that nearby plots share similar conditions. The OLS result was almost entirely spurious -- both bird diversity and plant diversity are spatially structured, so they correlate with each other even if there's no direct mechanistic link.
+
+## 6. Check GLS Residuals
+
+```{r}
+moran.test(residuals(glsFit, type="normalized"), W)
+```
+
+The Moran's I for GLS residuals is close to zero and non-significant. The spatial correlation structure has been absorbed by the model. The residuals now look approximately independent.
+
+## 7. Interpretation
+
+This is one of the cleanest illustrations of spatial confounding you'll find in real data. The OLS slope of 1.136 says: sites with 1 unit more plant diversity have 1.136 more units of bird diversity. That sounds like a meaningful ecological relationship. But it's almost entirely driven by the fact that both variables happen to be high in the same areas. Once GLS accounts for the spatial autocorrelation structure, the slope collapses to 0.122 and loses all significance.
+
+The lesson: spatial autocorrelation doesn't just inflate your standard errors by a modest amount. It can completely reverse your conclusion about whether a relationship exists. OLS in spatially structured data isn't just slightly wrong -- it can be spectacularly wrong.

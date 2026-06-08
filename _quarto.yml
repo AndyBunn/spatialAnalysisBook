@@ -4,7 +4,7 @@ project:
   pre-render: Rscript purl_all.R
 
 book:
-  title: "Applied Spatial Analysis for Environmental Science"
+  title: "Applied Spatial Analysis for Environmental Data"
   subtitle: "An R-Based Introduction"
   author: "Andy Bunn"
   date: today

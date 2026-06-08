@@ -1,5 +1,5 @@
 ## ----echo=FALSE, include=FALSE------------------------------------------------
-set.seed(2112)
+set.seed(130)
 
 
 ## ----message=FALSE------------------------------------------------------------
@@ -47,7 +47,7 @@ moran.test(dat$olsResids, W)
 
 
 ## -----------------------------------------------------------------------------
-lm.LMtests(ols, listw = W, test = "all")
+lm.RStests(ols, listw = W, test = "all")
 
 
 ## -----------------------------------------------------------------------------
@@ -69,27 +69,62 @@ summary(slmFit)
 AIC(semFit, slmFit)
 
 
-## ----eval=FALSE---------------------------------------------------------------
-# dat_birds <- read.csv("../data/birdDiv.csv")
-# datSF <- dat_birds %>%
-#   st_as_sf(coords = c("UTME", "UTMN"), crs = 26912)
-# 
-# coords_birds <- st_coordinates(datSF)
-# nb_birds     <- knn2nb(knearneigh(coords_birds, k = 8))
-# W_birds      <- nb2listw(nb_birds, style = "W")
+## ----message=FALSE------------------------------------------------------------
+library(tmap)
+birds_sf <- readRDS("../data/birdRichnessMexico.rds")
+coords_birds <- st_coordinates(birds_sf)
+
+nb_birds <- knn2nb(knearneigh(coords_birds, k = 8))
+W_birds  <- nb2listw(nb_birds, style = "W")
 
 
-## ----eval=FALSE---------------------------------------------------------------
-# ols_birds <- lm(birdDiv ~ plantDiv, data = dat_birds)
-# moran.test(residuals(ols_birds), W_birds)
+## -----------------------------------------------------------------------------
+tmap_mode("view")
+tm_shape(birds_sf) +
+  tm_symbols(col = "nSpecies", palette = "viridis",
+             title.col = "Species", size = 0.4)
 
 
-## ----eval=FALSE---------------------------------------------------------------
-# lm.LMtests(ols_birds, listw = W_birds, test = "all")
+## -----------------------------------------------------------------------------
+ols_birds <- lm(nSpecies ~ map + tempRange, data = birds_sf)
+summary(ols_birds)
 
 
-## ----eval=FALSE---------------------------------------------------------------
-# impacts(slmFit, listw = W, R = 500)
+## -----------------------------------------------------------------------------
+birds_sf$ols_resids <- residuals(ols_birds)
+moran.test(birds_sf$ols_resids, W_birds)
+
+
+## -----------------------------------------------------------------------------
+tm_shape(birds_sf) +
+  tm_symbols(col = "ols_resids",
+             palette = "-RdBu",
+             midpoint = 0,
+             title.col = "Residual",
+             size = 0.4)
+
+
+## -----------------------------------------------------------------------------
+lm.RStests(ols_birds, listw = W_birds, test = "all")
+
+
+## -----------------------------------------------------------------------------
+sem_birds <- errorsarlm(nSpecies ~ map + tempRange,
+                        data = birds_sf, listw = W_birds)
+summary(sem_birds)
+
+
+## -----------------------------------------------------------------------------
+birds_sf$sem_resids <- residuals(sem_birds)
+moran.test(birds_sf$sem_resids, W_birds)
+
+
+## -----------------------------------------------------------------------------
+AIC(ols_birds, sem_birds)
+
+
+## -----------------------------------------------------------------------------
+impacts(slmFit, listw = W, R = 500)
 
 
 ## ----eval=FALSE---------------------------------------------------------------

@@ -1,0 +1,67 @@
+# Solutions: Local Spatial Autocorrelation (LISA)
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(spdep)
+library(tmap)
+```
+
+```{r, message=FALSE}
+birds_sf <- readRDS("data/birdRichnessMexico.rds")
+```
+
+## 1. Weights Matrix
+
+```{r}
+coords <- st_coordinates(birds_sf)
+nb <- knn2nb(knearneigh(coords, k=8))
+W  <- nb2listw(nb, style="W")
+```
+
+## 2. Moran Scatterplot
+
+```{r}
+moran.plot(birds_sf$nSpecies, W,
+           xlab="nSpecies", ylab="Spatially lagged nSpecies")
+```
+
+Most points fall in the HH (upper right) and LL (lower left) quadrants. Running the counts: 73 HH, 102 LL, 19 LH, 6 HL. The LL cluster dominates -- low-richness locations tend to be surrounded by other low-richness locations, which reflects the large northern desert and arid zones of Mexico. The HH cluster reflects the species-rich southern regions where high-diversity areas are spatially contiguous.
+
+## 3. LISA Cluster Map
+
+```{r}
+lisa <- localmoran(birds_sf$nSpecies, W)
+
+# scale for quadrant assignment
+birds_sf$z    <- scale(birds_sf$nSpecies)[,1]
+birds_sf$lagz <- scale(lag.listw(W, birds_sf$nSpecies))[,1]
+
+# assign clusters at alpha = 0.01
+birds_sf$cluster <- "Not significant"
+birds_sf$cluster[lisa[,5] < 0.01 & birds_sf$z > 0 & birds_sf$lagz > 0] <- "HH"
+birds_sf$cluster[lisa[,5] < 0.01 & birds_sf$z < 0 & birds_sf$lagz < 0] <- "LL"
+birds_sf$cluster[lisa[,5] < 0.01 & birds_sf$z > 0 & birds_sf$lagz < 0] <- "HL"
+birds_sf$cluster[lisa[,5] < 0.01 & birds_sf$z < 0 & birds_sf$lagz > 0] <- "LH"
+
+tmap_mode("view")
+tm_shape(birds_sf) +
+  tm_symbols(col="cluster",
+             palette=c("HH"="red","LL"="blue","HL"="pink","LH"="lightblue",
+                       "Not significant"="grey80"),
+             title.col="Cluster")
+```
+
+At alpha = 0.01: 33 HH locations, 27 LL locations, 2 LH locations, 0 HL locations.
+
+## 4. Biogeographic Interpretation
+
+The HH cluster concentrates in southern Mexico -- Veracruz, Oaxaca, Chiapas, and the Yucatan Peninsula. These are the wettest, most climatically stable parts of Mexico, with strong connections to the Neotropical source pool to the south. The Sierra Madre mountain ranges also contribute, providing elevational gradients that stack many habitat types in a small area. High richness adjacent to high richness makes sense here: the favorable conditions are continuous across the landscape.
+
+The LL cluster dominates the north -- Sonora, Chihuahua, Baja California, and the central plateau. These are the driest, most thermally variable parts of Mexico. Low-richness areas are spatially contiguous because the arid conditions are themselves spatially continuous.
+
+The LISA map is a spatial decomposition of the global Moran's I = 0.71 from the previous chapter. The global number told you the signal was strong. The LISA map tells you it's driven by two large, geographically coherent clusters -- not scattered individual hotspots.
+
+## 5. Spatial Outliers
+
+The two LH locations (low richness surrounded by high-richness neighbors) are worth examining. LH outliers in the bird richness data likely reflect localized features that suppress richness within an otherwise productive landscape: an isolated arid patch, a high-elevation site above treeline, or a coastal location with limited habitat area. Pick the one that catches your eye on the map and look at what's on the ground there.

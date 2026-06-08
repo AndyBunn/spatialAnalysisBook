@@ -1,0 +1,99 @@
+# Solutions: Spatial Regression (SAR)
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(spdep)
+library(spatialreg)
+library(tmap)
+```
+
+```{r, message=FALSE}
+birds_sf <- readRDS("data/birdRichnessMexico.rds")
+coords   <- st_coordinates(birds_sf)
+nb       <- knn2nb(knearneigh(coords, k=8))
+W        <- nb2listw(nb, style="W")
+```
+
+## 1. OLS Baseline
+
+```{r}
+ols <- lm(nSpecies ~ mat + tempRange + map + precipSeason,
+          data=as.data.frame(birds_sf))
+summary(ols)
+```
+
+The OLS model fits reasonably: R² around 0.55-0.60. Mean annual temperature (mat) and temperature range (tempRange) are strongly significant. Precipitation seasonality (precipSeason) may or may not be significant depending on the model. All signs make ecological sense: warmer, wetter, and more stable climates support more species.
+
+## 2. Residual Map
+
+```{r}
+birds_sf$olsResid <- residuals(ols)
+tmap_mode("view")
+tm_shape(birds_sf) +
+  tm_symbols(col="olsResid",
+             palette="-RdBu",
+             midpoint=0,
+             title.col="OLS Residuals")
+```
+
+The residual map shows clear spatial structure. Large positive residuals cluster in the south (Oaxaca, Chiapas -- richer than the climate variables predict), large negative residuals in the north (poorer than predicted). The OLS model underpredicts richness in the most biodiverse areas. Residual autocorrelation is almost certain.
+
+## 3. LM Tests
+
+```{r}
+lm.RStests(ols, W, test="all")
+```
+
+Key results:
+- **adjRSerr = 32.4, p < 0.001**: strong evidence for the Spatial Error Model
+- **adjRSlag = 2.4, p = 0.12**: no significant evidence for the Spatial Lag Model once the error structure is accounted for
+
+The adjusted tests are the right ones to use when both raw tests are significant. The pattern here is decisive: the SEM is the appropriate model. The unexplained variation in richness is spatially correlated (error model), not driven by contagion from neighboring cells' richness (lag model). This makes ecological sense -- climate variables measured at coarse resolution miss fine-scale habitat variation that is itself spatially autocorrelated.
+
+## 4. Spatial Error Model
+
+```{r}
+sem <- errorsarlm(nSpecies ~ mat + tempRange + map + precipSeason,
+                  data=as.data.frame(birds_sf), listw=W)
+summary(sem)
+```
+
+Lambda = 0.60, highly significant. The spatial error autocorrelation is substantial. AIC of the SEM is around 29 units lower than OLS, a large improvement.
+
+Coefficient changes from OLS to SEM are informative. tempRange typically gets more negative -- once you remove the spatial correlation in the error, the pure effect of temperature variability on richness becomes clearer. Stable climates support more species, and the SEM sees through the spatial noise to that signal.
+
+## 5. SLM for Comparison
+
+```{r}
+slm <- lagsarlm(nSpecies ~ mat + tempRange + map + precipSeason,
+                data=as.data.frame(birds_sf), listw=W)
+AIC(sem)
+AIC(slm)
+```
+
+SEM beats SLM on AIC by around 5-10 units. The lag model doesn't fit as well, and the LM tests already told us not to expect it to.
+
+## 6. Check SEM Residuals
+
+```{r}
+birds_sf$semResid <- residuals(sem)
+moran.test(birds_sf$semResid, W)
+```
+
+The SEM residuals have Moran's I near zero, non-significant. The spatial error structure has been absorbed.
+
+## 7. Check SLM Residuals
+
+```{r}
+birds_sf$slmResid <- residuals(slm)
+moran.test(birds_sf$slmResid, W)
+```
+
+The SLM residuals are still significantly autocorrelated (p = 0.00018). The lag model didn't fully handle the spatial structure in the data. This is further confirmation that the SEM is the right choice -- the SLM leaves structured variation in its residuals.
+
+## 8. Ecological Interpretation
+
+The LM tests, the AIC comparison, and the residual diagnostics all point the same direction: spatial error structure, not spatial lag dependence. Bird species richness in Mexico is primarily driven by spatially autocorrelated environmental gradients -- climate, elevation, and habitat type -- that the available predictors measure only partially. Once you account for this, the climate coefficients sharpen up and the model fits much better.
+
+The takeaway is not just methodological. The SEM says the richness patterns you see are explained by underlying environmental drivers that are themselves spatially autocorrelated. There's no evidence of contagion -- richness in one cell doesn't spread to its neighbors through colonization dynamics at this scale. The processes are environmental filtering, not dispersal.

@@ -1,0 +1,78 @@
+# Solutions: Geostatistics III - Kriging
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(gstat)
+library(tmap)
+```
+
+```{r, message=FALSE}
+precip_sf  <- readRDS("data/waPrecip.rds")
+wa_sf      <- readRDS("data/waOutline.rds")
+wa_grid_sf <- readRDS("data/waGrid.rds")
+```
+
+## 1. Empirical Variogram
+
+```{r}
+precip_var <- variogram(precip_mm ~ 1, data=precip_sf)
+plot(precip_var)
+```
+
+The variogram rises steeply at short distances (high spatial autocorrelation nearby) and flattens around 200-300 km. There's a clear sill. The nugget is relatively small, suggesting most variation is spatially structured rather than noise.
+
+## 2. Fit Three Models
+
+```{r}
+vExp <- fit.variogram(precip_var, vgm(psill=200000, model="Exp", range=150000, nugget=5000))
+vSph <- fit.variogram(precip_var, vgm(psill=200000, model="Sph", range=200000, nugget=5000))
+vGau <- fit.variogram(precip_var, vgm(psill=200000, model="Gau", range=100000, nugget=5000))
+
+plot(precip_var, vExp, main="Exponential")
+plot(precip_var, vSph, main="Spherical")
+plot(precip_var, vGau, main="Gaussian")
+```
+
+Visually compare the fitted lines to the empirical points. The exponential model rises fastest at short distances and typically fits well when there's a smooth decay. Spherical levels off sharply at the range. Gaussian is the smoothest and can over-smooth near the origin.
+
+## 3. Cross-Validate
+
+```{r}
+cv_krige <- function(model, data, grid) {
+  krig <- krige.cv(precip_mm ~ 1, data, model=model)
+  rmse <- sqrt(mean(krig$residual^2, na.rm=TRUE))
+  r2   <- cor(krig$observed, krig$var1.pred, use="complete.obs")^2
+  data.frame(RMSE=rmse, R2=r2)
+}
+
+bind_rows(
+  cv_krige(vExp, precip_sf) %>% mutate(Model="Exponential"),
+  cv_krige(vSph, precip_sf) %>% mutate(Model="Spherical"),
+  cv_krige(vGau, precip_sf) %>% mutate(Model="Gaussian")
+)
+```
+
+Exponential wins: R² = 0.902, RMSE = 138.2 mm. This is consistent with the typical behavior of precipitation fields -- the correlation decays more like an exponential than a Gaussian, and the spherical cutoff is too abrupt.
+
+## 4. Kriging Prediction and Uncertainty
+
+```{r}
+krig_pred <- krige(precip_mm ~ 1, precip_sf, wa_grid_sf, model=vExp)
+
+tm_shape(wa_sf) + tm_borders() +
+tm_shape(krig_pred) +
+  tm_raster(col="var1.pred", palette="Blues", title="OK (mm)") -> m1
+
+tm_shape(wa_sf) + tm_borders() +
+tm_shape(krig_pred) +
+  tm_raster(col="var1.var", palette="YlOrRd", title="Kriging Variance") -> m2
+
+tmap_arrange(m1, m2, nrow=1)
+```
+
+The prediction surface looks similar to IDW and TPS. The variance map is the real payoff: high kriging variance in data-sparse areas (northeast corner, high Cascades) and low variance where stations are dense. This is honest spatial uncertainty quantification. IDW gives you nothing like this.
+
+## 5. Comparison
+
+Ordinary kriging (R² = 0.902, RMSE = 138.2 mm) is almost identical to TPS (R² = 0.904, RMSE = 136.2 mm) in LOOCV skill. Both are substantially better than IDW (R² = 0.863, RMSE = 164.4 mm). The main practical advantage of kriging over TPS isn't prediction skill -- it's the kriging variance map. When you need to communicate uncertainty spatially, kriging wins.

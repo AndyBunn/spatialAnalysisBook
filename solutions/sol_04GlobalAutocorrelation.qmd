@@ -1,0 +1,63 @@
+# Solutions: Global Spatial Autocorrelation
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(gstat)
+library(ncf)
+library(tmap)
+```
+
+## Bird Species Richness in Mexico
+
+```{r, message=FALSE}
+birds_sf <- readRDS("data/birdRichnessMexico.rds")
+tmap_mode("view")
+tm_shape(birds_sf) +
+  tm_symbols(col="nSpecies", palette="viridis", alpha=0.7, title.col="Species")
+```
+
+The richness gradient is strong and visually obvious. Southern Mexico (Veracruz, Oaxaca, Chiapas) is much richer than the northern deserts and Baja. This is the latitudinal diversity gradient plus the Neotropical source pool -- wetter, warmer, more climatically stable environments in the south support far more species.
+
+## Moran's I
+
+```{r}
+birdsDF <- data.frame(st_coordinates(birds_sf), nSpecies=birds_sf$nSpecies)
+
+# safe distance limit
+max(dist(st_coordinates(birds_sf))) / 3
+```
+
+The safe limit is about 1040 km.
+
+```{r}
+leadI <- correlog(x=birdsDF$X, y=birdsDF$Y, z=birdsDF$nSpecies,
+                  increment=100, resamp=99, quiet=TRUE)
+plot(leadI, xlim=c(0, 1050))
+```
+
+Moran's I is very high at short distances (I = 0.83 at ~66 km) and declines steadily with distance, crossing zero around 1000 km. The positive autocorrelation persists across nearly the entire safe range. Nearby locations are very similar in species richness, reflecting the smooth, broad-scale gradients driven by climate and biogeographic history.
+
+## Variogram
+
+```{r}
+birdVar <- variogram(nSpecies~1, data=birds_sf)
+plot(birdVar)
+```
+
+The variogram rises steeply at short distances, with semivariance increasing from around 240 at 50 km to above 3000 at 850 km. The variogram hasn't clearly plateaued within the data range, which means the range of spatial dependence extends beyond what the data can estimate confidently. This is consistent with the correlogram: autocorrelation persists out to ~1000 km.
+
+### Interpret
+
+Both the variogram and the correlogram tell the same story from different angles: bird species richness in Mexico is highly spatially structured at scales of hundreds of kilometers. The spatial dependence extends to the limit of what we can estimate reliably. This is not surprising -- the main drivers of richness (temperature, precipitation, elevation, evolutionary history) are themselves smoothly varying at continental scales.
+
+What the global analysis misses is *where* that structure is concentrated. Moran's I = 0.71 (if you ran it) tells you the signal is strong, but says nothing about whether it's driven by the southern richness hotspots, the northern depauperate areas, or some combination. That's the LISA question.
+
+### Directional Variograms
+
+```{r, eval=FALSE}
+birdVarDir <- variogram(nSpecies~1, data=birds_sf, alpha=c(0,90))
+plot(birdVarDir)
+```
+
+The north-south variogram (alpha=0) rises faster and reaches higher semivariance than the east-west variogram (alpha=90). The latitudinal gradient in richness is steeper than the longitudinal one -- species richness changes more rapidly when you move north or south across Mexico than when you move east or west at the same latitude. This reflects the dominant role of the tropical-to-arid climate gradient running north-south over the country.

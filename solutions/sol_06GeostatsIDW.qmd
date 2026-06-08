@@ -1,0 +1,73 @@
+# Solutions: Geostatistics I - IDW
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(gstat)
+library(tmap)
+```
+
+```{r, message=FALSE}
+precip_sf  <- readRDS("data/waPrecip.rds")
+wa_sf      <- readRDS("data/waOutline.rds")
+wa_grid_sf <- readRDS("data/waGrid.rds")
+```
+
+## 1. Map the Data
+
+```{r}
+tmap_mode("view")
+tm_shape(wa_sf) +
+  tm_borders() +
+tm_shape(precip_sf) +
+  tm_symbols(col="precip_mm", palette="Blues", size=0.3,
+             title.col="Precip (mm)")
+```
+
+The precipitation gradient is immediately visible. The western slopes of the Cascades and the Olympic Peninsula receive far more precipitation than eastern Washington. This is a classic orographic pattern: moist air off the Pacific loses most of its moisture as it rises over the mountains. Eastern Washington sits in a rain shadow.
+
+## 2. IDW with p=2
+
+```{r}
+idw2 <- idw(precip_mm ~ 1, locations=precip_sf, newdata=wa_grid_sf, idp=2)
+
+tm_shape(wa_sf) + tm_borders() +
+tm_shape(idw2) +
+  tm_raster(col="var1.pred", palette="Blues", title="IDW p=2 (mm)")
+```
+
+The p=2 surface is smooth. The bulls-eye artifacts around isolated stations are mild at this power.
+
+## 3. LOOCV Over p Values
+
+```{r}
+loocv_idw <- function(p_val, data) {
+  cv <- gstat.cv(gstat(id="precip_mm", formula=precip_mm~1, data=data),
+                 nfold=nrow(data), idp=p_val)
+  rmse <- sqrt(mean((cv$precip_mm.pred - cv$observed)^2, na.rm=TRUE))
+  r2   <- cor(cv$observed, cv$precip_mm.pred, use="complete.obs")^2
+  data.frame(p=p_val, RMSE=rmse, R2=r2)
+}
+
+pvals <- c(0.5, 1, 2, 3, 4, 5)
+cv_results <- map_dfr(pvals, loocv_idw, data=precip_sf)
+print(cv_results)
+```
+
+p=3 gives the best LOOCV performance: R² = 0.863, RMSE = 164.4 mm. Higher p values increase the weight on nearby points but at the cost of stronger bulls-eye artifacts and worse generalization. Lower p values over-smooth.
+
+## 4. Optimal IDW Map
+
+```{r}
+idw3 <- idw(precip_mm ~ 1, locations=precip_sf, newdata=wa_grid_sf, idp=3)
+
+tm_shape(wa_sf) + tm_borders() +
+tm_shape(idw3) +
+  tm_raster(col="var1.pred", palette="Blues", title="IDW p=3 (mm)")
+```
+
+The p=3 surface shows slightly crisper gradients near stations compared to p=2. The Cascade barrier is clearly delineated, and the Olympic Peninsula hotspot is prominent.
+
+## 5. Limitations
+
+IDW has no uncertainty estimates. You get a predicted surface but no map of how confident you should be in that surface. Stations are sparse in some areas (high Cascades, northeast corner) and denser near populated areas. The LOOCV cross-validation is honest about average skill but can't tell you that prediction uncertainty is higher in data-sparse regions. That's the core thing kriging adds.
