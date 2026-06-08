@@ -158,6 +158,8 @@ omHat_sf
 To make this concrete, let's look at all three surfaces: the OLS trend, the kriged residuals, and the final RK prediction that combines them. We have `omHat` from the OLS step already. We can recover the kriged residual surface by subtracting it from the RK prediction.
 
 ```{r}
+#| fig-width: 10
+#| fig-height: 9
 omHat_rast <- sf_2_rast(omHat_sf, variable2get = "omModel.pred")
 
 # kriged residual surface = RK prediction minus OLS trend

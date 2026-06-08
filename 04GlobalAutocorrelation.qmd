@@ -243,7 +243,10 @@ So, when we use variogram above as `variogram(log_lead~1, locations = meuse_sf)`
 ## Global Moran's I
 Variograms are nifty tools, but it would be nice to work with a technique that gave us more familiar numbers. Fortunately, there are other methods of measuring spatial autocorrelation beyond the variogram. Spatial autocorrelation is trickier than temporal autocorrelation because it is multi-dimensional and multi-directional. @bivand2008geostatistics covers Geary's C as an entry point. The statistic used more commonly is global Moran's I which is close to the inverse of Geary's C (but is not identical).  Values of Moran's I greater than zero indicate positive spatial autocorrelation and values below zero indicate negative autocorrelation. Values range from minus one (perfect dispersion like a chessboard) to values near one (strong clustering or gradients). A zero value indicates spatial randomness.
 
-```{r,echo=FALSE,fig.width=9,fig.height=3}
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 3
 n <- 20
 
 chess <- expand.grid(x = 1:n, y = 1:n) %>%
@@ -747,19 +750,24 @@ pGradBumpsI <-data.frame(I = zI$correlation,
 ### Uniform bumps
 This pattern is made from sine waves so that there are 25 bumps on the surface arranged 5x5. The brighter the color the "taller" the bump.
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
+#| fig-width: 6
+#| fig-height: 6
 p5BumpsMap
 ```
 
 Here it is as a `plotly` object that you can rotate and zoom.
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 p5BumpsPersp
 ```
 
 And here is the correlogram. Note extremely high values of Moran's I (~1) at short distances (inside the bump radius) and the repeating pattern that tells you the distance between the bumps. Also note the magnitude of Moran's I and that I'm truncating Moran's I conservatively at 50 m.
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 p5BumpsI
 ```
 
@@ -767,19 +775,24 @@ Let's intensify this uniform pattern to 100 (10x10) bumps.
 
 Map:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
+#| fig-width: 6
+#| fig-height: 6
 p10BumpsMap
 ```
 
 Perspective plot:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 p10BumpsPersp
 ```
 
 And the correlogram. Compare it to the example above and note how you can see the repeating pattern in the distances between peaks.
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 p10BumpsI
 ```
 
@@ -790,19 +803,24 @@ That example above is ridiculously contrived of course. Here is something closer
 
 Map:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
+#| fig-width: 6
+#| fig-height: 6
 pRanBumpsMap
 ```
 
 Perspective plot:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 pRanBumpsPersp
 ```
 
 Correlogram:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 pRanBumpsI
 ```
 
@@ -812,19 +830,24 @@ One this surface I've taken the random bump map above and added a gradient on th
 
 Map:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
+#| fig-width: 6
+#| fig-height: 6
 pGradBumpsMap
 ```
 
 Perspective plot:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 pGradBumpsPersp
 ```
 
 Correlogram:
 
-```{r,echo=FALSE}
+```{r}
+#| echo: false
 pGradBumpsI
 ```
 

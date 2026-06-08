@@ -348,6 +348,8 @@ vgm()
 `gstat` knows 20 different possible curves you can fit to your data. E.g.,
 
 ```{r}
+#| fig-width: 9
+#| fig-height: 4
 show.vgms(models = c("Exp", "Mat", "Gau", "Sph"))
 ```
 
