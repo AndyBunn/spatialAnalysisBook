@@ -205,7 +205,7 @@ plot(longleaf2L)
 
 
 ## -----------------------------------------------------------------------------
-data(sporophores) # run ?sporophores to see the help file. It's cool.
+data(sporophores)
 summary(sporophores)
 plot(sporophores, chars=c(16,1,2), cex=0.6, leg.args=list(cex=1.1))
 points(0,0,pch=16, cex=2)

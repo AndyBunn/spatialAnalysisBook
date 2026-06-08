@@ -8,7 +8,7 @@
 
 <meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Point Patterns – Applied Spatial Analysis for Environmental Science</title>
+<title>Point Patterns – Spatial Analysis for Environmental Data</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -169,7 +169,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Spatial Analysis for Environmental Data</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -384,7 +384,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  <a href="./A1DataSources.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: Data Sources</span></a>
   </div>
 </li>
       </ul>
@@ -1155,7 +1155,7 @@ Unit of length: 1 metre</code></pre>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(sporophores) <span class="co"># run ?sporophores to see the help file. It's cool.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(sporophores)</span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(sporophores)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
@@ -1192,7 +1192,7 @@ Fraction of frame area: 0.785</code></pre>
 </div>
 </div>
 </div>
-<p>This is a marked point pattern with three species of fungi. The data come from <span class="citation" data-cites="ford1980spatial">Ford et al. (<a href="13References.html#ref-ford1980spatial" role="doc-biblioref">1980</a>)</span>. Different species have different functional roles and differing abilities to colonize. Sporophores are mushrooms, in case that wasn’t obvious.</p>
+<p>This is a marked point pattern with three species of fungi. The data come from <span class="citation" data-cites="ford1980spatial">Ford et al. (<a href="13References.html#ref-ford1980spatial" role="doc-biblioref">1980</a>)</span>. Different species have different functional roles and differing abilities to colonize.</p>
 <p><span class="citation" data-cites="ford1980spatial">Ford et al. (<a href="13References.html#ref-ford1980spatial" role="doc-biblioref">1980</a>)</span> suggest two things we can investigate with PPA. First, that there “were distinct arcs around the tree which were not occupied by sporophores of any species.” Second, that there is “no consistent evidence of spatial inhibition between species.” We have one of the five years of data here. Is there any suggestion of inhibition between species?</p>
 <p>To subset the data and run the cross L-function for two species, here are two equivalent approaches. The default plot for <code>alltypes</code> is essentially unreadable, so going pairwise is cleaner.</p>
 <div class="cell">

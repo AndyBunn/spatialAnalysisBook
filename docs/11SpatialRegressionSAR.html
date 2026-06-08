@@ -8,7 +8,7 @@
 
 <meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Spatial Regression: Lag and Error Models – Applied Spatial Analysis for Environmental Science</title>
+<title>Spatial Regression: Lag and Error Models – Spatial Analysis for Environmental Data</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -181,7 +181,7 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Spatial Analysis for Environmental Data</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -396,7 +396,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  <a href="./A1DataSources.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: Data Sources</span></a>
   </div>
 </li>
       </ul>
@@ -489,7 +489,7 @@ Note
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p><code>spatialreg</code> carries the main functions for fitting SAR models. It was spun off from <code>spdep</code> a few years ago, which means older code you find online might load these functions from <code>spdep</code> directly. If you see <code>spdep::lagsarlm()</code> in old tutorials, that is the same function. Load <code>spatialreg</code> explicitly.</p>
+<p><code>spatialreg</code> <span class="citation" data-cites="spatialreg2021">(<a href="13References.html#ref-spatialreg2021" role="doc-biblioref">Bivand et al. 2021</a>)</span> carries the main functions for fitting SAR models. It was spun off from <code>spdep</code> <span class="citation" data-cites="R-spdep">(<a href="13References.html#ref-R-spdep" role="doc-biblioref">Bivand 2026</a>)</span> a few years ago, which means older code you find online might load these functions from <code>spdep</code> directly. If you see <code>spdep::lagsarlm()</code> in old tutorials, that is the same function. Load <code>spatialreg</code> explicitly. We also use <code>sf</code> <span class="citation" data-cites="R-sf">(<a href="13References.html#ref-R-sf" role="doc-biblioref">Pebesma 2026</a>)</span> for spatial data structures and <code>tidyverse</code> <span class="citation" data-cites="R-tidyverse">(<a href="13References.html#ref-R-tidyverse" role="doc-biblioref">Wickham 2023</a>)</span> for data wrangling.</p>
 </section>
 <section id="two-models-two-questions" class="level2">
 <h2 class="anchored" data-anchor-id="two-models-two-questions">Two Models, Two Questions</h2>
@@ -758,7 +758,7 @@ slmFit  4 201.3159</code></pre>
 </section>
 <section id="bird-species-richness-in-mexico" class="level2">
 <h2 class="anchored" data-anchor-id="bird-species-richness-in-mexico">Bird Species Richness in Mexico</h2>
-<p>The <code>birdRichnessMexico</code> dataset has 200 point locations across Mexico with bird species richness (<code>nSpecies</code>) and six WorldClim bioclimatic variables extracted at each location. Two predictors have strong ecological justification: mean annual precipitation (<code>map</code>) and temperature annual range (<code>tempRange</code>). Wetter areas support more species; thermally variable areas support fewer. That’s the energy-water hypothesis and Rapoport’s rule operating across the Mexican landscape.</p>
+<p>The <code>birdRichnessMexico</code> dataset has 200 point locations across Mexico with bird species richness (<code>nSpecies</code>) and six WorldClim bioclimatic variables extracted at each location. Maps use <code>tmap</code> <span class="citation" data-cites="tmap2018">(<a href="13References.html#ref-tmap2018" role="doc-biblioref">Tennekes 2018</a>)</span>. Two predictors have strong ecological justification: mean annual precipitation (<code>map</code>) and temperature annual range (<code>tempRange</code>). Wetter areas support more species; thermally variable areas support fewer. That’s the energy-water hypothesis and Rapoport’s rule operating across the Mexican landscape.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -1024,7 +1024,7 @@ x dy/dx 0.4626068 0.6786596 1.141266</code></pre>
 </section>
 <section id="exercises" class="level2">
 <h2 class="anchored" data-anchor-id="exercises">Exercises</h2>
-<p>The Meuse River data contains several candidate predictors for soil lead contamination. <code>river_dist_m</code> is the distance from the river channel in meters and <code>ffreq</code> is a flooding frequency class (a factor with three levels). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.</p>
+<p>The Meuse River data contains several candidate predictors for soil lead contamination. <code>river_dist_m</code> is the distance from the river channel in meters and <code>ffreq</code> is a flooding frequency class (a factor with three levels: 1 = most frequent, 3 = least frequent). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.</p>
 <div class="cell">
 <details open="" class="code-fold">
 <summary>Code</summary>
@@ -1041,10 +1041,11 @@ x dy/dx 0.4626068 0.6786596 1.141266</code></pre>
 </div>
 <ol type="1">
 <li><p>Build a k-nearest-neighbor weights matrix with <span class="math inline">\(k = 8\)</span>.</p></li>
-<li><p>Fit OLS of <code>log_lead ~ river_dist_m + ffreq</code>. Run Moran’s I on the residuals.</p></li>
-<li><p>If the residuals are autocorrelated, run the LM tests. Which model do they recommend?</p></li>
-<li><p>Fit the recommended model. Check the residuals. Did the spatial structure get absorbed?</p></li>
-<li><p>Compare the coefficients on <code>river_dist_m</code> and <code>ffreq</code> between OLS and your SAR model. Do the substantive conclusions change, or mostly just the standard errors?</p></li>
+<li><p>Fit OLS of <code>log_lead ~ river_dist_m + ffreq</code>. Interpret the coefficients – do the signs make ecological sense? Run Moran’s I on the residuals.</p></li>
+<li><p>Run the LM tests. Both RSerr and RSlag will be significant. Look at the robust tests to break the tie. Which model do they recommend?</p></li>
+<li><p>Fit both the SEM and the SLM. Check the residuals of each using Moran’s I. One model cleans up the spatial structure; the other doesn’t. Which is which, and what does that tell you?</p></li>
+<li><p>Compare AIC across OLS, SEM, and SLM. Does AIC agree with the LM tests?</p></li>
+<li><p>Compare coefficients on <code>river_dist_m</code> and <code>ffreq</code> between OLS and the SEM. The point estimates shift and the standard errors change. What does the shift in standard errors tell you about what OLS was doing wrong?</p></li>
 <li><p>Is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in floodplain soil?</p></li>
 <li><p>In the bird richness example, lambda = 0.72 after accounting for precipitation and temperature range. What do you think is driving the residual spatial structure? Name at least two candidate variables not in the model and explain why they might be spatially structured across Mexico.</p></li>
 </ol>
@@ -1058,8 +1059,23 @@ x dy/dx 0.4626068 0.6786596 1.141266</code></pre>
 <div id="ref-bivand2008geostatistics" class="csl-entry" role="listitem">
 Bivand, Roger. 2008. <span>“Interpolation and Geostatistics.”</span> In <em>Applied Spatial Data Analysis with <span>R</span></em>, edited by Roger Bivand, Edzer J. Pebesma, and Virgilio Gómez-Rubio. Use <span>R</span>! Springer.
 </div>
+<div id="ref-R-spdep" class="csl-entry" role="listitem">
+Bivand, Roger. 2026. <em>Spdep: Spatial Dependence: Weighting Schemes, Statistics</em>. <a href="https://github.com/r-spatial/spdep/">https://github.com/r-spatial/spdep/</a>.
+</div>
+<div id="ref-spatialreg2021" class="csl-entry" role="listitem">
+Bivand, Roger, Giovanni Millo, and Gianfranco Piras. 2021. <span>“A Review of Software for Spatial Econometrics in <span>R</span>.”</span> <em>Mathematics</em> 9 (11). <a href="https://doi.org/10.3390/math9111276">https://doi.org/10.3390/math9111276</a>.
+</div>
 <div id="ref-dormann2007methods" class="csl-entry" role="listitem">
 <span class="nocase">Dormann, Carsten F. et al.</span> 2007. <span>“Methods to Account for Spatial Autocorrelation in the Analysis of Species Distributional Data: A Review.”</span> <em>Ecography</em> 30: 609–28. <a href="https://doi.org/10.1111/j.2007.0906-7590.05171.x">https://doi.org/10.1111/j.2007.0906-7590.05171.x</a>.
+</div>
+<div id="ref-R-sf" class="csl-entry" role="listitem">
+Pebesma, Edzer. 2026. <em>Sf: Simple Features for r</em>. <a href="https://r-spatial.github.io/sf/">https://r-spatial.github.io/sf/</a>.
+</div>
+<div id="ref-tmap2018" class="csl-entry" role="listitem">
+Tennekes, Martijn. 2018. <span>“<span class="nocase">tmap</span>: Thematic Maps in <span>R</span>.”</span> <em>Journal of Statistical Software</em> 84 (6): 1–39. <a href="https://doi.org/10.18637/jss.v084.i06">https://doi.org/10.18637/jss.v084.i06</a>.
+</div>
+<div id="ref-R-tidyverse" class="csl-entry" role="listitem">
+Wickham, Hadley. 2023. <em>Tidyverse: Easily Install and Load the Tidyverse</em>. <a href="https://tidyverse.tidyverse.org">https://tidyverse.tidyverse.org</a>.
 </div>
 </div>
 </section>

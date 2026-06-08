@@ -2,13 +2,13 @@
 
 ## Why Spatial Analysis
 
-Species don't distribute themselves at random. Wildfire risk is not uniform across a landscape. Lead contamination in urban soils clusters near old roads and demolished buildings. Precipitation gradients drive vegetation boundaries that don't care about county lines. In each case, where something is happening is part of the story.
+Species don't distribute themselves at random. Wildfire risk is not uniform across a landscape. Lead contamination in soils clusters near  roads and demolished buildings. Precipitation gradients drive vegetation boundaries that don't care about county lines. In each case, where something is happening is part of the story.
 
 The underlying idea has a name. Tobler's First Law of Geography states that everything is related to everything else, but near things are more related than distant things. It sounds obvious until you realize how much standard statistical practice ignores it.
 
-If you treat spatially dependent observations as independent, your standard errors will be too small, your p-values too optimistic, and your predictions won't hold up. This isn't a minor technical complaint. It's a systematic bias, and it runs through a lot of published environmental science.
+If you treat spatially dependent observations as independent, your standard errors might be too small, your p-values too optimistic, and your predictions might not hold up. This isn't a minor technical complaint. It's a systematic bias, and it runs through a lot of published environmental science.
 
-The tools to do this right have existed for decades. What's changed is that they are now implemented in open, well-documented software, with enough worked examples that you don't need a geostatistics PhD to use them correctly. There's no longer a good reason to leave spatial structure on the table.
+The tools to do this right have existed for decades. What's changed is that they are now implemented in open, well-documented software, with enough worked examples that you don't need a geostatistics PhD to use them correctly. There's no longer a good reason to leave spatial structure out of your analysis.
 
 Spatial pattern is also information in its own right. Where something is happening, and where it isn't, tells you something about the processes driving it. Learning to read that structure is part of the fundamental job of environmental science: figuring out why things are patterned the way they are.
 
@@ -49,13 +49,13 @@ The book is organized into four parts. Each builds on the one before it.
 - **Regression Kriging** -- Kriging with external predictors folded in. Useful when covariates explain part of the spatial pattern.
     - *Aside: Predicting New Data with a Fitted Model* -- A refresher on using `predict` on new data.
 
-**Regression** closes the loop. When your regression residuals have spatial structure, OLS isn't the right tool.
+**Regression** closes the loop. You already know how to fit a linear model: a response variable, some predictors, minimize the sum of squared residuals. That's ordinary least squares (OLS), and it works great when the residuals are independent. The problem is that spatial data often violates that assumption. If you fit an OLS model and map the residuals, you'll sometimes see patches of positive residuals in one corner and negative residuals in another. That's spatial autocorrelation in the errors, and it means your standard errors are wrong and your inference is unreliable. The fix is to model that structure explicitly rather than pretend it isn't there.
 
 - **GLS with Autocorrelated Residuals** -- What to do when your regression residuals have spatial structure. Spoiler: you use GLS, and it works.
     - *Aside: OLS via Algebra and Matrices* -- Derives the OLS solution algebraically and in matrix form, then implements both in R. Background that makes the GLS chapter make more sense.
 - **Spatial Regression: Lag and Error Models** -- GLS treats space as nuisance in the residuals. SAR models let you go further: test whether the structure is in the errors or in the response itself, and fit accordingly.
 
-**What You Can Do Now** closes the book. A short synthesis of the three modes of spatial analysis -- description, prediction, inference -- and where to go from here.
+**What You Can Do Now** closes the book. A short synthesis of the three modes of spatial analysis we covered -- description, prediction, inference -- and where to go from here.
 
 ::: {.callout-note}
 ## Points and Grids, Not Polygons
@@ -74,13 +74,13 @@ So: set up your project, download the data, and let's get to work.
 
 ## Setup
 
-The book is built around R, so you'll need a working R installation. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. If you're not sure, run:
+The book is built around R, so you'll need a working R installation. The code here was written and tested with `r R.version.string`. The package versions used in each chapter are recorded in the References section, so if something breaks you have a fixed point to compare against. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. If you're not sure, run:
 
 ``` r
 update.packages()
 ```
 
-Do it now, and anytime it occurs to you.
+Do it now, and anytime it occurs to you. It's almost always the right thing to do!
 
 ### Project Structure
 

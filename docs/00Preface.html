@@ -8,7 +8,7 @@
 
 <meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>Preface – Applied Spatial Analysis for Environmental Science</title>
+<title>Preface – Spatial Analysis for Environmental Data</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -105,7 +105,7 @@ div.csl-indent {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Spatial Analysis for Environmental Data</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -320,7 +320,7 @@ div.csl-indent {
       <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  <a href="./A1DataSources.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: Data Sources</span></a>
   </div>
 </li>
       </ul>
@@ -355,11 +355,11 @@ div.csl-indent {
 </header>
 
 
-<p>This started as a weekly handout for a graduate course in spatial analysis at Western Washington University. This grew, as course notes sometimes do, into something closer to a short book. That process wasn’t really intentional, I’d fix a confusing explanation, add a section that answers a question, expand a toy example and so on. After two colleagues started using these as the text in their classes I felt I had something worth sharing more broadly.</p>
+<p>This project started as a weekly handout for a graduate course in spatial analysis at Western Washington University. This grew, as course notes sometimes do, into something closer to a short book. That process wasn’t really intentional, I’d fix a confusing explanation, add a section that answers a question, expand a toy example and so on. After two colleagues started using these as the text in their classes I felt I had something worth sharing more broadly.</p>
 <p>I am Andy Bunn. I am a professor of environmental sciences at Western Washington University in Bellingham, which sits in the northwest corner of the contiguous United States in a part of the world that is unreasonably beautiful. My research is mostly about paleoclimate and carbon cycling using tree rings. I have been writing R code since about 2000, including <code>dplR</code>, a package for dendrochronology that is part of the <a href="https://opendendro.org">openDendro</a> project. I am not a statistician. I am an environmental scientist and teacher who has spent a career working with spatial data.</p>
-<p>My own entry into this material came from two graduate courses at Duke University in the late 1990s, one in spatial analysis and one in landscape ecology, both taught by Dean Urban. Urban, who became a lifelong friend and mentor, had a way of making space feel like the most interesting thing in the data. He taught me that space was not a problem to correct for, but a signal worth understanding. That philosophy runs through this book. He has since published two books that are much broader in scope than what you’ll find here but are worth knowing about: <span class="citation" data-cites="urban2023agents">Urban (<a href="13References.html#ref-urban2023agents" role="doc-biblioref">2023</a>)</span> and <span class="citation" data-cites="urban2024landscape">Urban (<a href="13References.html#ref-urban2024landscape" role="doc-biblioref">2024</a>)</span>. Both are key texts if you want to go deeper into landscape ecology as a discipline.</p>
-<p>The students these notes were written for are masters students in environmental sciences at WWU. Most of them do applied work. They came to graduate school to better understand ecosystems, watersheds, climate, toxicology, or some other chunk of the world. They’ve taken an introductory stats class covering linear modeling but not math beyond calculus. And many of them are going to spend their careers working with data that have coordinates attached, which means they need to know about spatial analysis.</p>
-<p>The emphasis is on building intuition and getting things done in R, not on mathematical derivation. The scope is deliberately narrow: we work with point observations and continuous raster surfaces, not areal data or complex network structures. We often simulate known patterns before applying methods to real data, because the best way to trust a tool is to watch it find something you planted. We use the Meuse River dataset, a classic, and a few others that connect to problems environmental scientists actually care about.</p>
+<p>My own entry into this material came from two graduate courses at Duke University in the late 1990s, one in spatial analysis and one in landscape ecology, both taught by Dean Urban. Urban, who became a lifelong friend and mentor, had a way of making space feel like the most interesting thing in the data. He taught me that space was not a problem to correct for, but a signal worth understanding. That philosophy runs through this book. Dean has since published two books that are much broader in scope than what you’ll find here: <em>Agents and Implications of Landscape Pattern</em> <span class="citation" data-cites="urban2023agents">(<a href="13References.html#ref-urban2023agents" role="doc-biblioref">Urban 2023</a>)</span> and <em>Landscape Ecology: A Task-Oriented Perspective</em> <span class="citation" data-cites="urban2024landscape">(<a href="13References.html#ref-urban2024landscape" role="doc-biblioref">Urban 2024</a>)</span>. Both are worth knowing about if you want to go deeper into landscape ecology as a discipline.</p>
+<p>The students these notes were written for are masters students in environmental sciences at WWU. Most of them do applied work. They came to graduate school to better understand ecosystems, watersheds, climate, toxicology, or some other chunk of the world. They’ve taken an introductory stats class covering linear modeling but ususally not math beyond calculus. And many of them are going to spend their careers working with data that have coordinates attached, which means they need to know about spatial analysis.</p>
+<p>The emphasis is on building intuition and getting things done in R, not on mathematical derivation. The scope is deliberately narrow: we work with point observations and continuous raster surfaces, not areal data or network structures. We often simulate known patterns before applying methods to real data, because the best way to trust a tool is to watch it find something you planted. We use the Meuse River dataset, a classic, and a few others that connect to ecology and problems relevant to different kinds of environmental science.</p>
 <p>If you are an ecologist or environmental scientist who needs to handle spatial structure in your data and want a practical, R-based entry point, this is for you. There is no shortage of spatial analysis textbooks, but most of them are either deeply rooted in GIS workflows, pitched at geographers rather than ecologists, or written at a mathematical level that assumes more background than most field scientists have. This book tries to occupy the middle ground: rigorous enough to be clear about what the methods are doing, accessible enough that a first-year masters student can follow along and run the code.</p>
 <p>A few things this book is not. It is not a comprehensive treatment of spatial statistics. It is not a GIS manual. It says almost nothing about areal data (polygons, watersheds, administrative units) – a whole separate analytic world. And it is not a substitute for reading the other literature, which is why each chapter ends with a Further Reading section.</p>
 <p>This is a living document. If you find errors, have suggestions, or want to tell me that a particular explanation finally made something click, I’d love to hear from you.</p>

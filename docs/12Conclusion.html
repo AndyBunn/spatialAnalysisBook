@@ -8,7 +8,7 @@
 
 <meta name="description" content="An applied introduction to spatial analysis for environmental scientists using R">
 
-<title>What You Can Do Now – Applied Spatial Analysis for Environmental Science</title>
+<title>What You Can Do Now – Spatial Analysis for Environmental Data</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -105,7 +105,7 @@ div.csl-indent {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Applied Spatial Analysis for Environmental Science</span>
+    <span class="navbar-title">Spatial Analysis for Environmental Data</span>
     </a>
   </div>
         <div class="quarto-navbar-tools tools-end">
@@ -320,7 +320,7 @@ div.csl-indent {
       <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./A1MeuseData.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: The Meuse Dataset</span></a>
+  <a href="./A1DataSources.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Appendix: Data Sources</span></a>
   </div>
 </li>
       </ul>
@@ -355,16 +355,16 @@ div.csl-indent {
 </header>
 
 
-<p>You can look at a dataset with coordinates and ask real questions. Are these points clustered or random? Is there spatial structure in this variable, and where does it live? If I know the value at these locations, what’s my best estimate at the ones in between? And if I want to run a regression, are my residuals clean?</p>
-<p>Those questions fall into three different categories, and it’s worth being clear about which one you’re answering.</p>
-<p>The first is description. Before you model anything, you want to know what you’re dealing with. Is the variable spatially structured at all? At what scale? Is the autocorrelation isotropic or does it vary by direction? A variogram or correlogram early in an analysis is like plotting your data before fitting a model – it’s not optional, it’s how you avoid being surprised later. And sometimes the spatial pattern is the finding. A LISA map that shows a cluster of high values in one corner of the study area, or a correlogram that flattens out at 500 meters, is telling you something about the process that generated the data. That’s worth reporting even if you never fit another model.</p>
+<p>You can look at a dataset with coordinates and ask good questions. Are these points clustered or random? Is there spatial structure in this variable, and where does it live? If you know the value at these locations, what’s your best estimate at the ones in between? And if you want to run a regression, are your residuals clean?</p>
+<p>Those questions fall into three different categories, and it’s helpful to be explicit about those.</p>
+<p>The first is description. Before you model anything, you want to know what you’re dealing with. Is the variable spatially structured at all? At what scale? Is the autocorrelation isotropic or does it vary by direction? A variogram or correlogram early in an analysis is like plotting your data before fitting a model (and there is no such thing as too much ploting!), it’s how you avoid being surprised later. And sometimes the spatial pattern is the finding. A LISA map that shows a cluster of high values in one corner of the study area, or a correlogram that flattens out at 500 meters, is telling you something about the process that generated the data.</p>
 <p>The second is prediction. IDW, TPS, and kriging are about accuracy. You have measurements somewhere and want estimates somewhere else. The goal is a surface that holds up on withheld data. Whether the variogram parameters are ecologically meaningful is secondary. Cross-validation tells you how well you’re doing.</p>
 <p>The third is inference. You have a hypothesis about a relationship between variables and you want a coefficient and a standard error you can trust. Spatial autocorrelation threatens that goal not because it makes the predictions wrong, but because it makes the uncertainty estimates wrong. GLS and SAR are corrections to that problem, and skipping them means understating how uncertain you are.</p>
-<p>Mixing these up is a common source of confusion. Using a kriging surface to make causal claims, or worrying about prediction accuracy when all you need is a valid p-value, will lead you somewhere you don’t want to be.</p>
-<p>But here’s what I’d push back on if someone told you spatial analysis is mainly about avoiding statistical mistakes. The spatial structure in your data is information. Where lead is high tells you about flood history. Where birds are scarce tells you about habitat connectivity. Where your regression residuals are autocorrelated tells you that something is going on in that part of the landscape that your covariates don’t explain yet. Learning to read that structure is part of the fundamental job of environmental science.</p>
+<p>Mixing these categories up is common and it’s easy to forget what question you are asking of a data set. Using a kriging surface to make causal claims, or worrying about prediction accuracy when all you need is a valid p-value, will lead you somewhere you don’t want to be.</p>
+<p>But spatial analysis is not about avoiding statistical mistakes. The spatial structure in your data is information. Where lead is high tells you about flood history. Where birds are scarce tells you about habitat connectivity. Where your regression residuals are autocorrelated tells you that something is going on in that part of the landscape that your covariates don’t explain yet. Learning to read that structure is part of the fundamental job of environmental science.</p>
 <p>The thread running through all the methods in this book is Tobler’s First Law: nearby things are more related than distant things. KDE, Moran’s I, the variogram, kriging, GLS, SAR – they’re all taking that one idea seriously in different ways. You’ve got the tools now.</p>
-<p>A few things this book didn’t get to. Areal data – watersheds, census tracts, habitat patches – has its own analytical world built around polygon adjacency rather than continuous distance. If that’s where your data lives, look at <span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> chapters 9 and 10. Spatiotemporal methods, where you have both spatial and temporal autocorrelation, are a natural extension and an active area of development in R. Machine learning approaches to spatial prediction (random forests with spatial cross-validation, for instance) are worth knowing about, though they tend to trade interpretability for flexibility in ways that aren’t always a good deal for environmental science.</p>
-<p>For deeper reading: <span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> is the R-focused reference and you should own it. <span class="citation" data-cites="cressie1993statistics">Cressie (<a href="13References.html#ref-cressie1993statistics" role="doc-biblioref">1993</a>)</span> is the statistical bible for geostatistics, dense but authoritative. <span class="citation" data-cites="fortin2016spatial">Fortin et al. (<a href="13References.html#ref-fortin2016spatial" role="doc-biblioref">2016</a>)</span> is readable and ecologically grounded. <span class="citation" data-cites="diggle2007model">Diggle and Ribeiro (<a href="13References.html#ref-diggle2007model" role="doc-biblioref">2007</a>)</span> takes a model-based approach to geostatistics that connects cleanly to the likelihood ideas that show up in variogram fitting.</p>
+<p>There are a lot of things this book didn’t get to. Areal data – watersheds, census tracts, habitat patches – has its own analytical world built around polygon adjacency rather than continuous distance. If that’s where your data lives, look at <span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> chapters 9 and 10. Spatiotemporal methods, where you have both spatial and temporal autocorrelation, are a natural extension and an active area of development in R. Machine learning approaches to spatial prediction (random forests with spatial cross-validation, for instance) are worth knowing about, though they tend to trade interpretability for flexibility in ways that aren’t always a good deal for environmental science. And then there are networks. Stream networks are a good example of why standard spatial methods can mislead you: two sites might be 200 meters apart in Euclidean space but separated by 10 kilometers of channel, with a waterfall in between. Distances along the network – flow distance, not straight-line distance – are what govern organism dispersal, nutrient transport, and hydrologic connectivity. The <code>SSN2</code> package in R is built for exactly this, fitting spatial models where autocorrelation is structured by the stream network rather than by the map. If your data lives in a drainage network, it’s worth knowing about.</p>
+<p>For deeper reading: <span class="citation" data-cites="bivand2008geostatistics">Bivand (<a href="13References.html#ref-bivand2008geostatistics" role="doc-biblioref">2008</a>)</span> is the R-focused reference and you should own it. <span class="citation" data-cites="cressie1993statistics">Cressie (<a href="13References.html#ref-cressie1993statistics" role="doc-biblioref">1993</a>)</span> is the statistical bible for geostatistics, dense but authoritative. <span class="citation" data-cites="fortin2016spatial">Fortin et al. (<a href="13References.html#ref-fortin2016spatial" role="doc-biblioref">2016</a>)</span> is readable and ecologically grounded. <span class="citation" data-cites="diggle2007model">Diggle and Ribeiro (<a href="13References.html#ref-diggle2007model" role="doc-biblioref">2007</a>)</span> takes a model-based approach to geostatistics that connects cleanly to the likelihood ideas that show up in variogram fitting. And if you want to go deeper into landscape ecology as a discipline – the spatial structure of habitat, the movement of organisms through patchy environments, the consequences of fragmentation – Dean Urban’s books are the place to go: <span class="citation" data-cites="urban2023agents">Urban (<a href="13References.html#ref-urban2023agents" role="doc-biblioref">2023</a>)</span> and <span class="citation" data-cites="urban2024landscape">Urban (<a href="13References.html#ref-urban2024landscape" role="doc-biblioref">2024</a>)</span>. Urban is who kicked off the preface, and his work is still the best argument I know for why space isn’t just a nuisance to correct for.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
@@ -379,6 +379,12 @@ Diggle, Peter J., and Paulo Justiniano Ribeiro. 2007. <em>Model-Based Geostatist
 </div>
 <div id="ref-fortin2016spatial" class="csl-entry" role="listitem">
 Fortin, Marie-Josèe, Mark R. T. Dale, and Jay M. Ver Hoef. 2016. <span>“Spatial Analysis in Ecology.”</span> In <em>Wiley <span>StatsRef</span>: Statistics Reference Online</em>, edited by N. Balakrishnan, T. Colton, B. Everitt, W. Piegorsch, F. Ruggeri, and J. L. Teugels. John Wiley &amp; Sons. <a href="https://doi.org/10.1002/9781118445112.stat07766">https://doi.org/10.1002/9781118445112.stat07766</a>.
+</div>
+<div id="ref-urban2023agents" class="csl-entry" role="listitem">
+Urban, Dean L. 2023. <em>Agents and Implications of Landscape Pattern: Working Models for Landscape Ecology</em>. Springer Nature Switzerland. <a href="https://doi.org/10.1007/978-3-031-40254-8">https://doi.org/10.1007/978-3-031-40254-8</a>.
+</div>
+<div id="ref-urban2024landscape" class="csl-entry" role="listitem">
+Urban, Dean L. 2024. <em>Landscape Ecology: A Task-Oriented Perspective</em>. Springer Nature Switzerland. <a href="https://doi.org/10.1007/978-3-031-72251-6">https://doi.org/10.1007/978-3-031-72251-6</a>.
 </div>
 </div>
 

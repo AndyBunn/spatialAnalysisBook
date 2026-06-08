@@ -188,7 +188,7 @@ p2 <- ggplot(data = meuse_sf) +
 p2
 ```
 
-Let's interpolate those measurements to an empty grid that covers the whole study site. We will use `meuse.grid2`, a 40 x 40 m prediction grid covering the study area with 3089 cells. It includes elevation, terrain derivatives, land cover, and distance to the river from modern open data sources. See the [appendix](A1MeuseData.qmd) for full variable descriptions and provenance.
+Let's interpolate those measurements to an empty grid that covers the whole study site. We will use `meuse.grid2`, a 40 x 40 m prediction grid covering the study area with 3089 cells. It includes elevation, terrain derivatives, land cover, and distance to the river from modern open data sources. See the [appendix](A1DataSources.qmd) for full variable descriptions and provenance.
 
 ```{r}
 meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
