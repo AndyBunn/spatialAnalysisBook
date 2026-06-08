@@ -193,7 +193,7 @@ date: ""
     bottom: 24px;
     left: 80px;
     font-family: 'Source Code Pro', monospace;
-    font-size: 14px;
+    font-size: 20px;
     letter-spacing: 0.12em;
     color: #8ec4b0;
     text-transform: uppercase;
@@ -274,10 +274,10 @@ date: ""
   <div class="content">
     <a href="00Preface.html" class="enter-button">Welcome →</a>
     <div class="banner-title">
-      Applied Spatial <span class="accent-word">Analysis</span><br>
+      Spatial <span class="accent-word">Analysis</span><br>
       for Environmental Data
     </div>
-    <div class="banner-subtitle">patterns, structure, and prediction in space</div>
+    <div class="banner-subtitle">An R-Based Introduction</div>
     <div class="tags">
       <span class="tag">Foundations</span>
       <span class="tag">Point Patterns &amp; Autocorrelation</span>

@@ -38,7 +38,7 @@ where $\hat{Z}$ will be an estimate of a variable at a spatial location $s_0$ wh
 ## Variogram Redux
 Fitting a variogram is also called structural analysis and it is where we calculate the squared difference between the values of pairs of measured points. In the variogram we set this as $\gamma = (z_i-z_j)^2/2$. We then plot $\gamma$ against distance and we have a variogram cloud. In practice the number of pairs (dyads) to calculate and plot gets very large. For $n$ points there are $n \cdot (n-1) / 2$ pairs. So, instead of plotting each pair we average $\gamma$ by distance bins. This is the empirical semivariogram.
 
-We will demonstrate a variogram with the Meuse River data. Here we load `meuse2` (the point measurements) and `meuse.grid2` (the prediction grid), make a new variable by logging the `lead` column and plot them. This is the same setup we used in the IDW chapter. See the [appendix](A1MeuseData.qmd) for details on both datasets.
+We will demonstrate a variogram with the Meuse River data. Here we load `meuse2` (the point measurements) and `meuse.grid2` (the prediction grid), make a new variable by logging the `lead` column and plot them. This is the same setup we used in the IDW chapter. See the [appendix](A1DataSources.qmd) for details on both datasets.
 
 ```{r}
 # load

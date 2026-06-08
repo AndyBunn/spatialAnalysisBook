@@ -23,7 +23,7 @@ library(sf)
 library(tidyverse)
 ```
 
-`spatialreg` carries the main functions for fitting SAR models. It was spun off from `spdep` a few years ago, which means older code you find online might load these functions from `spdep` directly. If you see `spdep::lagsarlm()` in old tutorials, that is the same function. Load `spatialreg` explicitly.
+`spatialreg` [@spatialreg2021] carries the main functions for fitting SAR models. It was spun off from `spdep` [@R-spdep] a few years ago, which means older code you find online might load these functions from `spdep` directly. If you see `spdep::lagsarlm()` in old tutorials, that is the same function. Load `spatialreg` explicitly. We also use `sf` [@R-sf] for spatial data structures and `tidyverse` [@R-tidyverse] for data wrangling.
 
 ## Two Models, Two Questions
 
@@ -157,7 +157,7 @@ Now let's run this on data we didn't build.
 
 ## Bird Species Richness in Mexico
 
-The `birdRichnessMexico` dataset has 200 point locations across Mexico with bird species richness (`nSpecies`) and six WorldClim bioclimatic variables extracted at each location. Two predictors have strong ecological justification: mean annual precipitation (`map`) and temperature annual range (`tempRange`). Wetter areas support more species; thermally variable areas support fewer. That's the energy-water hypothesis and Rapoport's rule operating across the Mexican landscape.
+The `birdRichnessMexico` dataset has 200 point locations across Mexico with bird species richness (`nSpecies`) and six WorldClim bioclimatic variables extracted at each location. Maps use `tmap` [@tmap2018]. Two predictors have strong ecological justification: mean annual precipitation (`map`) and temperature annual range (`tempRange`). Wetter areas support more species; thermally variable areas support fewer. That's the energy-water hypothesis and Rapoport's rule operating across the Mexican landscape.
 
 ```{r, message=FALSE}
 library(tmap)

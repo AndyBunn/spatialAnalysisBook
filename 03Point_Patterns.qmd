@@ -376,14 +376,14 @@ Here is an example of three species of [ectomycorrhizae](https://en.wikipedia.or
 
 
 ```{r}
-data(sporophores) # run ?sporophores to see the help file. It's cool.
+data(sporophores)
 summary(sporophores)
 plot(sporophores, chars=c(16,1,2), cex=0.6, leg.args=list(cex=1.1))
 points(0,0,pch=16, cex=2)
 text(15,8,"Tree", cex=0.75)
 ```
 
-This is a marked point pattern with three species of fungi. The data come from @ford1980spatial. Different species have different functional roles and differing abilities to colonize. Sporophores are mushrooms, in case that wasn't obvious.
+This is a marked point pattern with three species of fungi. The data come from @ford1980spatial. Different species have different functional roles and differing abilities to colonize. 
 
 @ford1980spatial suggest two things we can investigate with PPA. First, that there "were distinct arcs around the tree which were not occupied by sporophores of any species." Second, that there is "no consistent evidence of spatial inhibition between species." We have one of the five years of data here. Is there any suggestion of inhibition between species?
 

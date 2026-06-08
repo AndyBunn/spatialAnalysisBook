@@ -47,7 +47,7 @@ meuse2 <- readRDS("data/meuse2.Rds")
 meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
 ```
 
-`meuse2` has `r nrow(meuse2)` point measurements and `meuse.grid2` has `r nrow(meuse.grid2)` grid cells. See the [appendix](A1MeuseData.qmd) for full variable descriptions.
+`meuse2` has `r nrow(meuse2)` point measurements and `meuse.grid2` has `r nrow(meuse.grid2)` grid cells. See the [appendix](A1DataSources.qmd) for full variable descriptions.
 
 We'll model `om`, percent organic matter, as a function of distance to the river. Distance to the river has a correlation of about -0.58 with organic matter - the strongest of any variable in `meuse.grid2`. Other candidates (elevation, slope, TWI, soil type, flooding frequency) either don't add much once distance is in the model or are largely redundant with it. Simple and defensible. We'll first do this naively with OLS alone, then add the kriging step to get RK.
 
