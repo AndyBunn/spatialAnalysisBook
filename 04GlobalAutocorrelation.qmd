@@ -855,7 +855,7 @@ Moran's I gives you a single number summarizing that structure globally. It's a 
 
 ## Exercises
 
-The file `birdRichnessMexico.rds` contains an `sf` object with bird species richness at locations across Mexico. The column `nSpecies` is the number of bird species occurring within a kilometer of each location. The data are projected using the North America Albers Equal Area Conic centered on Mexico ([SR-ORG:38](http://spatialreference.org/ref/sr-org/mexico-albers-equal-area-conic/)), which gives units in kilometers.
+The file `birdRichnessMexico.rds` contains an `sf` object with bird species richness at locations across Mexico. The column `nSpecies` is the number of bird species occurring within a kilometer of each location. The data are projected using the North America Albers Equal Area Conic centered on Mexico ([SR-ORG:38](http://spatialreference.org/ref/sr-org/mexico-albers-equal-area-conic/)), which gives units in kilometers. The dataset also contains several WorldClim bioclimatic variables (mean annual precipitation, temperature range, and others) but we're not using them here. They come back in the [SAR chapter](11SpatialRegressionSAR.html), where richness gets a proper regression treatment.
 
 ```{r, message=FALSE}
 library(tmap)

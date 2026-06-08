@@ -1,7 +1,7 @@
 # Spatial Regression: Lag and Error Models
 
 ```{r,echo=FALSE, include=FALSE}
-set.seed(2112)
+set.seed(130)
 ```
 
 ## Big Idea
@@ -49,15 +49,15 @@ One important caution: **the $\beta$ coefficients from the SLM are not total mar
 
 ## Choosing Between Them: LM Tests
 
-There is a diagnostic test for choosing the appropriate model. The Lagrange Multiplier (LM) tests in `spdep::lm.LMtests()` take an OLS fit and a weights matrix and test for evidence of spatial error vs spatial lag structure in the residuals. You get five test statistics from `test = "all"`:
+There is a diagnostic test for choosing the appropriate model. The Rao score tests in `spdep::lm.RStests()` take an OLS fit and a weights matrix and test for evidence of spatial error vs spatial lag structure in the residuals. You get five test statistics from `test = "all"`:
 
-- **LMerr**: tests for spatial error autocorrelation. Significant means the error model looks useful.
-- **LMlag**: tests for spatial lag structure. Significant means the lag model looks useful.
-- **RLMerr**: robust LM test for error, controlling for the possibility of a lag. Use this when both LMerr and LMlag are significant.
-- **RLMlag**: robust LM test for lag, controlling for error structure. Same situation.
+- **RSerr**: tests for spatial error autocorrelation. Significant means the error model looks useful.
+- **RSlag**: tests for spatial lag structure. Significant means the lag model looks useful.
+- **adjRSerr**: robust test for error, controlling for the possibility of a lag. Use this when both RSerr and RSlag are significant.
+- **adjRSlag**: robust test for lag, controlling for error structure. Same situation.
 - **SARMA**: joint test for both.
 
-The decision tree is simple. If only one of LMerr or LMlag is significant, fit that model. If both are significant, look at the robust tests and fit whichever of RLMerr or RLMlag is more significant. If neither is significant, OLS is fine.
+The decision tree is simple. If only one of RSerr or RSlag is significant, fit that model. If both are significant, look at the robust tests and fit whichever of adjRSerr or adjRSlag is more significant. If neither is significant, OLS is fine.
 
 ## Toy Example
 
@@ -113,10 +113,10 @@ Moran's I is significantly positive on the OLS residuals. We know we have a prob
 ### LM Tests
 
 ```{r}
-lm.LMtests(ols, listw = W, test = "all")
+lm.RStests(ols, listw = W, test = "all")
 ```
 
-Both LMerr and LMlag will likely be significant -- a spatial error process can produce apparent lag structure too because the autocorrelated errors bleed into the response. Look at the robust tests. RLMerr should dominate, since that is how we built the data. That is the model to fit.
+Both RSerr and RSlag will be significant -- a spatial error process can produce apparent lag structure because the autocorrelated errors bleed into the response. Look at the robust tests. adjRSerr is significant; adjRSlag is not. That points to the error model, which is the right answer since that is how we built the data.
 
 ### Spatial Error Model
 
@@ -125,7 +125,7 @@ semFit <- errorsarlm(y ~ x, data = dat, listw = W)
 summary(semFit)
 ```
 
-The coefficient table gives $\hat\beta_0$ and $\hat\beta_1$, interpreted exactly like OLS coefficients. The additional parameter is $\lambda$ -- the spatial autocorrelation in the errors. A value near 1 means strong spatial error dependence; near 0 means the error model adds little over OLS. Given how we generated the data ($\rho = 0.75$), expect $\hat\lambda$ to be substantial. The coefficient estimates should land near our known values of $\beta_0 = 3$ and $\beta_1 = 0.5$.
+The coefficient table gives $\hat\beta_0$ and $\hat\beta_1$, interpreted exactly like OLS coefficients. The additional parameter is $\lambda$, the spatial autocorrelation in the errors. A value near 1 means strong spatial error dependence; near 0 means the error model adds little over OLS. Given how we generated the data ($\rho = 0.75$), lambda should be substantial, and the coefficient estimates should land near our known values of $\beta_0 = 3$ and $\beta_1 = 0.5$.
 
 Check the residuals.
 
@@ -145,7 +145,7 @@ slmFit <- lagsarlm(y ~ x, data = dat, listw = W)
 summary(slmFit)
 ```
 
-The lag model estimates $\rho$, the spatial autoregression of the response. Because the data were generated under an error process, this is the wrong model. It will likely fit reasonably (the models are related) but the LM tests already pointed us elsewhere. Compare AIC.
+The lag model estimates $\rho$, the spatial autoregression of the response. Because the data were generated under an error process, this is the wrong model. It fits reasonably (the models are related) but the LM tests already pointed us elsewhere, and the AIC confirms it.
 
 ```{r}
 AIC(semFit, slmFit)
@@ -153,66 +153,123 @@ AIC(semFit, slmFit)
 
 The SEM should win. This is a good workflow to internalize: LM tests first, then model fitting, then AIC as a sanity check.
 
-## Back to the Bird Data
+Now let's run this on data we didn't build.
 
-Let's run this workflow on the bird diversity dataset from the GLS chapter.
+## Bird Species Richness in Mexico
 
-```{r, eval=FALSE}
-dat_birds <- read.csv("data/birdDiv.csv")
-datSF <- dat_birds %>%
-  st_as_sf(coords = c("UTME", "UTMN"), crs = 26912)
+The `birdRichnessMexico` dataset has 200 point locations across Mexico with bird species richness (`nSpecies`) and six WorldClim bioclimatic variables extracted at each location. Two predictors have strong ecological justification: mean annual precipitation (`map`) and temperature annual range (`tempRange`). Wetter areas support more species; thermally variable areas support fewer. That's the energy-water hypothesis and Rapoport's rule operating across the Mexican landscape.
 
-coords_birds <- st_coordinates(datSF)
-nb_birds     <- knn2nb(knearneigh(coords_birds, k = 8))
-W_birds      <- nb2listw(nb_birds, style = "W")
+```{r, message=FALSE}
+library(tmap)
+birds_sf <- readRDS("data/birdRichnessMexico.rds")
+coords_birds <- st_coordinates(birds_sf)
+
+nb_birds <- knn2nb(knearneigh(coords_birds, k = 8))
+W_birds  <- nb2listw(nb_birds, style = "W")
 ```
 
-OLS and Moran test on residuals:
+Map the richness surface first.
 
-```{r, eval=FALSE}
-ols_birds <- lm(birdDiv ~ plantDiv, data = dat_birds)
-moran.test(residuals(ols_birds), W_birds)
+```{r}
+tmap_mode("view")
+tm_shape(birds_sf) +
+  tm_symbols(col = "nSpecies", palette = "viridis",
+             title.col = "Species", size = 0.4)
 ```
 
-If Moran's I flags autocorrelated residuals, run the LM tests:
+### OLS and Residual Check
 
-```{r, eval=FALSE}
-lm.LMtests(ols_birds, listw = W_birds, test = "all")
+```{r}
+ols_birds <- lm(nSpecies ~ map + tempRange, data = birds_sf)
+summary(ols_birds)
 ```
 
-Then fit the model the tests recommend and compare the coefficient on `plantDiv` to what OLS and GLS gave in the previous chapter. Does the point estimate shift? Do the standard errors change? That is the correction at work.
+R² of 0.80. Both predictors are significant with the expected signs. Now check the residuals.
+
+```{r}
+birds_sf$ols_resids <- residuals(ols_birds)
+moran.test(birds_sf$ols_resids, W_birds)
+```
+
+Moran's I is 0.40, strongly significant. The model explains 80% of the variance but the residuals carry substantial spatial signal. Map them to see where the model is over- and under-predicting.
+
+```{r}
+tm_shape(birds_sf) +
+  tm_symbols(col = "ols_resids",
+             palette = "-RdBu",
+             midpoint = 0,
+             title.col = "Residual",
+             size = 0.4)
+```
+
+The pattern is not random. There are regions where richness is consistently higher than the climate model predicts and others where it's consistently lower. That's what Moran's I is flagging, and the map shows you where.
+
+### LM Tests
+
+```{r}
+lm.RStests(ols_birds, listw = W_birds, test = "all")
+```
+
+Both RSerr and RSlag are significant. Go to the robust tests. adjRSerr is large and stays significant; adjRSlag collapses to near zero. The error model is the right fit.
+
+### Spatial Error Model
+
+```{r}
+sem_birds <- errorsarlm(nSpecies ~ map + tempRange,
+                        data = birds_sf, listw = W_birds)
+summary(sem_birds)
+```
+
+Lambda is 0.72, highly significant. There is strong spatial autocorrelation in the errors above and beyond what precipitation and temperature range explain. Check the residuals.
+
+```{r}
+birds_sf$sem_resids <- residuals(sem_birds)
+moran.test(birds_sf$sem_resids, W_birds)
+```
+
+Moran's I drops to near zero. The spatial structure has been absorbed into lambda. Compare AIC.
+
+```{r}
+AIC(ols_birds, sem_birds)
+```
+
+A drop of about 73 units. The error model is substantially better.
+
+### What Changed
+
+The coefficients shift after accounting for spatial error dependence. The effect of `tempRange` gets stronger: OLS estimated -1.76 species per degree of range; the SEM estimates -2.75. OLS was underestimating the temperature effect because spatially autocorrelated errors were confounding the estimate. The precipitation coefficient shifts less, from 0.078 to 0.073, which makes sense given how dominant that predictor is.
+
+What does lambda = 0.72 mean ecologically? Precipitation and temperature range explain most of the richness gradient, but there's substantial residual spatial structure they don't capture. Some of it is almost certainly habitat heterogeneity: the Sierra Madre Occidental and Oriental are centers of endemism and provide topographic complexity that flat climate variables miss. Some may reflect historical biogeography -- proximity to the Neotropical source pool in southern Mexico leaves a signature that current climate alone doesn't explain. The SEM doesn't tell you what the missing variable is. It tells you that something spatially structured is out there and that ignoring it was biasing your inference.
 
 ## A Note on Interpreting Lag Model Coefficients
 
-This is worth saying slowly because it catches people off guard.
+In an OLS or SEM, $\hat\beta_1 = 0.5$ means: a one-unit increase in $x$ is associated with a 0.5-unit increase in $y$. That is a total effect.
 
-In an OLS or SEM, $\hat\beta_1 = 0.5$ means: a one-unit increase in $x$ is associated with a 0.5-unit increase in $y$, full stop. That is a total effect.
+In a SLM, a change in $x_i$ affects $y_i$ directly, but that change in $y_i$ then propagates to neighboring locations because their $y$ values depend on $y_i$ via the lag term. Those ripples feed back. The $\hat\beta_1$ from `lagsarlm` is only the direct local effect, before the spatial propagation plays out. The full marginal effect, including spillovers, requires computing impacts from the fitted model.
 
-In a SLM, a change in $x_i$ affects $y_i$ directly, but that change in $y_i$ then propagates to neighboring locations because their $y$ values depend on $y_i$ via the lag term. Those ripples feed back. The $\hat\beta_1$ from `lagsarlm` is only the direct local effect, before the spatial propagation plays out. The full marginal effect -- including spillovers -- requires computing impacts from the fitted model.
-
-```{r, eval=FALSE}
+```{r}
 impacts(slmFit, listw = W, R = 500)
 ```
 
-The output decomposes effects into direct (same-location), indirect (spillover to neighbors), and total. For most environmental science applications, the total effects are what you want to report if you are using a lag model. If the indirect effects are small relative to the direct effects, the distinction matters less in practice -- but check.
+The output decomposes effects into direct (same-location), indirect (spillover to neighbors), and total. For most environmental science applications, the total effects are what you want to report if you are using a lag model. If the indirect effects are small relative to the direct effects, the distinction matters less in practice, but check.
 
-If this all feels like it complicates what should be a simple regression, that is because the lag model is making a more specific and more mechanistic claim about the data-generating process. The error model is the cleaner choice when you just want valid inference on your predictors and space is nuisance variation.
+The lag model is making a more specific and more mechanistic claim about the data-generating process than the error model. The error model is the cleaner choice when you just want valid inference on your predictors and space is nuisance variation.
 
 ## GLS vs. SAR: When to Use Which
 
 They are often interchangeable in practice for the spatial error case.
 
-GLS uses a variogram -- a continuous function of distance -- to model the error correlation structure. It captures the range, sill, and nugget of the spatial dependence and is very flexible. SAR models use a discrete neighbor structure: you define who counts as a neighbor and the autocorrelation operates only among neighbors. GLS tends to work better when you have a clear distance-decay structure and a reasonable sample size to fit the variogram. SAR works better when your data are naturally defined by adjacency or neighborhood -- watershed catchments, habitat patches, gridded climate data -- and when you want to lean on the weights matrix you have already built for exploratory work like LISA.
+GLS uses a variogram, a continuous function of distance, to model the error correlation structure. It captures the range, sill, and nugget of the spatial dependence and is very flexible. SAR models use a discrete neighbor structure: you define who counts as a neighbor and the autocorrelation operates only among neighbors. GLS tends to work better when you have a clear distance-decay structure and a reasonable sample size to fit the variogram. SAR works better when your data are naturally defined by adjacency or neighborhood (watershed catchments, habitat patches, gridded climate data) and when you want to lean on the weights matrix you have already built for exploratory work like LISA.
 
 The spatial lag model has no real GLS equivalent. If the biology or ecology predicts a spillover or diffusion process, fit the lag model. Just be careful with the coefficients.
 
 ## Wrapping Up
 
-GLS and SAR are both corrections to the same problem: OLS residuals that carry spatial signal the model hasn't explained. Which one you reach for depends on your data and your question. For most field-based environmental science, GLS is the workhorse. It's flexible, connects directly to the variogram, and the output is easy to interpret. SAR is worth knowing when the spatial structure is better described by a neighbor graph than a continuous distance decay, or when you genuinely believe there's a spillover process in the response itself. That's a real mechanism sometimes -- think about how disease spreads, or how animal behavior in one patch influences neighboring patches. But for lead in floodplain soil, space is probably just a proxy for flood exposure. Use GLS and sleep well.
+GLS and SAR are both corrections to the same problem: OLS residuals that carry spatial signal the model hasn't explained. Which one you reach for depends on your data and your question. For most field-based environmental science, GLS is the workhorse. It's flexible, connects directly to the variogram, and the output is easy to interpret. SAR is worth knowing when the spatial structure is better described by a neighbor graph than a continuous distance decay, or when there's a credible spillover process in the response itself. That's a real mechanism sometimes -- think about how disease spreads, or how animal behavior in one patch influences neighboring patches. But for lead in floodplain soil, space is probably just a proxy for flood exposure. Use GLS and sleep well.
 
 ## Exercises
 
-The Meuse River data contains several candidate predictors for soil lead contamination. `river_dist_m` is the distance from the river channel in meters and `ffreq` is a flooding frequency class (a factor with three levels). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.
+The Meuse River data contains several candidate predictors for soil lead contamination. `river_dist_m` is the distance from the river channel in meters and `ffreq` is a flooding frequency class (a factor with three levels: 1 = most frequent, 3 = least frequent). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.
 
 ```{r, eval=FALSE}
 meuse2      <- readRDS("data/meuse2.Rds")
@@ -228,15 +285,19 @@ meuse_sf <- st_join(meuse_sf, covars_sf, join = st_nearest_feature) %>%
 
 1. Build a k-nearest-neighbor weights matrix with $k = 8$.
 
-2. Fit OLS of `log_lead ~ river_dist_m + ffreq`. Run Moran's I on the residuals.
+2. Fit OLS of `log_lead ~ river_dist_m + ffreq`. Interpret the coefficients -- do the signs make ecological sense? Run Moran's I on the residuals.
 
-3. If the residuals are autocorrelated, run the LM tests. Which model do they recommend?
+3. Run the LM tests. Both RSerr and RSlag will be significant. Look at the robust tests to break the tie. Which model do they recommend?
 
-4. Fit the recommended model. Check the residuals. Did the spatial structure get absorbed?
+4. Fit both the SEM and the SLM. Check the residuals of each using Moran's I. One model cleans up the spatial structure; the other doesn't. Which is which, and what does that tell you?
 
-5. Compare the coefficients on `river_dist_m` and `ffreq` between OLS and your SAR model. Do the substantive conclusions change, or mostly just the standard errors?
+5. Compare AIC across OLS, SEM, and SLM. Does AIC agree with the LM tests?
 
-6. Is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in floodplain soil?
+6. Compare coefficients on `river_dist_m` and `ffreq` between OLS and the SEM. The point estimates shift and the standard errors change. What does the shift in standard errors tell you about what OLS was doing wrong?
+
+7. Is the spatial error model or the spatial lag model more ecologically defensible for soil lead? What process would the lag model imply, and is that a plausible mechanism for how lead ends up in floodplain soil?
+
+8. In the bird richness example, lambda = 0.72 after accounting for precipitation and temperature range. What do you think is driving the residual spatial structure? Name at least two candidate variables not in the model and explain why they might be spatially structured across Mexico.
 
 ## Further Reading
 

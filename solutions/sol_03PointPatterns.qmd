@@ -1,0 +1,80 @@
+# Solutions: Point Patterns
+
+```{r, echo=FALSE, include=FALSE}
+set.seed(1984)
+library(tidyverse)
+library(spatstat)
+```
+
+## Simulated Data
+
+```{r}
+n <- 100
+patternA <- data.frame(x=rnorm(n), y=rnorm(n), id="A")
+patternB <- data.frame(x=runif(n), y=runif(n), id="B")
+patternC <- data.frame(expand.grid(x=seq(0,1,length.out=sqrt(n)),
+                                   y=seq(0,1,length.out=sqrt(n))), id="C")
+patternD <- data.frame(expand.grid(x=rep(seq(0,1,length.out=n/20),2),
+                                   y=rep(seq(0,1,length.out=n/20),2)), id="D")
+patternD$x <- jitter(patternD$x)
+patternD$y <- jitter(patternD$y)
+simDat <- bind_rows(patternA, patternB, patternC, patternD) %>%
+  group_by(id) %>%
+  mutate(x=scales::rescale(x), y=scales::rescale(y))
+```
+
+Pattern D is a jittered regular grid -- repulsed. The L function should fall below the CSR envelope at short distances because points are pushing each other away.
+
+```{r}
+patternD <- simDat %>% filter(id=="D")
+patternD_ppp <- ppp(x=patternD$x, y=patternD$y,
+                    xrange=c(0,1), yrange=c(0,1), unitname="km")
+plot(envelope(patternD_ppp, Lest, verbose=FALSE))
+```
+
+The L function dips below the CSR envelope at short distances, confirming repulsion. The grid structure enforces minimum spacing between points, so fewer pairs fall within small radii than expected under randomness.
+
+Now try the other patterns. B is CSR (random uniform), so L should hover near the envelope. A is clustered (random normal centered in the middle), so L should rise above the envelope at short to medium distances. C is a perfect regular grid, which shows the most extreme repulsion -- the L function drops sharply below the envelope.
+
+```{r}
+for(id_val in c("A","B","C")) {
+  pat <- simDat %>% filter(id==id_val)
+  p   <- ppp(x=pat$x, y=pat$y, xrange=c(0,1), yrange=c(0,1))
+  plot(envelope(p, Lest, verbose=FALSE), main=paste("Pattern", id_val))
+}
+```
+
+B and C are hard to distinguish by eye from a map -- both look somewhat regular. The L function separates them: C is a perfect grid and falls well below the envelope; B is random uniform and stays close to it. The gap between their L functions reflects how much more regularly spaced C is.
+
+## Mycorrhizal Fungi
+
+```{r}
+data(sporophores)
+summary(sporophores)
+plot(sporophores, chars=c(16,1,2), cex=0.6, leg.args=list(cex=1.1))
+points(0, 0, pch=16, cex=2)
+text(15, 8, "Tree", cex=0.75)
+```
+
+Run the cross L-function for each species pair to test for inhibition.
+
+```{r}
+# Hebloma vs L pubescens
+cross_heb_pub <- envelope(sporophores, "Lcross",
+                          i="L pubescens", j="Hebloma spp", verbose=FALSE)
+plot(cross_heb_pub, main="L pubescens vs Hebloma")
+
+# L lac vs Hebloma
+cross_lac_heb <- envelope(sporophores, "Lcross",
+                          i="L laccata", j="Hebloma spp", verbose=FALSE)
+plot(cross_lac_heb, main="L laccata vs Hebloma")
+
+# L lac vs L pubescens
+cross_lac_pub <- envelope(sporophores, "Lcross",
+                          i="L laccata", j="L pubescens", verbose=FALSE)
+plot(cross_lac_pub, main="L laccata vs L pubescens")
+```
+
+The cross L functions largely stay within or near the simulation envelopes, which is consistent with Ford's (1980) finding of no consistent spatial inhibition between species. The species don't strongly avoid each other. That said, with only one year of data and a single tree, there isn't much power to detect inhibition if it exists. The main visual story from the map is the arc structure around the tree -- the innermost zone is largely unoccupied regardless of species.
+
+Try `global=TRUE` to understand significance differently. The pointwise envelopes test each distance separately, which risks multiple comparison inflation. The global envelope asks whether the entire curve falls within a globally valid band, which is more conservative and more appropriate when you're making a claim about the overall pattern rather than at a specific distance.

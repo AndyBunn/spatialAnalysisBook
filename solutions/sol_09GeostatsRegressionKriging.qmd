@@ -1,0 +1,92 @@
+# Solutions: Geostatistics IV - Regression Kriging
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(gstat)
+library(tmap)
+```
+
+```{r, message=FALSE}
+meuse2      <- readRDS("data/meuse2.Rds")
+meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
+
+meuse_sf      <- st_as_sf(meuse2, coords=c("x","y"), crs=28992)
+meuse_grid_sf <- st_as_sf(meuse.grid2, coords=c("x","y"), crs=28992)
+
+meuse_sf$logOM <- log(meuse_sf$om)
+
+# get river_dist_m from grid to sample points
+covars_sf <- meuse_grid_sf %>% select(river_dist_m)
+meuse_sf  <- st_join(meuse_sf, covars_sf, join=st_nearest_feature)
+meuse_sf$log_dist <- log(meuse_sf$river_dist_m)
+meuse_sf <- meuse_sf[!is.na(meuse_sf$logOM), ]
+```
+
+## 1. OLS Model
+
+```{r}
+ols <- lm(logOM ~ log_dist, data=as.data.frame(meuse_sf))
+summary(ols)
+```
+
+Log-distance to the river is a strong predictor of organic matter. The slope is negative -- further from the river means less organic matter. Closer to the floodplain, fine sediments deposited during floods accumulate organic carbon. R² = 0.337 from OLS alone.
+
+## 2. Residual Variogram
+
+```{r}
+meuse_sf$ols_resid <- residuals(ols)
+resid_var <- variogram(ols_resid ~ 1, data=meuse_sf)
+plot(resid_var)
+```
+
+The OLS residuals show clear spatial structure: semivariance rises with distance before leveling off around 800-1000 m range. If the OLS residuals were spatially independent there would be no trend here. They aren't. That means the ordinary kriging of residuals will add real predictive value beyond the trend surface.
+
+## 3. Fit Variogram and Cross-Validate
+
+```{r}
+vFit <- fit.variogram(resid_var, vgm(psill=0.10, model="Sph", range=1000, nugget=0.05))
+print(vFit)
+
+# OLS-only CV
+gstat_ols <- gstat(id="logOM", formula=logOM ~ log_dist, data=meuse_sf)
+cv_ols    <- gstat.cv(gstat_ols, nfold=nrow(meuse_sf))
+r2_ols    <- cor(cv_ols$observed, cv_ols$logOM.pred, use="complete.obs")^2
+rmse_ols  <- sqrt(mean((cv_ols$logOM.pred - cv_ols$observed)^2, na.rm=TRUE))
+
+# RK CV
+gstat_rk <- gstat(id="logOM", formula=logOM ~ log_dist, data=meuse_sf, model=vFit)
+cv_rk    <- gstat.cv(gstat_rk, nfold=nrow(meuse_sf))
+r2_rk    <- cor(cv_rk$observed, cv_rk$logOM.pred, use="complete.obs")^2
+rmse_rk  <- sqrt(mean((cv_rk$logOM.pred - cv_rk$observed)^2, na.rm=TRUE))
+
+cat("OLS R2:", round(r2_ols, 3), "RMSE:", round(rmse_ols, 3), "\n")
+cat("RK  R2:", round(r2_rk, 3),  "RMSE:", round(rmse_rk, 3), "\n")
+cat("R2 gain:", round(r2_rk - r2_ols, 3), "\n")
+cat("RMSE reduction:", round(rmse_ols - rmse_rk, 3), "\n")
+```
+
+OLS-only: R² = 0.336, RMSE = 0.409. Regression kriging: R² = 0.562, RMSE = 0.332. That's a 22-point jump in explained variance and a 19% reduction in RMSE. The residual spatial structure was real and the kriging captured it.
+
+## 4. Predict to Grid
+
+```{r}
+# grid also needs log_dist
+meuse_grid_sf$log_dist <- log(meuse_grid_sf$river_dist_m)
+
+rk_pred <- predict(gstat_rk, newdata=meuse_grid_sf)
+
+tmap_mode("view")
+tm_shape(rk_pred) +
+  tm_raster(col="logOM.pred", palette="YlGn", title="RK logOM") +
+tm_shape(meuse_sf) +
+  tm_symbols(col="logOM", palette="YlGn", size=0.4, title.col="Observed logOM")
+```
+
+The predicted surface follows the river closely, with highest predicted organic matter in the floodplain and a rapid decline moving inland. The spatial pattern is sharper than a pure trend surface -- the kriging of residuals adds local detail that the log-distance predictor misses.
+
+## 5. When Regression Kriging Helps
+
+The 22-point R² improvement shows that residual spatial structure was substantial. This is the pattern regression kriging is designed for: you have a useful predictor (distance to river captures the flood deposition gradient) but observations near each other share more than the predictor explains (maybe because of local soil texture, microtopography, or within-season flooding patterns). The kriged residuals pick up that shared nearby variation and add it to the trend prediction.
+
+If the residual variogram were flat (nugget = sill, no structure), regression kriging would add nothing beyond OLS. Always check the residual variogram before committing to the extra complexity.

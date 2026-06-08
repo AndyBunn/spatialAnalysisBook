@@ -1,0 +1,78 @@
+# Solutions: Geostatistics II - Thin Plate Splines
+
+```{r, echo=FALSE, include=FALSE}
+library(sf)
+library(tidyverse)
+library(fields)
+library(tmap)
+```
+
+```{r, message=FALSE}
+precip_sf  <- readRDS("data/waPrecip.rds")
+wa_sf      <- readRDS("data/waOutline.rds")
+wa_grid_sf <- readRDS("data/waGrid.rds")
+```
+
+## 1. Fit a Thin Plate Spline
+
+```{r}
+coords <- st_coordinates(precip_sf)
+z      <- precip_sf$precip_mm
+
+tps_fit <- Tps(coords, z)
+summary(tps_fit)
+```
+
+## 2. Predict to Grid
+
+```{r}
+grid_coords <- st_coordinates(wa_grid_sf)
+tps_pred    <- predict(tps_fit, grid_coords)
+
+wa_grid_sf$tps_pred <- tps_pred
+
+tmap_mode("view")
+tm_shape(wa_sf) + tm_borders() +
+tm_shape(wa_grid_sf) +
+  tm_raster(col="tps_pred", palette="Blues", title="TPS (mm)")
+```
+
+The TPS surface is globally smooth -- it satisfies all the data points while minimizing total curvature. Unlike IDW there are no bulls-eye artifacts. The smoothness penalty enforced by the thin plate approach means it interpolates gracefully even in data-sparse regions.
+
+## 3. Cross-Validation
+
+```{r}
+cv_tps <- Krig.spatialProcess(coords, z)
+set.seed(42)
+cv_result <- do.call(rbind, lapply(1:10, function(fold) {
+  n    <- length(z)
+  idx  <- ((seq_len(n) %% 10) + 1) == fold
+  fit  <- Tps(coords[!idx,], z[!idx])
+  pred <- predict(fit, coords[idx,])
+  data.frame(obs=z[idx], pred=pred)
+}))
+
+r2_tps   <- cor(cv_result$obs, cv_result$pred)^2
+rmse_tps <- sqrt(mean((cv_result$pred - cv_result$obs)^2))
+cat("10-fold CV R2:", round(r2_tps, 3), "\n")
+cat("10-fold CV RMSE:", round(rmse_tps, 1), "mm\n")
+```
+
+10-fold CV gives R² = 0.904, RMSE = 136.2 mm. That's noticeably better than the best IDW (R² = 0.863, RMSE = 164.4 mm). The TPS has a fundamentally better global structure for this kind of smooth atmospheric gradient.
+
+## 4. Standard Errors
+
+```{r}
+tps_se <- predict.se(tps_fit, grid_coords)
+wa_grid_sf$tps_se <- tps_se
+
+tm_shape(wa_sf) + tm_borders() +
+tm_shape(wa_grid_sf) +
+  tm_raster(col="tps_se", palette="YlOrRd", title="TPS SE (mm)")
+```
+
+Uncertainty is higher where data are sparse -- the high Cascades and the northeastern corner of Washington. The TPS standard errors are approximate (they come from the estimated smoothing parameter, not a full Bayesian model), but they give a useful qualitative picture of where predictions are shakier. This is a real advantage over IDW.
+
+## 5. Comparing Methods
+
+TPS outperforms IDW by about 28 mm RMSE in cross-validation. The main reason: IDW weights only by distance and has no mechanism for capturing smooth continental-scale gradients. TPS finds the globally smooth function that fits the data, which matches the physics of precipitation better -- moisture declines smoothly from west to east as you move away from the Pacific source.
