@@ -2,7 +2,7 @@
 
 Course notes for ESCI 505 at Western Washington University. Started as weekly handouts for a ten-week graduate course, grew into something closer to a short book.
 
-**Live site:** [https://andybunn.github.io/spatialNotes/](https://andybunn.github.io/spatialNotes/)
+**Live site:** [https://andybunn.github.io/spatialAnalysisBook/](https://andybunn.github.io/spatialAnalysisBook/)
 
 ## What this covers
 

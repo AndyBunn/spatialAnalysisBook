@@ -50,7 +50,7 @@ book:
     - part: "Appendices"
       chapters:
         - A1DataSources.qmd
-  repo-url: https://github.com/AndyBunn/spatialNotes
+  repo-url: https://github.com/AndyBunn/spatialAnalysisBook
   repo-actions: [edit, issue]
 
 bibliography:
