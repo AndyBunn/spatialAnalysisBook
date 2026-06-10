@@ -4,7 +4,7 @@
 
 **Read it here: [spatial.andybunn.org](https://spatial.andybunn.org/)**
 
-This started as weekly handouts for ESCI 505, a ten-week graduate course in spatial analysis at Western Washington University, and grew into something closer to a short book. It's free to read online and openly licensed.
+This started as weekly handouts for ESCI 505, a graduate course in spatial analysis at Western Washington University, and grew into a short book. It's free to read online and openly licensed.
 
 ## What it covers
 
@@ -19,11 +19,11 @@ The emphasis is on building intuition and getting things done in R, not on mathe
 
 ## Who it's for
 
-Masters students in environmental science who need to handle spatial structure in their data. If you're an ecologist or field scientist who wants a practical, R-based entry point to spatial analysis, it should work for you too. It assumes an introductory linear-modeling course and not much math beyond calculus.
+Orignally? Masters students in environmental science who need to handle spatial structure in their data. But if you're an ecologist or field scientist who wants a practical, R-based entry point to spatial analysis, it should work for you too. It assumes an introductory linear-modeling course and not math beyond calculus (and doesn't even need that really).
 
 ## How it's built
 
-The book is written in [Quarto](https://quarto.org) and rendered as a book site. Every push to `main` triggers a GitHub Actions workflow that renders the book and deploys it to [spatial.andybunn.org](https://spatial.andybunn.org/), so the live site is always current. Computed results are cached in `_freeze/`, so only chapters you've actually changed get re-run.
+The book is written in [Quarto](https://quarto.org) and rendered as a book site. Every push to `main` triggers a GitHub Actions workflow that renders the book and deploys it to [spatial.andybunn.org](https://spatial.andybunn.org/), so the live site is always current.
 
 To build it locally you'll need R, Quarto, and the packages listed in `DESCRIPTION`. From the project root:
 
