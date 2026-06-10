@@ -28,5 +28,8 @@ data.zip
 rScripts/buildMeuseCovariates.R
 data/ESA_WorldCover_meuse.tif
 
-# docs is kept for GitHub Pages
-# _freeze is kept so Quarto can use cached outputs on GitHub
+# docs/ is built and deployed by GitHub Actions (.github/workflows/publish.yml),
+# so it no longer needs to be committed.
+docs/
+
+# _freeze is kept so CI can reuse cached outputs and skip re-running unchanged chapters
