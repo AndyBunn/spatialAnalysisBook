@@ -2,6 +2,8 @@ project:
   type: book
   output-dir: docs
   pre-render: Rscript purl_all.R
+  resources:
+    - CNAME
 
 book:
   title: "Spatial Analysis for Environmental Data"
