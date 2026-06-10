@@ -1,0 +1,34 @@
+Package: spatialAnalysisBook
+Title: Spatial Analysis for Environmental Data
+Version: 0.0.0.9000
+Authors@R:
+    person("Andy", "Bunn", role = c("aut", "cre"),
+           email = "bunna@wwu.edu")
+Description: Dependency manifest for building the book in CI. Not a real
+    package; this lists the R packages the chapters load so GitHub Actions
+    can install them before rendering.
+Encoding: UTF-8
+Imports:
+    automap,
+    cowplot,
+    fields,
+    ggplot2,
+    ggrepel,
+    gstat,
+    knitr,
+    ncf,
+    nlme,
+    patchwork,
+    plotly,
+    PNWColors,
+    rmarkdown,
+    sf,
+    spatialreg,
+    spatstat,
+    spdep,
+    terra,
+    tidyterra,
+    tidyverse,
+    tmap
+Remotes:
+    jakelawlor/PNWColors
