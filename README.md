@@ -1,28 +1,41 @@
-# Spatial Analysis for Environmental Science
+# Spatial Analysis for Environmental Data
 
-Course notes for ESCI 505 at Western Washington University. Started as weekly handouts for a ten-week graduate course, grew into something closer to a short book.
+*An R-Based Introduction*
 
-**Live site:** [https://andybunn.github.io/spatialAnalysisBook/](https://andybunn.github.io/spatialAnalysisBook/)
+**Read it here: [spatial.andybunn.org](https://spatial.andybunn.org/)**
 
-## What this covers
+This started as weekly handouts for ESCI 505, a ten-week graduate course in spatial analysis at Western Washington University, and grew into something closer to a short book. It's free to read online and openly licensed.
 
-The notes work through spatial analysis from the ground up, organized into four parts:
+## What it covers
+
+The book works through spatial analysis from the ground up, in four parts:
 
 - **Foundations** - spatial data structures in R, coordinate systems, methods and generics
 - **Point Patterns & Autocorrelation** - point process analysis, Moran's I, LISA
 - **Interpolation & Geostatistics** - IDW, thin plate splines, kriging, regression kriging
 - **Regression** - GLS, spatial regression with SAR models
 
-The emphasis is on building intuition and getting things done in R. Not on mathematical derivation. We work with point observations and continuous raster surfaces. We simulate known patterns before applying methods to real data, because the best way to trust a tool is to watch it find something you planted.
+The emphasis is on building intuition and getting things done in R, not on mathematical derivation. We stick to point observations and continuous raster surfaces, and we simulate known patterns before turning a method loose on real data, because the best way to trust a tool is to watch it find something you planted.
 
 ## Who it's for
 
-Masters students in environmental sciences who need to handle spatial structure in their data. That said, if you're an ecologist or field scientist who wants a practical, R-based entry point to spatial analysis, these notes might work for you too.
+Masters students in environmental science who need to handle spatial structure in their data. If you're an ecologist or field scientist who wants a practical, R-based entry point to spatial analysis, it should work for you too. It assumes an introductory linear-modeling course and not much math beyond calculus.
+
+## How it's built
+
+The book is written in [Quarto](https://quarto.org) and rendered as a book site. Every push to `main` triggers a GitHub Actions workflow that renders the book and deploys it to [spatial.andybunn.org](https://spatial.andybunn.org/), so the live site is always current. Computed results are cached in `_freeze/`, so only chapters you've actually changed get re-run.
+
+To build it locally you'll need R, Quarto, and the packages listed in `DESCRIPTION`. From the project root:
+
+```sh
+quarto render
+```
+
+Found an error or have a suggestion? Open an issue, or use the "Edit this page" link on any chapter. I'd love to hear from you.
 
 ## License
 
-This material is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). You're free to use, adapt, and redistribute it for any purpose, including commercial, as long as you give appropriate credit.
+The book is dual-licensed (see [LICENSE.md](LICENSE.md)):
 
-## Built with
-
-[Quarto](https://quarto.org), rendered as a book. To build locally you'll need R, Quarto, and the packages loaded in the chapters.
+- **Prose and figures** under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Share and adapt for noncommercial use, keep derivatives open under the same terms, and give credit.
+- **Code** under the [MIT License](https://opensource.org/licenses/MIT). Use it however you like.
