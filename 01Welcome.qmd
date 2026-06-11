@@ -90,12 +90,12 @@ To follow along, you'll want a working RStudio project.
     Go to **File → New Project → New Directory → New Project**. Give it a name (something like `spatial-analysis`) and choose where to save it.
 
 2.  **Download the `data/` folder**\
-    The datasets used in the examples are in the `data/` folder of the book's GitHub repository. Download that folder and place it inside your project directory.
+    The datasets used in the examples are bundled into a single `data.zip`. Download it and unzip it inside your project directory.
 
-    You can [download the data directly](https://github.com/AndyBunn/spatialAnalysisBook/releases/download/data-latest/data.zip) from the GitHub [repo](https://github.com/AndyBunn/spatialAnalysisBook):
+    You can [download the data directly](https://spatial.andybunn.org/data.zip):
 
     ```
-    https://github.com/AndyBunn/spatialAnalysisBook/releases/download/data-latest/data.zip
+    https://spatial.andybunn.org/data.zip
     ```
 
     Once it's unzipped, your folder structure should look something like this:
