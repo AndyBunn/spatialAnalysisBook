@@ -4,6 +4,8 @@
 
 **Read it here: [spatial.andybunn.org](https://spatial.andybunn.org/)**
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20651828.svg)](https://doi.org/10.5281/zenodo.20651828)
+
 This started as weekly handouts for ESCI 505, a graduate course in spatial analysis at Western Washington University, and grew into a short book. It's free to read online and openly licensed.
 
 ## What it covers

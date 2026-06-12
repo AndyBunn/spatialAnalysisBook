@@ -18,5 +18,9 @@ This is a living document. If you find errors, have suggestions, or want to tell
 
 The book is free to read online and openly licensed. The prose and figures are released under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 license](https://creativecommons.org/licenses/by-nc-sa/4.0/), and the code under the [MIT License](https://opensource.org/licenses/MIT). You are welcome to share it, teach from it, and adapt it for noncommercial use, as long as you keep it open and give credit.
 
-*Andy Bunn*  
+If you'd like to cite the book, it has a DOI: [10.5281/zenodo.20651828](https://doi.org/10.5281/zenodo.20651828). That link always points to the latest version. A citation looks like:
+
+> Bunn, A. (2026). *Spatial Analysis for Environmental Data: An R-Based Introduction*. <https://doi.org/10.5281/zenodo.20651828>
+
+*Andy Bunn*\
 *Bellingham, Washington*
