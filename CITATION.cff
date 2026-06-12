@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this book, please cite it as below."
+title: "Spatial Analysis for Environmental Data: An R-Based Introduction"
+abstract: >-
+  An applied, R-based introduction to spatial analysis for environmental
+  scientists and ecologists. It covers point pattern analysis, spatial
+  autocorrelation, interpolation and geostatistics (inverse distance weighting,
+  thin plate splines, and kriging), and spatial regression, with an emphasis on
+  building intuition and getting things done in R rather than mathematical
+  derivation. The book originated as graduate course notes at Western Washington
+  University.
+authors:
+  - family-names: Bunn
+    given-names: Andy
+    affiliation: "Western Washington University"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # add your ORCID here
+url: "https://spatial.andybunn.org/"
+repository-code: "https://github.com/AndyBunn/spatialAnalysisBook"
+license: CC-BY-NC-SA-4.0
+keywords:
+  - spatial analysis
+  - geostatistics
+  - kriging
+  - spatial autocorrelation
+  - R
+  - environmental science
+  - ecology
+version: "0.1.0"
+date-released: "2026-06-11"
