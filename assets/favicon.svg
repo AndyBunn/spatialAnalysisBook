@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#1a6a4a"/>
+  <!-- axes -->
+  <path d="M16 14 V50 H52" fill="none" stroke="#ffffff" stroke-opacity="0.5"
+        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- variogram model: rise to the sill -->
+  <path d="M16 48 C 28 48 30 22 50 20" fill="none" stroke="#a8f0cf"
+        stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,35 +1,40 @@
 # Spatial Data in R: A Quick Orientation
 
-There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It goes deep fast. We aren't going to go there. This is not a GIS-in-R book, and it is not a substitute for one.
+There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It can get deep pretty fast but we aren't going to go there. This is not a GIS-in-R book, and it is not a substitute for one.
 
-If you want the full treatment, two resources will serve you well. [Geocomputation with R](https://r.geocompx.org/) by Lovelace, Nowosad, and Muenchow is the best book on the subject and it's free online. The [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/) covers the fundamentals in a hands-on workshop format. Work through either of those and you'll come out knowing a lot more than we need here.
+If you want the full treatment, two resources will serve you well. [Geocomputation with R](https://r.geocompx.org/) by Lovelace, Nowosad, and Muenchow is the best book I know on the subject and it's free online. The [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/) covers the fundamentals in a hands-on workshop format. Work through either of those and you'll come out knowing a lot more than we need here.
 
 What we do need is a working vocabulary for two things: point data and raster data. Those are the main characters in this book. Polygons and lines show up occasionally but they aren't the focus.
 
 So that's the plan for this chapter. Quick introduction to `sf` for points. Quick introduction to `terra` for rasters. Then we move on.
 
-We'll use three packages in this chapter. `tidyverse` [@R-tidyverse] for general data wrangling, `sf` [@R-sf] for vector spatial data, and `terra` [@R-terra] for rasters. You'll see these same packages throughout the book. Full citations are in the [References](12References.html) chapter at the back.
+We'll use four packages in this chapter. `tidyverse` [@R-tidyverse] for general data wrangling, `sf` [@R-sf] for vector spatial data, `terra` [@R-terra], and `tidyterra` [@R-tidyterra] for rasters. You'll see these same packages throughout the book. Full citations are in the [References](12References.html) chapter at the back.
+
+When you encounter a package that you haven't used you can install it. E.g., `install.packages("sf")`. You just have to do that once. Then you can load your packages with `library`.
 
 ```{r, include=FALSE}
 library(tidyverse)
 library(sf)
 library(terra)
+library(tidyterra)
 ```
 
 ## Points with `sf`
 
-The `sf` package handles vector data in R: points, lines, and polygons. We care about points. An `sf` object looks like a data frame, which is intentional. It is a data frame, with one extra column that holds the geometry.
+The `sf` package handles vector data in R: points, lines, and polygons. We care about points mostly. An `sf` object looks like a data frame. In fact, it is a data frame, with one extra column that holds the geometry.
+
+Let's look at a simple csv file.
 
 ```{r}
 californiaOzonePoints <- read_csv("data/californiaOzonePoints.csv")
 head(californiaOzonePoints)
 ```
 
-That's just a plain data frame right now. It has coordinates in it, but R doesn't know they mean anything spatial yet. We tell it:
+That's just a plain data frame right now. It has coordinates in it, but R doesn't know they mean anything spatial yet. We will make this into a `sf` object by telling it:
 
 ```{r}
 californiaOzonePointsSF <- st_as_sf(californiaOzonePoints, coords = c("longitude", "latitude"), crs = 4326)
-californiaOzonePointsSF
+head(californiaOzonePointsSF)
 ```
 
 The `coords` argument says which columns are the coordinates. The `crs = 4326` sets the coordinate reference system, in this case WGS84 geographic coordinates (longitude/latitude), which is what you get from a GPS or most downloaded occurrence data.
@@ -42,17 +47,17 @@ plot(californiaOzonePointsSF)
 
 A few things worth knowing about `sf` objects before we move on:
 
-**Generic functions work on them.** `plot()`, `summary()`, and `print()` all know what to do with an `sf` object. We'll talk more about how R handles this in the [Methods and Generics aside](02xAsideMethodsAndGenerics.html), but the short version is: the same function call does sensible things regardless of what you hand it.
+**Generic functions work on them.** E.g., `plot()`, `summary()`, and `print()` all know what to do with an `sf` object. We'll talk more about how R handles this in the [Methods and Generics aside](02xAsideMethodsAndGenerics.html), but the short version is: the same function call does sensible things regardless of what you hand it.
 
 **The geometry column sticks around.** When you use `dplyr` verbs like `filter()` or `select()` on an `sf` object, the geometry column comes along for the ride. You don't have to do anything special.
 
-**CRS matters.** If you try to do spatial operations on two `sf` objects with different coordinate systems, you'll get an error. Good. R is catching a problem. Transform with `st_transform()` when you need to match them up.
+**CRS matters.** If you try to do spatial operations on two `sf` objects with different coordinate systems, you'll get an error. Good! R is trying to help you by making sure your data are in the right place on earth. Transform with `st_transform()` when you need to match them up.
 
 ## Rasters with `terra`
 
 Raster data is a grid, a matrix of cells each holding a value, covering some extent of the Earth's surface. Elevation, temperature, precipitation, land cover: these are all commonly stored as rasters.
 
-The `.tif` format (GeoTIFF) is the most common way you'll encounter rasters in the wild. Think of it as an image file with spatial metadata baked in. If you've opened a satellite image or a scanned map, you've seen a TIFF. The "Geo" part means it knows where on Earth it lives: the extent, the resolution, the CRS. `terra` reads it the same way you'd read any raster, and the spatial info comes along automatically.
+The `.tif` format (GeoTIFF) is the most common way you'll encounter rasters in the wild. Think of it as an image file with spatial metadata baked in. If you've opened a satellite image or a scanned map, you've seen a TIFF. The "Geo" part means it knows where on earth it lives: the extent, the resolution, the CRS. `terra` reads it the same way you'd read any raster, and the spatial info comes along automatically.
 
 The `terra` package handles rasters in R. Its main object is a `SpatRaster`.
 
@@ -80,33 +85,53 @@ plot(californiaElevationFt)
 
 `californiaElevation > 500` gives you a logical raster of cells above 500 meters. It's fast because `terra` handles the iteration internally.
 
-Before we extract, here's the payoff for having both objects in the same space. We can plot the ozone stations on top of the elevation surface in one shot. To do that with `ggplot2`, we first convert the raster to a plain data frame, then layer in the points with `geom_sf()`.
+We can plot the ozone stations on top of the elevation surface in one shot. Let's do that with `ggplot`.
 
 ```{r}
-elevDF <- as.data.frame(californiaElevation, xy = TRUE)
-names(elevDF)[3] <- "elevation"
-
 ggplot() +
-  geom_raster(data = elevDF, aes(x = x, y = y, fill = elevation)) +
-  geom_contour(data = elevDF, aes(x = x, y = y, z = elevation),
-               color = "white", alpha = 0.4, bins = 15) +
-  geom_sf(data = californiaOzonePointsSF, color = "red", size = 1.5) +
-  scale_fill_viridis_c(name = "Elevation (m)") +
-  coord_sf() +
-  theme_minimal() +
-  labs(x = NULL, y = NULL)
+  geom_spatraster(data = californiaElevation) +
+  scale_fill_terrain_c(name = "Elevation (m)") +
+  geom_spatraster_contour(
+    data = californiaElevation,
+    color = "black", alpha = 0.4, bins = 10
+  ) +
+  geom_sf(
+    data = californiaOzonePointsSF, pch = 21, color = "grey",
+    fill = "white",
+    size = 2, alpha = 0.5
+  ) +
+  theme_minimal()
 ```
 
 The monitoring stations cluster in the valleys and along the coast, which makes sense. Nobody builds an ozone monitor on top of a mountain.
 
-**Extracting values at points.** You'll do this constantly: you have point observations and a raster surface, and you want to know the raster value at each point location. `terra::extract()` does it. The `terra::` prefix is intentional. `extract()` exists in other packages too, and if you've loaded `tidyverse`, there's a good chance the wrong one is sitting on top. Being explicit saves you a confusing error.
+**Extracting values at points.** You'll do this quite a bit: you have point observations and a raster surface, and you want to know the raster value at each point location. `terra::extract()` does it. The `terra::` prefix is intentional. `extract()` exists in other packages too, and if you've loaded `tidyverse`, there's a good chance the wrong one is sitting on top. Being explicit saves you a confusing error.
 
 ```{r}
-elevation_at_ozone_points <- terra::extract(californiaElevation, californiaOzonePointsSF)
-head(elevation_at_ozone_points)
+elevationAtOzonePoints <- terra::extract(californiaElevation, californiaOzonePointsSF)
+head(elevationAtOzonePoints)
 ```
 
 A field ecologist records species observations at GPS points. You want to know the elevation, the climate, the land cover at each location. `terra::extract()` is how you get there.
+
+We could attach those to the ozone points
+
+```{r}
+californiaOzonePointsSF <- californiaOzonePointsSF %>%
+  add_column(elevation = elevationAtOzonePoints$elev)
+head(californiaOzonePointsSF)
+```
+
+And now we have a nice new data column that we can use any way we like. E.g.,
+
+```{r}
+californiaOzonePointsSF %>%
+  ggplot(mapping = aes(x = elevation, y = ozone)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Elevation (m)", y = "Ozone (ppb)") +
+  theme_minimal()
+```
 
 ## Projections: Why You Want to Be on a Plane
 

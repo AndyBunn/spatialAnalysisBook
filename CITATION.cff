@@ -11,9 +11,9 @@ abstract: >-
   University.
 authors:
   - family-names: Bunn
-    given-names: Andy
+    given-names: "Andrew G."
     affiliation: "Western Washington University"
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # add your ORCID here
+    orcid: "https://orcid.org/0000-0001-9027-2162"
 url: "https://spatial.andybunn.org/"
 repository-code: "https://github.com/AndyBunn/spatialAnalysisBook"
 doi: "10.5281/zenodo.20651828"

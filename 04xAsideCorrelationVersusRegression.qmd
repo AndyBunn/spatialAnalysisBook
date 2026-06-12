@@ -22,8 +22,8 @@ x <- rnorm(n, mean = 50, sd = 10)
 y <- 2 + 0.6 * x + rnorm(n, sd = 6)
 
 ggplot(data.frame(x, y), aes(x = x, y = y)) +
-  geom_point(alpha = 0.5) + theme_minimal()
-
+  geom_point(alpha = 0.5) +
+  theme_minimal()
 ```
 
 Cool? Now let's get the concepts sorted out. But first, a rule that applies to everything in this aside and most of statistics: **plot your data before you calculate anything.** Anscombe's quartet is the classic demonstration of why. It is a set of four datasets with nearly identical means, standard deviations, correlations, and regression coefficients. They look completely different when plotted. One is a clean linear relationship. One is a perfect curve that a line describes badly. One has an outlier that is driving everything. Look them up. The lesson is that summary statistics, including $r$ and $\hat{\beta}_1$, can be identical across datasets that have nothing in common. The plot catches what the numbers miss.
@@ -43,8 +43,8 @@ The correlation between $x$ and $y$ is identical to the correlation between $y$ 
 For the data we made above $$r_{xy} = r_{yx} = 0.79$$
 
 ```{r}
-cor(x,y)
-cor(y,x)
+cor(x, y)
+cor(y, x)
 ```
 
 ## Regression
@@ -56,35 +56,45 @@ Regression is **not symmetric**. Regressing $y$ on $x$ gives you a different lin
 
 ```{r}
 # Regression of y on x
-fit_yx <- lm(y ~ x)
+fitYx <- lm(y ~ x)
 # Regression of x on y
-fit_xy <- lm(x ~ y)
+fitXy <- lm(x ~ y)
 ```
 
 To compare these on the same plot, we need to rearrange the second model to express $y$ as a function of $x$. We use `a` and `b` here rather than $\hat{\beta}_0$ and $\hat{\beta}_1$ deliberately. Those are already in use for `lm(y ~ x)`, and reusing them for a model predicting a different variable would invite exactly the kind of confusion we are trying to avoid. Think of `a` and `b` as temporary labels for the intercept and slope of `lm(x ~ y)`. If that model gives us $\hat{x} = a + b \cdot y$, then solving for $y$ gives $y = -a/b + (1/b) \cdot x$.
 
 ```{r}
-a <- coef(fit_xy)[1]
-b <- coef(fit_xy)[2]
+a <- coef(fitXy)[1]
+b <- coef(fitXy)[2]
 
 # Rearranged: y = -a/b + (1/b) * x
-intercept_rearranged <- -a / b
-slope_rearranged <- 1 / b
+interceptRearranged <- -a / b
+slopeRearranged <- 1 / b
 ```
 
 ```{r, echo=FALSE}
 ggplot(data.frame(x, y), aes(x = x, y = y)) +
   geom_point(alpha = 0.5) +
-  geom_abline(intercept = coef(fit_yx)[1], slope = coef(fit_yx)[2],
-              color = "steelblue", linewidth = 1, aes(linetype = "lm(y ~ x)")) +
-  geom_abline(intercept = intercept_rearranged, slope = slope_rearranged,
-              color = "firebrick", linewidth = 1, aes(linetype = "lm(x ~ y) rearranged")) +
-  scale_linetype_manual(name = "Model",
-                        values = c("lm(y ~ x)" = "solid",
-                                   "lm(x ~ y) rearranged" = "dashed"),
-                        guide = guide_legend()) +
-  labs(title = "Two regressions, one scatter plot",
-       subtitle = "Same data. Different lines.") +
+  geom_abline(
+    intercept = coef(fitYx)[1], slope = coef(fitYx)[2],
+    color = "steelblue", linewidth = 1, aes(linetype = "lm(y ~ x)")
+  ) +
+  geom_abline(
+    intercept = interceptRearranged, slope = slopeRearranged,
+    color = "firebrick", linewidth = 1, aes(linetype = "lm(x ~ y) rearranged")
+  ) +
+  scale_linetype_manual(
+    name = "Model",
+    values = c(
+      "lm(y ~ x)" = "solid",
+      "lm(x ~ y) rearranged" = "dashed"
+    ),
+    guide = guide_legend()
+  ) +
+  labs(
+    title = "Two regressions, one scatter plot",
+    subtitle = "Same data. Different lines."
+  ) +
   theme_minimal()
 ```
 
@@ -112,10 +122,10 @@ The slope is the correlation scaled by the ratio of the standard deviations. Tha
 
 ```{r}
 r <- cor(x, y)
-slope_formula <- r * (sd(y) / sd(x))
-slope_lm <- coef(fit_yx)[2]
+slopeFormula <- r * (sd(y) / sd(x))
+slopeLm <- coef(fitYx)[2]
 
-round(c(from_formula = slope_formula, from_lm = slope_lm), 6)
+round(c(from_formula = slopeFormula, from_lm = slopeLm), 6)
 ```
 
 They match. This also tells you something useful: if you standardize both variables to have mean 0 and standard deviation 1 before fitting, the regression slope equals the correlation coefficient exactly. But in real data with real units, they are different quantities that answer different questions.
@@ -140,11 +150,11 @@ Look at that formula. The only things in it are $r$ and $n$. That means the p-va
 
 ```{r}
 # Small correlation, large n
-r_small <- 0.11
-n_large <- 1000
-t_stat <- r_small * sqrt(n_large - 2) / sqrt(1 - r_small^2)
-p_val <- 2 * pt(-abs(t_stat), df = n_large - 2)
-p_val
+rSmall <- 0.11
+nLarge <- 1000
+tStat <- rSmall * sqrt(nLarge - 2) / sqrt(1 - rSmall^2)
+pVal <- 2 * pt(-abs(tStat), df = nLarge - 2)
+pVal
 ```
 
 Significant. And also $r = 0.11$, which means $R^2 = 0.0121$. The predictor explains about 1.2% of the variance in the response. Be careful with the word "significant."

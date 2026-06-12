@@ -101,15 +101,15 @@ idx <- which(DmatUpperTri, arr.ind = TRUE)
 # Step 4: build the pairs data frame.
 # For each pair, grab the z value at station i, the z value at station j,
 # and the distance between them from the matrix.
-pairs_df <- data.frame(
-  zi   = transect$z[idx[,1]],  # z at station i
-  zj   = transect$z[idx[,2]],  # z at station j
-  dist = Dmat[DmatUpperTri]     # distance between i and j
+pairsDf <- data.frame(
+  zi   = transect$z[idx[, 1]], # z at station i
+  zj   = transect$z[idx[, 2]], # z at station j
+  dist = Dmat[DmatUpperTri] # distance between i and j
 )
-pairs_df
+pairsDf
 ```
 
-Spend some time with `pairs_df` and look back up at the plot:
+Spend some time with `pairsDf` and look back up at the plot:
 
 * The first row has the leftmost point and the second leftmost point with values of $z$ being 10 and 12 and a distance of 100m.
 * The second row has the leftmost point and the third leftmost point with values of $z$ being 10 and 11 and a distance of 200m.
@@ -120,20 +120,22 @@ That gives us $n(n-1)/2 = 28$ pairs. Now we can ask: for short-distance pairs, d
 
 ```{r}
 # compute r for each group to use as labels in the plot
-cor_labels <- pairs_df %>%
+corLabels <- pairsDf %>%
   filter(dist <= 100 | dist > 200) %>%
   mutate(group = ifelse(dist <= 100, "Close (≤ 100m)", "Far (≥ 200m)")) %>%
   group_by(group) %>%
   summarise(r = round(cor(zi, zj), 2)) %>%
   mutate(label = paste0("r = ", r))
 
-pairs_df %>%
+pairsDf %>%
   filter(dist <= 100 | dist > 200) %>%
   mutate(group = ifelse(dist <= 100, "Close (≤ 100m)", "Far (≥ 200m)")) %>%
   ggplot(aes(x = zi, y = zj)) +
   geom_point(size = 3) +
-  geom_text(data = cor_labels, aes(label = label),
-            x = Inf, y = Inf, hjust = 1.1, vjust = 1.5) +
+  geom_text(
+    data = corLabels, aes(label = label),
+    x = Inf, y = Inf, hjust = 1.1, vjust = 1.5
+  ) +
   facet_wrap(~group) +
   labs(x = expression(z[i]), y = expression(z[j]))
 ```
@@ -155,22 +157,22 @@ head(meuse2)
 We can transform the `data.frame` to a `sf` object by specifying the coordinates and the projection information.
 
 ```{r}
-meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
+meuseSf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 ```
 
 Before we go any further, let's log-transform lead and add it as a column. Lead concentrations in soil are right-skewed with a handful of hotspot values near the river being much larger than the rest of the data. Both the variogram and Moran's I involve squared deviations from the mean, so those few extreme values end up dominating the result. You wind up describing the spatial arrangement of your outliers rather than the general structure in the data. Log-transforming stabilizes the variance and gives both methods a fairer look at the whole dataset. We'll use `log_lead` throughout.
 
 ```{r}
-meuse_sf$log_lead <- log(meuse_sf$lead)
+meuseSf$log_lead <- log(meuseSf$lead)
 ```
 
 And make a plot of the lead concentration in the soils.
 
 ```{r}
-ggplot(data = meuse_sf) + 
-  geom_sf(mapping = aes(fill=lead,size=lead),shape=21,alpha=0.6) +
-  scale_fill_continuous(type = "viridis",name="ppm")
+ggplot(data = meuseSf) +
+  geom_sf(mapping = aes(fill = lead, size = lead), shape = 21, alpha = 0.6) +
+  scale_fill_continuous(type = "viridis", name = "ppm")
 ```
 
 ### Using tmap
@@ -178,8 +180,8 @@ I made the plot below with the `tmap` library.  I'm just sticking this here to g
 
 Anyways, here is the site:
 ```{r}
-tmap_mode('view')
-tm_shape(meuse_sf) +
+tmap_mode("view")
+tm_shape(meuseSf) +
   tm_bubbles(
     size        = "lead",
     fill        = "lead",
@@ -203,19 +205,23 @@ Thus, if pairs of points that are close together in space also have a smaller sq
 Now we will make and plot the variogram using `log_lead`. Think of the variogram as a measure of environmental distance with respect to Euclidean (geographic) distance.
 
 ```{r}
-leadVarCloud <- variogram(log_lead~1, locations = meuse_sf, cloud = TRUE)
-plot(leadVarCloud,pch=20,cex=1.5,col="black",alpha=0.1,
-     ylab=expression(Semivariance~(gamma)),
-     xlab="Distance (m)",main = "Log lead concentrations")
+leadVarCloud <- variogram(log_lead ~ 1, locations = meuseSf, cloud = TRUE)
+plot(leadVarCloud,
+  pch = 20, cex = 1.5, col = "black", alpha = 0.1,
+  ylab = expression(Semivariance ~ (gamma)),
+  xlab = "Distance (m)", main = "Log lead concentrations"
+)
 ```
 
 On the x-axis of the plot is the distance between the locations, and on the y-axis is the difference of their log lead values squared. That is, each dot in the variogram represents a pair of locations, not the individual locations on the map. This is a bit messy. Typically, we don't look at the cloud of points but rather get an average model value at a few distances and the `variogram` function is conservative in looking at distances within a safe range.
 
 ```{r}
-leadVar <- variogram(log_lead~1, locations = meuse_sf, cloud = FALSE)
-plot(leadVar,pch=20,cex=1.5,col="black",
-     ylab=expression(Semivariance~(gamma)),
-     xlab="Distance (m)", main = "Log lead concentrations")
+leadVar <- variogram(log_lead ~ 1, locations = meuseSf, cloud = FALSE)
+plot(leadVar,
+  pch = 20, cex = 1.5, col = "black",
+  ylab = expression(Semivariance ~ (gamma)),
+  xlab = "Distance (m)", main = "Log lead concentrations"
+)
 ```
 
 This is a lot cleaner. Note the change in the y-axis range. We got rid of an awful lot of noise by averaging the $\gamma$ values. Just by eyeballing this we would likely think that log lead concentrations in this data set are autocorrelated out to a distance of about 750m because $\gamma$ is small at distances less than 750m. The next step is to fit a curve (model) to the variogram, which lets us estimate $\gamma$ for any distance. We will cover that in the Kriging chapter.
@@ -227,17 +233,17 @@ You might be wondering about the `log_lead~1` in the call to `variogram` above. 
 Consider our example with log lead above and look at the output for this linear model.
 
 ```{r}
-summary(lm(log_lead~1,data=meuse_sf))
+summary(lm(log_lead ~ 1, data = meuseSf))
 ```
 
-You can see it has only an intercept term (no slope). The `Estimate` for the intercept is the mean of `meuse_sf$log_lead` and the `Std. Error` is its standard error. 
+You can see it has only an intercept term (no slope). The `Estimate` for the intercept is the mean of `meuseSf$log_lead` and the `Std. Error` is its standard error. 
 
 ```{r}
-mean(meuse_sf$log_lead)
-sd(meuse_sf$log_lead)/sqrt(nrow(meuse_sf))
+mean(meuseSf$log_lead)
+sd(meuseSf$log_lead) / sqrt(nrow(meuseSf))
 ```
 
-So, when we use variogram above as `variogram(log_lead~1, locations = meuse_sf)` we are asking for the autocorrelation of log lead with no other predictor variables. Later chapters cover ways of assessing spatial structure in the presence of predictors, but for now we leave it as an intercept-only model.
+So, when we use variogram above as `variogram(log_lead~1, locations = meuseSf)` we are asking for the autocorrelation of log lead with no other predictor variables. Later chapters cover ways of assessing spatial structure in the presence of predictors, but for now we leave it as an intercept-only model.
 
 
 ## Global Moran's I
@@ -250,31 +256,40 @@ Variograms are nifty tools, but it would be nice to work with a technique that g
 n <- 20
 
 chess <- expand.grid(x = 1:n, y = 1:n) %>%
-  mutate(z = ifelse((x + y) %% 2 == 0, 1, 0),
-         pattern = "Moran's I ≈ -1\nChessboard")
+  mutate(
+    z = ifelse((x + y) %% 2 == 0, 1, 0),
+    pattern = "Moran's I ≈ -1\nChessboard"
+  )
 
 set.seed(42)
 random <- expand.grid(x = 1:n, y = 1:n) %>%
-  mutate(z = runif(n^2),
-         pattern = "Moran's I ≈ 0\nRandom noise")
+  mutate(
+    z = runif(n^2),
+    pattern = "Moran's I ≈ 0\nRandom noise"
+  )
 
 gradient <- expand.grid(x = 1:n, y = 1:n) %>%
-  mutate(z = x / n,
-         pattern = "Moran's I ≈ 1\nGradient")
+  mutate(
+    z = x / n,
+    pattern = "Moran's I ≈ 1\nGradient"
+  )
 
 bind_rows(chess, random, gradient) %>%
   mutate(pattern = factor(pattern, levels = c(
     "Moran's I ≈ -1\nChessboard",
     "Moran's I ≈ 0\nRandom noise",
-    "Moran's I ≈ 1\nGradient"))) %>%
+    "Moran's I ≈ 1\nGradient"
+  ))) %>%
   ggplot(aes(x = x, y = y, fill = z)) +
   geom_raster() +
   scale_fill_viridis_c() +
   facet_wrap(~pattern) +
   coord_fixed() +
   theme_void() +
-  theme(legend.position = "none",
-        strip.text = element_text(size = 11))
+  theme(
+    legend.position = "none",
+    strip.text = element_text(size = 11)
+  )
 ```
 
 Moran's I is defined as:
@@ -299,54 +314,55 @@ Let's demonstrate Moran's I using logged lead values from the Meuse River data. 
 OK, here is Moran's I for the logged values of lead using an inverse distance weights matrix:
 
 ```{r, warning=FALSE}
-# distance matrix 
-D <- dist(st_coordinates(meuse_sf))
+# distance matrix
+D <- dist(st_coordinates(meuseSf))
 # inverse distance matrix
-W <- as.matrix(1/D)
+W <- as.matrix(1 / D)
 # convert a the weights matrix to a weights list object
 # so spdep is happy
 wList <- mat2listw(W)
 # calculate I
-moran.test(meuse_sf$log_lead,wList)
+moran.test(meuseSf$log_lead, wList)
 ```
 
 The results from this indicate that log lead values are positively autocorrelated when we use $W$ as inverse distances. This means that measurements of log lead that are close in space will be associated with each other. Note that this is looking across all the points because we are calculating a weights matrix that uses all the points. In reality, the value of Moran's I above 1000 m don't have a lot of influence because $W < 0.001$ when distances are greater than 1000m but all the elements of $W$ have some influence. You could draw this if you thought about it, but here is the relationship between distance and inverse distance:
 
 ```{r, warning=FALSE}
-x <- as.vector(as.matrix(dist(st_coordinates(meuse_sf))))
+x <- as.vector(as.matrix(dist(st_coordinates(meuseSf))))
 y <- as.vector(W)
-ggplot() + geom_line(aes(x=x[x>0],y=y[x>0])) +
-  labs(x="Distance (m)",y="Inverse distance (aka W)") +
-  lims(x=c(0,1500))
+ggplot() +
+  geom_line(aes(x = x[x > 0], y = y[x > 0])) +
+  labs(x = "Distance (m)", y = "Inverse distance (aka W)") +
+  lims(x = c(0, 1500))
 ```
 
 If we want to we could calculate a weights matrix explicitly by looking at distance. E.g., here we will make $w_{ij}=1$ when $d_{ij}<100$ and $w_{ij}=0$ when $d_{ij}\geq100$ 
 
 ```{r, warning=FALSE}
-D <- as.matrix(dist(st_coordinates(meuse_sf)))
+D <- as.matrix(dist(st_coordinates(meuseSf)))
 # make an empty weights matrix
-W <- matrix(0,ncol=ncol(D),nrow=nrow(D))
+W <- matrix(0, ncol = ncol(D), nrow = nrow(D))
 # set some values to 1 using a logical mask of D<100
-W[D<100] <- 1
+W[D < 100] <- 1
 # convert a the weights matrix to a weights list object
 # so spdep is happy
 wList <- mat2listw(W)
 # calculate I
-moran.test(meuse_sf$log_lead,wList)
+moran.test(meuseSf$log_lead, wList)
 ```
 
 Note that Moran's I is quite large when using only points within 100m of each other. Let's look at only points between 500  and 1000 m of each other.
 
 ```{r, warning=FALSE}
 # make an empty weights matrix of the right dimensions
-W <- matrix(0,ncol=ncol(D),nrow=nrow(D))
+W <- matrix(0, ncol = ncol(D), nrow = nrow(D))
 # set some values to 1
-W[D>500 & D<=1000] <- 1
+W[D > 500 & D <= 1000] <- 1
 # convert a the weights matrix to a weights list object
 # so spdep is happy
 wList <- mat2listw(W)
 # calculate I
-moran.test(meuse_sf$log_lead,wList)
+moran.test(meuseSf$log_lead, wList)
 ```
 
 Now we can see that points far away from each other (between 500m and 1000m) are not correlated. So, by using $W$ cleverly, we can determine the distances where autocorrelation occurs and where it does not. 
@@ -359,28 +375,28 @@ So here is a Moran's I a correlogram by distance 0 to 1500 m in 100 m bins:
 
 ```{r, warning=FALSE}
 distanceInterval <- 100
-distanceVector <- seq(0,1500,by=distanceInterval)
+distanceVector <- seq(0, 1500, by = distanceInterval)
 n <- length(distanceVector)
-D <- as.matrix(dist(st_coordinates(meuse_sf)))
+D <- as.matrix(dist(st_coordinates(meuseSf)))
 # make an object to hold results
-res <- data.frame(midBin=rep(NA,n-1),I=rep(NA,n-1))
-for(i in 2:n){
-  W <- matrix(0,ncol=ncol(D),nrow=nrow(D))
+res <- data.frame(midBin = rep(NA, n - 1), I = rep(NA, n - 1))
+for (i in 2:n) {
+  W <- matrix(0, ncol = ncol(D), nrow = nrow(D))
   # set some values to 1
-  W[D >= distanceVector[i-1] & D < distanceVector[i]] <- 1
+  W[D >= distanceVector[i - 1] & D < distanceVector[i]] <- 1
   # convert a the weights matrix to a weights list object
   # so spdep is happy
   wList <- mat2listw(W)
   # calculate I
-  res$I[i-1] <- moran.test(meuse_sf$log_lead,wList,zero.policy=TRUE)$estimate[1]
+  res$I[i - 1] <- moran.test(meuseSf$log_lead, wList, zero.policy = TRUE)$estimate[1]
   # centered distance bin
-  res$midBin[i-1] <- distanceVector[i] - distanceInterval/2
+  res$midBin[i - 1] <- distanceVector[i] - distanceInterval / 2
 }
-ggplot(data=res, mapping = aes(x=midBin,y=I)) + 
-  geom_hline(yintercept = 0, linetype="dashed") +
-  geom_line() + geom_point(size=3) +
-  labs(x="Distance (m)",y="Moran's I")
-
+ggplot(data = res, mapping = aes(x = midBin, y = I)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line() +
+  geom_point(size = 3) +
+  labs(x = "Distance (m)", y = "Moran's I")
 ```
 
 Take a look at the loop. The indexing is pretty convoluted! But will let you see, hopefully, how we can make the $W$ matrix do our bidding by setting distances we specify to either zero or one and thus let us calculate Moran's I as a function of distance. 
@@ -392,8 +408,8 @@ We are working with point data here. And I typically work with either point data
 Often, and especially with areal data, we calculate the weights matrix using just the correlation between the $k$ closest neighbors and usually set $k=8$ (there is nothing magical about eight, it is a loose kind of rule).  
 
 ```{r}
-W <- knn2nb(knearneigh(meuse_sf,k=8))
-moran.test(meuse_sf$log_lead,nb2listw(W))
+W <- knn2nb(knearneigh(meuseSf, k = 8))
+moran.test(meuseSf$log_lead, nb2listw(W))
 ```
 
 I realize the code here is kind of opaque. There are three functions above that take some getting used to. E.g., `knearneigh` tells you the $k$ nearest neighbors for each point, `knn2nb` takes the $k$ nearest neighbors and turns it into a neighbor object `nb`, and then `nb2listw` takes an `nb` object and makes it useful to the `moran.test` function. Simple and not at all convoluted, right? (The very smart people that made this had good reasons for doing what they did!)
@@ -402,15 +418,16 @@ But what do we see here? If we use the eight nearest neighbors to calculate spat
 
 ```{r,warning=FALSE}
 n <- 7
-res <- data.frame(k=2^(1:n),I=rep(NA,n))
-for(i in 1:n){
-  W <- knn2nb(knearneigh(meuse_sf,k=2^i))
-  res$I[i] <- moran.test(meuse_sf$log_lead,nb2listw(W))$estimate[1]
+res <- data.frame(k = 2^(1:n), I = rep(NA, n))
+for (i in 1:n) {
+  W <- knn2nb(knearneigh(meuseSf, k = 2^i))
+  res$I[i] <- moran.test(meuseSf$log_lead, nb2listw(W))$estimate[1]
 }
-ggplot(data=res, mapping = aes(x=k,y=I)) + 
-  geom_hline(yintercept = 0, linetype="dashed") +
-  geom_line() + geom_point(size=3) +
-  labs(x="K neighbors",y="Moran's I")
+ggplot(data = res, mapping = aes(x = k, y = I)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line() +
+  geom_point(size = 3) +
+  labs(x = "K neighbors", y = "Moran's I")
 ```
 
 That's a Moran's I a correlogram by the number of neighbors. Because these are points, I prefer to look at Moran's I in a correlogram by distance (like we did above) but if we had to deal with polygonal data, we'd likely use this approach. See the text for more info.
@@ -420,22 +437,24 @@ The `spdep`[@R-spdep] library is fantastic but doesn't produce the correlogram i
 
 There are two functions we will look at to do this. One uses distance **categories** and one makes a **continuous** function. 
 
-Let's grab the `x`, `y`, and `z` data from `meuse_sf` for convenience.
+Let's grab the `x`, `y`, and `z` data from `meuseSf` for convenience.
 
 ```{r}
-meuseX <- st_coordinates(meuse_sf)[,1]
-meuseY <- st_coordinates(meuse_sf)[,2]
-meuseLead <- meuse_sf$log_lead
+meuseX <- st_coordinates(meuseSf)[, 1]
+meuseY <- st_coordinates(meuseSf)[, 2]
+meuseLead <- meuseSf$log_lead
 ```
 
 ### Discrete correlogram
 First the discrete plot of Moran's I by distance categories:
 
 ```{r}
-leadI <- correlog(x=meuseX, y=meuseY, z=meuseLead,
-                  increment=100, resamp=100, quiet=TRUE)
-plot(leadI,xlim=c(0,1500))
-abline(h=0,lty="dashed")
+leadI <- correlog(
+  x = meuseX, y = meuseY, z = meuseLead,
+  increment = 100, resamp = 100, quiet = TRUE
+)
+plot(leadI, xlim = c(0, 1500))
+abline(h = 0, lty = "dashed")
 ```
 
 Let's look at what is going on here. We are calculating $I=f(d)$ and using 100 m increments. We are also doing significance testing with 100 bootstrap replicates of the data to test a null hypothesis of CSR. In the plot, the points are colored be whether or not autocorrelation is significantly different from zero in that distance class using a nominal (two-sided) 5%-level. This is a slightly fancier version of what we did in the loop above. And the syntax is much easier to follow.  
@@ -449,7 +468,7 @@ Here is the whole data set. in the default plot.
 
 ```{r}
 plot(leadI)
-abline(h=0,lty="dashed")
+abline(h = 0, lty = "dashed")
 ```
 
 That's nutty. There are so few pairs of points to compare at longer distances that you get a bunch on nonsense (hence the non-significant values with high values of I). We need to truncate the analysis. Let's look at how we can get a safe distance that should mitigate edge effects.
@@ -464,7 +483,7 @@ max(meuseY) - min(meuseY)
 
 The furthest point-to-point distance is about 4400 m.
 ```{r}
-meuseD <- dist(cbind(meuseX,meuseY))
+meuseD <- dist(cbind(meuseX, meuseY))
 max(meuseD)
 ```
 
@@ -476,20 +495,24 @@ Yet, the `correlog` function is happy to let you calculate Moran's I out to thos
 Oh, one more thing for the ggplot crowd. Note that all the data for the correlogram is stored in an easy to access fashion in the `leadI` object. You can roll your own plot in you want in `ggplot`. And unlike the default plot above, we can control the alpha level for plotting the significance from the permutation test. E.g.,
 
 ```{r}
-data.frame(n=leadI$n,
-           I = leadI$correlation, 
-           d = leadI$mean.of.class,
-           p = leadI$p) %>%
+data.frame(
+  n = leadI$n,
+  I = leadI$correlation,
+  d = leadI$mean.of.class,
+  p = leadI$p
+) %>%
   mutate(Significant = p < .01) %>%
   ggplot() +
-  geom_hline(yintercept = 0,linetype="dashed") +
-  geom_path(aes(x = d, y = I,group = 1, color=Significant),size=1) + 
-  geom_point(aes(x = d, y = I, fill=Significant),size=5,pch=21) +
-  lims(x=c(0,1500),y=c(-0.6,0.6)) +
-  scale_fill_manual(values = c("grey","darkgreen")) +
-  scale_color_manual(values = c("grey","darkgreen")) +
-  labs(x="Distance (m)",y="Moran's I",
-       title = "Autocorrelation of log(Lead)",subtitle = "Crit value of p<0.01")
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_path(aes(x = d, y = I, group = 1, color = Significant), size = 1) +
+  geom_point(aes(x = d, y = I, fill = Significant), size = 5, pch = 21) +
+  lims(x = c(0, 1500), y = c(-0.6, 0.6)) +
+  scale_fill_manual(values = c("grey", "darkgreen")) +
+  scale_color_manual(values = c("grey", "darkgreen")) +
+  labs(
+    x = "Distance (m)", y = "Moran's I",
+    title = "Autocorrelation of log(Lead)", subtitle = "Crit value of p<0.01"
+  )
 ```
 
 Remember! R will (usually) do what you want if you try.
@@ -502,7 +525,7 @@ library(fields)
 library(plotly)
 
 n <- 100
-nVec <- 0:(n-1)
+nVec <- 0:(n - 1)
 
 ###################################################################
 #
@@ -512,56 +535,62 @@ nVec <- 0:(n-1)
 
 amp <- 0.5
 nBumps <- 10
-nBumps2 <- n/nBumps
+nBumps2 <- n / nBumps
 z <- amp * sin(2 * pi / nBumps2 * nVec)
-Z <- matrix(rep(z,n),nrow=n, ncol=n)
+Z <- matrix(rep(z, n), nrow = n, ncol = n)
 Z <- Z + t(Z)
-eps <- matrix(abs(rnorm(n^2,sd=0.1)),nrow=n, ncol=n)
+eps <- matrix(abs(rnorm(n^2, sd = 0.1)), nrow = n, ncol = n)
 Z <- Z + eps
 # make flat
-Z[Z<0] <- 0
-foo <- expand.grid(x=nVec,y=nVec)
+Z[Z < 0] <- 0
+foo <- expand.grid(x = nVec, y = nVec)
 foo$z <- as.vector(Z)
 
-p10BumpsMap <- ggplot(foo,aes(x=x,y=y,fill=z)) + 
-  geom_raster() + 
-  scale_fill_viridis_c() + 
-  coord_fixed() + 
-  labs(x="Easting (m)", y="Northing (m)") + 
+p10BumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  coord_fixed() +
+  labs(x = "Easting (m)", y = "Northing (m)") +
   theme_minimal() +
   theme(legend.position = "none")
 
 
-fooMat <- matrix(foo$z,n,n)
-p10BumpsPersp <- plot_ly(z = fooMat) %>% 
+fooMat <- matrix(foo$z, n, n)
+p10BumpsPersp <- plot_ly(z = fooMat) %>%
   add_surface() %>%
   hide_colorbar() %>%
-  layout(title = "",
-         scene = list(
-           xaxis = list(title = "Easting (m)"),
-           yaxis = list(title = "Northing (m)"),
-           camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-         ))
+  layout(
+    title = "",
+    scene = list(
+      xaxis = list(title = "Easting (m)"),
+      yaxis = list(title = "Northing (m)"),
+      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
+    )
+  )
 
-samps2get <- sample(n^2,size = 500)
-bar <- foo[samps2get,]
+samps2get <- sample(n^2, size = 500)
+bar <- foo[samps2get, ]
 
-zI <- correlog(x=bar$x, y=bar$y, z=bar$z, increment = 1, resamp = 200, quiet = TRUE)
+zI <- correlog(x = bar$x, y = bar$y, z = bar$z, increment = 1, resamp = 200, quiet = TRUE)
 
-p10BumpsI <- data.frame(I = zI$correlation, 
-                        d = zI$mean.of.class,
-                        p = zI$p) %>%
+p10BumpsI <- data.frame(
+  I = zI$correlation,
+  d = zI$mean.of.class,
+  p = zI$p
+) %>%
   filter(I < 1 & d <= 50) %>%
   mutate(Significant = p < .01) %>%
   ggplot() +
-  geom_hline(yintercept = 0,linetype="dashed") +
-  geom_path(aes(x = d, y = I,group = 1, color=Significant),size=1) + 
-  geom_point(aes(x = d, y = I, fill=Significant),size=3,pch=21) +
-  lims(x=c(0,50))+ #,y=c(-0.6,0.6)) +
-  scale_fill_manual(values = c("grey","darkgreen")) +
-  scale_color_manual(values = c("grey","darkgreen")) +
-  labs(x="Distance (m)",y="Moran's I",
-       caption = "Crit value of p<0.01")
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_path(aes(x = d, y = I, group = 1, color = Significant), size = 1) +
+  geom_point(aes(x = d, y = I, fill = Significant), size = 3, pch = 21) +
+  lims(x = c(0, 50)) + # ,y=c(-0.6,0.6)) +
+  scale_fill_manual(values = c("grey", "darkgreen")) +
+  scale_color_manual(values = c("grey", "darkgreen")) +
+  labs(
+    x = "Distance (m)", y = "Moran's I",
+    caption = "Crit value of p<0.01"
+  )
 
 ###################################################################
 #
@@ -570,63 +599,69 @@ p10BumpsI <- data.frame(I = zI$correlation,
 ###################################################################
 
 nBumps <- 5
-nBumps2 <- n/nBumps
+nBumps2 <- n / nBumps
 z <- amp * sin(2 * pi / nBumps2 * nVec)
-Z <- matrix(rep(z,n),nrow=n, ncol=n)
+Z <- matrix(rep(z, n), nrow = n, ncol = n)
 Z <- Z + t(Z)
-eps <- matrix(abs(rnorm(n^2,sd=0.1)),nrow=n, ncol=n)
+eps <- matrix(abs(rnorm(n^2, sd = 0.1)), nrow = n, ncol = n)
 Z <- Z + eps
 # make flat
-Z[Z<0] <- 0
-foo <- expand.grid(x=nVec,y=nVec)
+Z[Z < 0] <- 0
+foo <- expand.grid(x = nVec, y = nVec)
 foo$z <- as.vector(Z)
 
-p5BumpsMap <- ggplot(foo,aes(x=x,y=y,fill=z)) + 
-  geom_raster() + 
-  scale_fill_viridis_c() + 
-  coord_fixed() + 
-  labs(x="Easting (m)", y="Northing (m)") + 
+p5BumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  coord_fixed() +
+  labs(x = "Easting (m)", y = "Northing (m)") +
   theme_minimal() +
   theme(legend.position = "none")
 
-fooMat <- matrix(foo$z,n,n)
-p5BumpsPersp <- plot_ly(z = fooMat) %>% 
+fooMat <- matrix(foo$z, n, n)
+p5BumpsPersp <- plot_ly(z = fooMat) %>%
   add_surface() %>%
   hide_colorbar() %>%
-  layout(title = "",
-         scene = list(
-           xaxis = list(title = "Easting (m)"),
-           yaxis = list(title = "Northing (m)"),
-           camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-         ))
+  layout(
+    title = "",
+    scene = list(
+      xaxis = list(title = "Easting (m)"),
+      yaxis = list(title = "Northing (m)"),
+      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
+    )
+  )
 
-samps2get <- sample(n^2,size = 500)
-bar <- foo[samps2get,]
-zI <- correlog(x=bar$x, y=bar$y, z=bar$z, increment = 1, resamp = 200, quiet = TRUE)
+samps2get <- sample(n^2, size = 500)
+bar <- foo[samps2get, ]
+zI <- correlog(x = bar$x, y = bar$y, z = bar$z, increment = 1, resamp = 200, quiet = TRUE)
 
-p5BumpsI <- data.frame(I = zI$correlation, 
-                       d = zI$mean.of.class,
-                       p = zI$p) %>%
+p5BumpsI <- data.frame(
+  I = zI$correlation,
+  d = zI$mean.of.class,
+  p = zI$p
+) %>%
   filter(I < 1 & d <= 50) %>%
   mutate(Significant = p < .01) %>%
   ggplot() +
-  geom_hline(yintercept = 0,linetype="dashed") +
-  geom_path(aes(x = d, y = I,group = 1, color=Significant),size=1) + 
-  geom_point(aes(x = d, y = I, fill=Significant),size=3,pch=21) +
-  lims(x=c(0,50))+ #,y=c(-0.6,0.6)) +
-  scale_fill_manual(values = c("grey","darkgreen")) +
-  scale_color_manual(values = c("grey","darkgreen")) +
-  labs(x="Distance (m)",y="Moran's I",
-       caption = "Crit value of p<0.01")
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_path(aes(x = d, y = I, group = 1, color = Significant), size = 1) +
+  geom_point(aes(x = d, y = I, fill = Significant), size = 3, pch = 21) +
+  lims(x = c(0, 50)) + # ,y=c(-0.6,0.6)) +
+  scale_fill_manual(values = c("grey", "darkgreen")) +
+  scale_color_manual(values = c("grey", "darkgreen")) +
+  labs(
+    x = "Distance (m)", y = "Moran's I",
+    caption = "Crit value of p<0.01"
+  )
 
 
 ###################################################################
 #
-## Random bumps 
+## Random bumps
 #
 ###################################################################
 
-foo <- expand.grid(x=nVec,y=nVec)
+foo <- expand.grid(x = nVec, y = nVec)
 foo$z <- NA
 
 # pin corners
@@ -636,63 +671,69 @@ foo$z[foo$x == 99 & foo$y == 0] <- 0
 foo$z[foo$x == 99 & foo$y == 99] <- 0
 
 # fill in random zeros
-ran0 <- sample(1:nrow(foo),size=1000)
+ran0 <- sample(1:nrow(foo), size = 1000)
 foo$z[ran0] <- 0
 
 # make a random hillS
 # small
-foo$z[foo$x %in% 73:77 & foo$y %in% 73:77] <- runif(25,0.5,1)
-foo$z[foo$x %in% 53:57 & foo$y %in% 43:47] <- runif(25,0.5,1)
+foo$z[foo$x %in% 73:77 & foo$y %in% 73:77] <- runif(25, 0.5, 1)
+foo$z[foo$x %in% 53:57 & foo$y %in% 43:47] <- runif(25, 0.5, 1)
 
-#bigger
-foo$z[foo$x %in% 21:30 & foo$y %in% 33:42] <- runif(100,0.25,1)
-foo$z[foo$x %in% 11:15 & foo$y %in% 13:22] <- runif(50,0.25,1)
+# bigger
+foo$z[foo$x %in% 21:30 & foo$y %in% 33:42] <- runif(100, 0.25, 1)
+foo$z[foo$x %in% 11:15 & foo$y %in% 13:22] <- runif(50, 0.25, 1)
 
-#INTERPOLATE
-fooTPS <- Tps(x = foo[,1:2], Y = foo$z,verbose=FALSE)
-fooTPS <- c(predict(object=fooTPS, x = cbind(foo[,1:2])))
+# INTERPOLATE
+fooTPS <- Tps(x = foo[, 1:2], Y = foo$z, verbose = FALSE)
+fooTPS <- c(predict(object = fooTPS, x = cbind(foo[, 1:2])))
 foo$z <- fooTPS
-eps <- abs(rnorm(n^2,sd=0.1))
+eps <- abs(rnorm(n^2, sd = 0.1))
 foo$z <- foo$z + eps
 
-pRanBumpsMap <- ggplot(foo,aes(x=x,y=y,fill=z)) + 
-  geom_raster() + 
-  scale_fill_viridis_c() + 
-  coord_fixed() + 
-  labs(x="Easting (m)", y="Northing (m)") + 
+pRanBumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  coord_fixed() +
+  labs(x = "Easting (m)", y = "Northing (m)") +
   theme_minimal() +
   theme(legend.position = "none")
 
-fooMat <- matrix(foo$z,n,n)
-pRanBumpsPersp <- plot_ly(z = fooMat) %>% 
+fooMat <- matrix(foo$z, n, n)
+pRanBumpsPersp <- plot_ly(z = fooMat) %>%
   add_surface() %>%
   hide_colorbar() %>%
-  layout(title = "",
-         scene = list(
-           xaxis = list(title = "Easting (m)"),
-           yaxis = list(title = "Northing (m)"),
-           camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-         ))
+  layout(
+    title = "",
+    scene = list(
+      xaxis = list(title = "Easting (m)"),
+      yaxis = list(title = "Northing (m)"),
+      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
+    )
+  )
 
-samps2get <- sample(n^2,size = 500)
-bar <- foo[samps2get,]
+samps2get <- sample(n^2, size = 500)
+bar <- foo[samps2get, ]
 
-zI <- correlog(x=bar$x, y=bar$y, z=bar$z, increment = 1, resamp = 200, quiet = TRUE)
+zI <- correlog(x = bar$x, y = bar$y, z = bar$z, increment = 1, resamp = 200, quiet = TRUE)
 
-pRanBumpsI <- data.frame(I = zI$correlation, 
-                         d = zI$mean.of.class,
-                         p = zI$p) %>%
+pRanBumpsI <- data.frame(
+  I = zI$correlation,
+  d = zI$mean.of.class,
+  p = zI$p
+) %>%
   filter(I < 1 & d <= 50) %>%
   mutate(Significant = p < .01) %>%
   ggplot() +
-  geom_hline(yintercept = 0,linetype="dashed") +
-  geom_path(aes(x = d, y = I,group = 1, color=Significant),size=1) + 
-  geom_point(aes(x = d, y = I, fill=Significant),size=3,pch=21) +
-  lims(x=c(0,50))+ #,y=c(-0.6,0.6)) +
-  scale_fill_manual(values = c("grey","darkgreen")) +
-  scale_color_manual(values = c("grey","darkgreen")) +
-  labs(x="Distance (m)",y="Moran's I",
-       caption = "Crit value of p<0.01")
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_path(aes(x = d, y = I, group = 1, color = Significant), size = 1) +
+  geom_point(aes(x = d, y = I, fill = Significant), size = 3, pch = 21) +
+  lims(x = c(0, 50)) + # ,y=c(-0.6,0.6)) +
+  scale_fill_manual(values = c("grey", "darkgreen")) +
+  scale_color_manual(values = c("grey", "darkgreen")) +
+  labs(
+    x = "Distance (m)", y = "Moran's I",
+    caption = "Crit value of p<0.01"
+  )
 
 
 ###################################################################
@@ -702,49 +743,54 @@ pRanBumpsI <- data.frame(I = zI$correlation,
 ###################################################################
 
 # add a gradient to foo
-for(i in 1:n-1){
-  foo$z[foo$x==i] <- foo$z[foo$x==i] + i*0.005
+for (i in 1:n - 1) {
+  foo$z[foo$x == i] <- foo$z[foo$x == i] + i * 0.005
 }
 
-pGradBumpsMap <- ggplot(foo,aes(x=x,y=y,fill=z)) + 
-  geom_raster() + 
-  scale_fill_viridis_c() + 
-  coord_fixed() + 
-  labs(x="Easting (m)", y="Northing (m)") + 
+pGradBumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
+  geom_raster() +
+  scale_fill_viridis_c() +
+  coord_fixed() +
+  labs(x = "Easting (m)", y = "Northing (m)") +
   theme_minimal() +
   theme(legend.position = "none")
 
-fooMat <- matrix(foo$z,n,n)
-pGradBumpsPersp <- plot_ly(z = fooMat) %>% 
+fooMat <- matrix(foo$z, n, n)
+pGradBumpsPersp <- plot_ly(z = fooMat) %>%
   add_surface() %>%
   hide_colorbar() %>%
-  layout(title = "",
-         scene = list(
-           xaxis = list(title = "Easting (m)"),
-           yaxis = list(title = "Northing (m)"),
-           camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-         ))
+  layout(
+    title = "",
+    scene = list(
+      xaxis = list(title = "Easting (m)"),
+      yaxis = list(title = "Northing (m)"),
+      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
+    )
+  )
 
 
-samps2get <- sample(n^2,size = 500)
-bar <- foo[samps2get,]
-zI <- correlog(x=bar$x, y=bar$y, z=bar$z, increment = 1, resamp = 200, quiet = TRUE)
+samps2get <- sample(n^2, size = 500)
+bar <- foo[samps2get, ]
+zI <- correlog(x = bar$x, y = bar$y, z = bar$z, increment = 1, resamp = 200, quiet = TRUE)
 
-pGradBumpsI <-data.frame(I = zI$correlation, 
-                         d = zI$mean.of.class,
-                         p = zI$p) %>%
+pGradBumpsI <- data.frame(
+  I = zI$correlation,
+  d = zI$mean.of.class,
+  p = zI$p
+) %>%
   filter(I < 1 & d <= 50) %>%
   mutate(Significant = p < .01) %>%
   ggplot() +
-  geom_hline(yintercept = 0,linetype="dashed") +
-  geom_path(aes(x = d, y = I,group = 1, color=Significant),size=1) + 
-  geom_point(aes(x = d, y = I, fill=Significant),size=3,pch=21) +
-  lims(x=c(0,50))+ #,y=c(-0.6,0.6)) +
-  scale_fill_manual(values = c("grey","darkgreen")) +
-  scale_color_manual(values = c("grey","darkgreen")) +
-  labs(x="Distance (m)",y="Moran's I",
-       caption = "Crit value of p<0.01")
-
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_path(aes(x = d, y = I, group = 1, color = Significant), size = 1) +
+  geom_point(aes(x = d, y = I, fill = Significant), size = 3, pch = 21) +
+  lims(x = c(0, 50)) + # ,y=c(-0.6,0.6)) +
+  scale_fill_manual(values = c("grey", "darkgreen")) +
+  scale_color_manual(values = c("grey", "darkgreen")) +
+  labs(
+    x = "Distance (m)", y = "Moran's I",
+    caption = "Crit value of p<0.01"
+  )
 ```
 
 ### Uniform bumps
@@ -859,8 +905,10 @@ You could imagine detrending this final surface with a model and then replotting
 You will find `spline.correlog` in the `ncf` package and you will be tempted to run it. Go ahead. It fits a spline smoother through the Moran's I values rather than binning them, giving you a continuous curve instead of discrete points.
 
 ```{r}
-leadI <- spline.correlog(x=meuseX, y=meuseY, z=meuse_sf$log_lead,
-                         resamp=100, xmax=1500, quiet=TRUE)
+leadI <- spline.correlog(
+  x = meuseX, y = meuseY, z = meuseSf$log_lead,
+  resamp = 100, xmax = 1500, quiet = TRUE
+)
 plot(leadI)
 ```
 
@@ -882,10 +930,10 @@ The file `birdRichnessMexico.rds` contains an `sf` object with bird species rich
 
 ```{r, message=FALSE}
 library(tmap)
-birds_sf <- readRDS("data/birdRichnessMexico.rds")
+birdsSf <- readRDS("data/birdRichnessMexico.rds")
 tmap_mode("view")
-tm_shape(birds_sf) +
-  tm_symbols(col="nSpecies", alpha = 0.7)
+tm_shape(birdsSf) +
+  tm_symbols(col = "nSpecies", alpha = 0.7)
 ```
 
 Take a minute to look at the patterns. Some areas are hotspots of richness, like southern Veracruz. Others, like northern Baja, are less rich.
@@ -894,16 +942,16 @@ Look at spatial autocorrelation in the bird data using Moran's I and fit a vario
 
 A few notes on the data handling:
 
-1. You can pull `birds_sf` out of `sf` into a plain data frame for use with `correlog`:
+1. You can pull `birdsSf` out of `sf` into a plain data frame for use with `correlog`:
 
 ```{r}
-birdsDF <- data.frame(st_coordinates(birds_sf),nSpecies=birds_sf$nSpecies)
+birdsDF <- data.frame(st_coordinates(birdsSf), nSpecies = birdsSf$nSpecies)
 ```
 
 2. For `correlog`, watch edge effects. Limit your interpretation to about 1/3 of the maximum distance between points:
 
 ```{r}
-max(dist(st_coordinates(birds_sf)))/3
+max(dist(st_coordinates(birdsSf))) / 3
 ```
 
 That puts the safe limit around 1000 km.
@@ -917,7 +965,7 @@ What can you learn by comparing the two approaches? More importantly, what are w
 Everything above treats spatial structure as direction-independent (isotropic). That isn't always a safe assumption. Pollution plumes move downwind; species distributions follow latitudinal gradients. The `variogram` function can calculate directional variograms with the `alpha` argument -- try north-south vs. east-west for the bird data:
 
 ```{r eval=FALSE}
-birdVar <- variogram(nSpecies~1, data = birds_sf, alpha=c(0,90))
+birdVar <- variogram(nSpecies ~ 1, data = birdsSf, alpha = c(0, 90))
 ```
 
 Think about gradients and what biogeographic processes might be driving any anisotropy you find.
@@ -925,4 +973,3 @@ Think about gradients and what biogeographic processes might be driving any anis
 ## Further Reading
 
 Hijmans's [Spatial autocorrelation](https://www.rspatial.org/raster/analysis/3-spauto.html) is a free online resource with good worked examples in R, including Moran's I and variograms on familiar data. @fortin2016spatial covers spatial autocorrelation coefficients concisely and is worth reading alongside this chapter. @bivand2008geostatistics chapter 8 through section 8.4.2 goes deeper on variogram fitting, cutoff selection, lag width, and directional effects.
-

@@ -56,20 +56,20 @@ We'll model `om`, percent organic matter, as a function of distance to the river
 Make both objects into `sf`, then use `st_join()` with `st_nearest_feature` to pull `river_dist_m` from the nearest grid cell onto each sample point.
 
 ```{r}
-meusePoints_sf <- st_as_sf(meuse2, coords = c("x","y"), crs=28992)
-meuseGrid_sf   <- st_as_sf(meuse.grid2, coords = c("x","y"), crs=28992)
+meusePointsSf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
+meuseGridSf <- st_as_sf(meuse.grid2, coords = c("x", "y"), crs = 28992)
 
-covars_sf <- meuseGrid_sf %>% select(river_dist_m)
-meusePoints_sf <- st_join(meusePoints_sf, covars_sf, join = st_nearest_feature)
+covarsSf <- meuseGridSf %>% select(river_dist_m)
+meusePointsSf <- st_join(meusePointsSf, covarsSf, join = st_nearest_feature)
 ```
 
 Distance to the river is right-skewed - a handful of points are far from the channel and most are close. Log-transforming it spreads out the short-distance end of the scale where most of the variation in organic matter happens.
 
 ```{r}
-meusePoints_sf <- meusePoints_sf %>%
+meusePointsSf <- meusePointsSf %>%
   mutate(log_dist = log(river_dist_m)) %>%
   drop_na(om)
-meuseGrid_sf <- meuseGrid_sf %>%
+meuseGridSf <- meuseGridSf %>%
   mutate(log_dist = log(river_dist_m))
 ```
 
@@ -77,34 +77,36 @@ meuseGrid_sf <- meuseGrid_sf %>%
 A simple OLS model: $om = \beta_0 + \beta_1 \log(\text{river\_dist}) + \varepsilon$.
 
 ```{r}
-om_lm <- lm(om ~ log_dist, data = meusePoints_sf)
-summary(om_lm)
+omLm <- lm(om ~ log_dist, data = meusePointsSf)
+summary(omLm)
 ```
 
 Distance to the river explains about half the variance in organic matter. Now, after you learn about the pitfalls of using OLS with spatial data you'll be appalled that I'm running this model without checking for autocorrelation in the residuals. But suppress your horror for now, because all we want to do here is show what a purely regression-based prediction surface looks like before we improve on it.
 
 ```{r}
-meuseGrid_sf$omHat <- predict(om_lm, newdata=meuseGrid_sf)
+meuseGridSf$omHat <- predict(omLm, newdata = meuseGridSf)
 
-# same sf_2_rast function from the IDW notes -- write it once, use it everywhere
-sf_2_rast <- function(sfObject, variable2get = 1){
-  tmp <- sfObject[,variable2get] %>% st_drop_geometry()
-  dfObject <- data.frame(st_coordinates(sfObject), z=tmp)
-  rastObject <- rast(dfObject, crs=crs(sfObject))
+# same sf2Rast function from the IDW notes -- write it once, use it everywhere
+sf2Rast <- function(sfObject, variable2get = 1) {
+  tmp <- sfObject[, variable2get] %>% st_drop_geometry()
+  dfObject <- data.frame(st_coordinates(sfObject), z = tmp)
+  rastObject <- rast(dfObject, crs = crs(sfObject))
   return(rastObject)
 }
 
-meuseGrid_rast <- sf_2_rast(meuseGrid_sf, variable2get = "omHat")
-ggplot() + geom_spatraster(data = meuseGrid_rast,
-                           mapping = aes(fill=omHat)) +
+meuseGridRast <- sf2Rast(meuseGridSf, variable2get = "omHat")
+ggplot() +
+  geom_spatraster(
+    data = meuseGridRast,
+    mapping = aes(fill = omHat)
+  ) +
   scale_fill_terrain_c() +
   labs(fill = "omHat")
-
 ```
 
 ```{r, echo=FALSE}
-w <- spdep::knn2nb(spdep::knearneigh(meusePoints_sf, k=4))
-foo <- spdep::moran.test(residuals(om_lm), spdep::nb2listw(w))
+w <- spdep::knn2nb(spdep::knearneigh(meusePointsSf, k = 4))
+foo <- spdep::moran.test(residuals(omLm), spdep::nb2listw(w))
 ```
 
 The prediction is reasonable, but the residuals are spatially autocorrelated: Moran's I on a four-neighbor object is `r round(foo$estimate[1],2)`, significantly greater than zero. That matters, and we'll come back to it in the GLS module. 
@@ -115,21 +117,27 @@ The OLS model used distance to the river but ignored everything we know about th
 Let's look at the variogram of `om` before conditioning on anything
 
 ```{r}
-omVar <- variogram(om ~ 1, meusePoints_sf)
-plot(omVar, pch=20, cex=1.5, col="black",
-     ylab=expression("Semivariance ("*gamma*")"),
-     xlab="Distance (m)", main = "% Soil Organic Matter")
+omVar <- variogram(om ~ 1, meusePointsSf)
+plot(omVar,
+  pch = 20, cex = 1.5, col = "black",
+  ylab = expression("Semivariance (" * gamma * ")"),
+  xlab = "Distance (m)", main = "% Soil Organic Matter"
+)
 ```
 
 Now we set up a `gstat` object that includes the regression formula. When we call `variogram` on this object, we get the variogram of the OLS residuals, not of `om` itself. The residuals here are just the familiar $e_i = om_i - \hat{om}_i$ at each sample point: how much higher or lower is the observed organic matter than what log distance alone would predict? We're asking whether those leftover deviations have spatial structure, or whether they're just noise. Compare the two variogram plots and you'll notice the residual variogram has less total variance, which is the variance the covariates explained away. What remains still has spatial structure, which means kriging has something to work with.
 
 ```{r}
-omGstat <- gstat(id = "omModel", formula = om ~ log_dist,
-                 data = meusePoints_sf)
-omGstat_obsVariogram <- variogram(omGstat)
-plot(omGstat_obsVariogram, pch=20, cex=1.5, col="black",
-     ylab=expression("Semivariance ("*gamma*")"),
-     xlab="Distance (m)", main = "Model Residuals")
+omGstat <- gstat(
+  id = "omModel", formula = om ~ log_dist,
+  data = meusePointsSf
+)
+omGstatObsVariogram <- variogram(omGstat)
+plot(omGstatObsVariogram,
+  pch = 20, cex = 1.5, col = "black",
+  ylab = expression("Semivariance (" * gamma * ")"),
+  xlab = "Distance (m)", main = "Model Residuals"
+)
 ```
 
 The residual variogram isn't dramatic, but the semivariance rises from a nugget of around four to a sill of around six. There is spatial structure in the residuals that we can use.
@@ -137,22 +145,26 @@ The residual variogram isn't dramatic, but the semivariance rises from a nugget 
 We fit a theoretical model to it. I'll use a Gaussian model here, though an exponential would also be defensible.
 
 ```{r}
-omGau_variogramModel <- vgm(psill = 2, model = "Gau", range = 500, nugget = 4)
-omGau_fittedVariogram <- fit.variogram(object = omGstat_obsVariogram, 
-                                       model = omGau_variogramModel)
-plot(omGstat_obsVariogram, omGau_fittedVariogram, pch=20, cex=1.5, col="black",
-     ylab=expression("Semivariance ("*gamma*")"),
-     xlab="Distance (m)", main = "Model Residuals")
+omGauVariogramModel <- vgm(psill = 2, model = "Gau", range = 500, nugget = 4)
+omGauFittedVariogram <- fit.variogram(
+  object = omGstatObsVariogram,
+  model = omGauVariogramModel
+)
+plot(omGstatObsVariogram, omGauFittedVariogram,
+  pch = 20, cex = 1.5, col = "black",
+  ylab = expression("Semivariance (" * gamma * ")"),
+  xlab = "Distance (m)", main = "Model Residuals"
+)
 ```
 
 Now we update the `gstat` object with the fitted variogram model and predict across the grid. Under the hood, `predict` is doing three things at every grid cell. First, it evaluates the OLS model by plugging `log_dist` into $\hat{\beta}_0 + \hat{\beta}_1 x_1$ to get the covariate-driven trend at that location. Second, it kriges the residuals: it looks at the OLS residuals at the nearby sample points ($e_i = om_i - \hat{om}_i$) and uses the fitted variogram to estimate what the residual would be at the prediction location. Third, it adds the two together. The first part handles the large-scale gradient in organic matter driven by distance to the river. The second part handles the local spatial deviations that distance alone couldn't predict.
 
 ```{r}
 # Update the gstat object with the variogram:
-omGstat_w_variogram <- gstat(omGstat, id="omModel", model=omGau_fittedVariogram)
+omGstatWVariogram <- gstat(omGstat, id = "omModel", model = omGauFittedVariogram)
 # And predict
-omHat_sf <- predict(omGstat_w_variogram, newdata = meuseGrid_sf)
-omHat_sf
+omHatSf <- predict(omGstatWVariogram, newdata = meuseGridSf)
+omHatSf
 ```
 
 To make this concrete, let's look at all three surfaces: the OLS trend, the kriged residuals, and the final RK prediction that combines them. We have `omHat` from the OLS step already. We can recover the kriged residual surface by subtracting it from the RK prediction.
@@ -160,38 +172,40 @@ To make this concrete, let's look at all three surfaces: the OLS trend, the krig
 ```{r}
 #| fig-width: 10
 #| fig-height: 9
-omHat_rast <- sf_2_rast(omHat_sf, variable2get = "omModel.pred")
+omHatRast <- sf2Rast(omHatSf, variable2get = "omModel.pred")
 
 # kriged residual surface = RK prediction minus OLS trend
-omHat_sf$krigedResid <- omHat_sf$omModel.pred - meuseGrid_sf$omHat
-omResid_rast <- sf_2_rast(omHat_sf, variable2get = "krigedResid")
+omHatSf$krigedResid <- omHatSf$omModel.pred - meuseGridSf$omHat
+omResidRast <- sf2Rast(omHatSf, variable2get = "krigedResid")
 
-p_ols <- ggplot() +
-  geom_spatraster(data = meuseGrid_rast, mapping = aes(fill=omHat)) +
-  scale_fill_terrain_c(limits=c(0,18)) +
-  labs(title="OLS trend", fill="om (%)") +
-  theme(axis.text=element_blank(), axis.ticks=element_blank())
+pOls <- ggplot() +
+  geom_spatraster(data = meuseGridRast, mapping = aes(fill = omHat)) +
+  scale_fill_terrain_c(limits = c(0, 18)) +
+  labs(title = "OLS trend", fill = "om (%)") +
+  theme(axis.text = element_blank(), axis.ticks = element_blank())
 
-p_resid <- ggplot() +
-  geom_spatraster(data = omResid_rast, mapping = aes(fill=krigedResid)) +
-  scale_fill_gradient2(low="blue", mid="white", high="red", 
-                     midpoint=0, na.value="transparent") +
-  labs(title="Kriged residuals", fill="resid") +
-  theme(axis.text=element_blank(), axis.ticks=element_blank())
+pResid <- ggplot() +
+  geom_spatraster(data = omResidRast, mapping = aes(fill = krigedResid)) +
+  scale_fill_gradient2(
+    low = "blue", mid = "white", high = "red",
+    midpoint = 0, na.value = "transparent"
+  ) +
+  labs(title = "Kriged residuals", fill = "resid") +
+  theme(axis.text = element_blank(), axis.ticks = element_blank())
 
-p_rk <- ggplot() +
-  geom_spatraster(data = omHat_rast, mapping = aes(fill=omModel.pred)) +
-  scale_fill_terrain_c(limits=c(0,18)) +
-  labs(fill="om (%)") +
-  theme(axis.text=element_blank(), axis.ticks=element_blank())
+pRk <- ggplot() +
+  geom_spatraster(data = omHatRast, mapping = aes(fill = omModel.pred)) +
+  scale_fill_terrain_c(limits = c(0, 18)) +
+  labs(fill = "om (%)") +
+  theme(axis.text = element_blank(), axis.ticks = element_blank())
 
 
-eq <- ggdraw() + draw_label("OLS trend  +  Kriged residuals  =  RK prediction", 
-                             fontface="italic", size=11)
+eq <- ggdraw() + draw_label("OLS trend  +  Kriged residuals  =  RK prediction",
+  fontface = "italic", size = 11
+)
 
-top_row <- plot_grid(p_ols, p_resid, ncol=2)
-plot_grid(top_row, eq, p_rk, nrow=3, rel_heights=c(1, 0.1, 1))
-
+topRow <- plot_grid(pOls, pResid, ncol = 2)
+plot_grid(topRow, eq, pRk, nrow = 3, rel_heights = c(1, 0.1, 1))
 ```
 
 The OLS surface is smooth: it varies only with log distance to the river. The kriged residual surface shows local corrections, positive where nearby samples were higher than the OLS predicted and negative where they were lower. The RK surface is the sum, which has the broad shape of the OLS prediction but with local detail added by the kriged residuals.
@@ -199,10 +213,13 @@ The OLS surface is smooth: it varies only with log distance to the river. The kr
 And the variance surface around the RK predictions:
 
 ```{r}
-omHatVar_rast <- sf_2_rast(omHat_sf, variable2get = "omModel.var")
-omHatVar_rast <- omHatVar_rast %>% mutate(omModel.var.sqrt = sqrt(omModel.var))
-ggplot() + geom_spatraster(data = omHatVar_rast,
-                           mapping = aes(fill=omModel.var.sqrt)) +
+omHatVarRast <- sf2Rast(omHatSf, variable2get = "omModel.var")
+omHatVarRast <- omHatVarRast %>% mutate(omModel.var.sqrt = sqrt(omModel.var))
+ggplot() +
+  geom_spatraster(
+    data = omHatVarRast,
+    mapping = aes(fill = omModel.var.sqrt)
+  ) +
   scale_fill_terrain_c() +
   labs(fill = "Organic Matter SD (%)")
 ```
@@ -219,7 +236,7 @@ The next two chapters take a step back. Instead of predicting a surface, we retu
 
 ## Exercises
 
-Use `gstat.cv` to cross-validate both the OLS-only model (`omGstat`) and the full RK model (`omGstat_w_variogram`). Compute RMSE and R$^2$ for each. Did RK improve predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?
+Use `gstat.cv` to cross-validate both the OLS-only model (`omGstat`) and the full RK model (`omGstatWVariogram`). Compute RMSE and R$^2$ for each. Did RK improve predictions over plain OLS? How much, and where do you think the improvement (or lack of it) came from?
 
 This was a simple model using `om ~ log_dist`. What else in `meuse.grid2` might be worth adding?
 

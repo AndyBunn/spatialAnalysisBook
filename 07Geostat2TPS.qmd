@@ -55,18 +55,20 @@ Let's redo the Meuse lead application from the IDW module. We will use the same 
 #| message: false
 meuse2 <- readRDS("data/meuse2.Rds")
 meuse2$logLead <- log(meuse2$lead)
-meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
+meuseSf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
 meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
 ```
 
 ```{r}
-ggplot(data = meuse_sf) +
-  geom_sf(aes(fill=logLead), size=4,
-          shape = 21, color="white",alpha=0.8)+
-  scale_fill_continuous(type = "viridis",name="log(ppm)") +
-  labs(title="Lead concentrations")
+ggplot(data = meuseSf) +
+  geom_sf(aes(fill = logLead),
+    size = 4,
+    shape = 21, color = "white", alpha = 0.8
+  ) +
+  scale_fill_continuous(type = "viridis", name = "log(ppm)") +
+  labs(title = "Lead concentrations")
 ```
 
 ### TPS
@@ -74,7 +76,7 @@ ggplot(data = meuse_sf) +
 The `Tps` function from `fields` fits the thin-plate spline model. It takes `x`, a matrix of coordinates, and `Y`, the response variable (Yes, that is confusing variable naming. Why not x, y, and z?). Note that `fields` is less fussy about object classes than `gstat` so we can work directly on `data.frame` objects rather than converting to `sf`.
 
 ```{r}
-logLeadTPSmodel <- Tps(x = meuse2[,1:2], Y = meuse2$logLead)
+logLeadTPSmodel <- Tps(x = meuse2[, 1:2], Y = meuse2$logLead)
 logLeadTPSmodel
 ```
 
@@ -108,19 +110,21 @@ Note that we're calling `predict()` again here which is the same generic functio
 
 ```{r}
 # Predict the model over all the coordinates in meuse.grid2
-logLeadPreds <- c(predict(object=logLeadTPSmodel, x = meuse.grid2[,1:2]))
+logLeadPreds <- c(predict(object = logLeadTPSmodel, x = meuse.grid2[, 1:2]))
 # Store in a data.frame with the x,y coordinates
-logLeadTPS <- data.frame(x = meuse.grid2[,1],
-                         y = meuse.grid2[,2],
-                         logLead=logLeadPreds)
+logLeadTPS <- data.frame(
+  x = meuse.grid2[, 1],
+  y = meuse.grid2[, 2],
+  logLead = logLeadPreds
+)
 # And into SpatRaster
-logLeadTPS_rast <- rast(logLeadTPS, crs=crs(meuse_sf))
+logLeadTPSRast <- rast(logLeadTPS, crs = crs(meuseSf))
 
 # Plot
 ggplot() +
-  geom_spatraster(data=logLeadTPS_rast, mapping = aes(fill=logLead),alpha=0.8) +
-  scale_fill_continuous(type = "viridis",name="log(ppm)",na.value = "transparent") +
-  labs(title="Lead concentrations", subtitle = "TPS") +
+  geom_spatraster(data = logLeadTPSRast, mapping = aes(fill = logLead), alpha = 0.8) +
+  scale_fill_continuous(type = "viridis", name = "log(ppm)", na.value = "transparent") +
+  labs(title = "Lead concentrations", subtitle = "TPS") +
   theme_minimal()
 ```
 
@@ -132,20 +136,22 @@ Now let's check the numbers. First the in-sample fit, using all 164 observations
 
 ```{r}
 obs <- meuse2$logLead
-preds <- extract(logLeadTPS_rast, meuse_sf) %>% pull(logLead)
-rsq <- cor(obs,preds)^2
+preds <- extract(logLeadTPSRast, meuseSf) %>% pull(logLead)
+rsq <- cor(obs, preds)^2
 rmse <- sqrt(mean((preds - obs)^2))
 c(rsq = rsq, rmse = rmse)
 ```
 
 ```{r}
 ggplot() +
-  geom_abline(slope=1,intercept = 0) +
-  geom_point(aes(x=obs,y=preds)) +
-  coord_fixed(ratio=1, xlim = range(preds,obs),ylim = range(preds,obs)) +
-  labs(x="Observed Values",
-       y="Predicted Values",
-       title="Lead log(ppm)")
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point(aes(x = obs, y = preds)) +
+  coord_fixed(ratio = 1, xlim = range(preds, obs), ylim = range(preds, obs)) +
+  labs(
+    x = "Observed Values",
+    y = "Predicted Values",
+    title = "Lead log(ppm)"
+  )
 ```
 
 Here we have R$^2$ of `r round(rsq,3)` and a reasonable RMSE of `r round(rmse,3)`. Notice these in-sample numbers tell a more informative story than IDW's 0.99 R$^2$ did. IDW is exact at data locations in theory -- the weight to each point from itself becomes infinite and overwhelms everything -- so its in-sample performance is essentially perfect by construction. TPS is different. The GCV smoothing means the fitted surface doesn't pass through every point exactly, so you have in-sample residuals. That's the smoothing penalty doing its job.
@@ -156,39 +162,43 @@ Let's do a proper train/test evaluation. Here is a 80%/20% split.
 
 ```{r}
 n <- nrow(meuse2)
-rows4test <- sample(x = 1:n,size = n*0.2)
-meuseTest <- meuse2[rows4test,]
-meuseTrain <- meuse2[-rows4test,]
+rows4test <- sample(x = 1:n, size = n * 0.2)
+meuseTest <- meuse2[rows4test, ]
+meuseTrain <- meuse2[-rows4test, ]
 
 # Note meuseTrain here
-logLeadTPSmodel <- Tps(x = meuseTrain[,1:2], Y = meuseTrain$logLead)
+logLeadTPSmodel <- Tps(x = meuseTrain[, 1:2], Y = meuseTrain$logLead)
 logLeadTPSmodel
 
 # Predict the model over all the coordinates in meuse.grid2
-logLeadPreds <- c(predict(object=logLeadTPSmodel, x = meuse.grid2[,1:2]))
+logLeadPreds <- c(predict(object = logLeadTPSmodel, x = meuse.grid2[, 1:2]))
 # Store in a data.frame with the x,y coordinates
-logLeadTPS <- data.frame(x = meuse.grid2[,1],
-                         y = meuse.grid2[,2],
-                         logLead=logLeadPreds)
+logLeadTPS <- data.frame(
+  x = meuse.grid2[, 1],
+  y = meuse.grid2[, 2],
+  logLead = logLeadPreds
+)
 # And into SpatRaster
-logLeadTPS_rast <- rast(logLeadTPS, crs=crs(meuse_sf))
+logLeadTPSRast <- rast(logLeadTPS, crs = crs(meuseSf))
 
 # Look at skill on withheld data. Note meuseTest:
 obs <- meuseTest$logLead
-preds <- extract(logLeadTPS_rast, meuseTest[,1:2]) %>% pull(logLead)
-rsq <- cor(obs,preds)^2
+preds <- extract(logLeadTPSRast, meuseTest[, 1:2]) %>% pull(logLead)
+rsq <- cor(obs, preds)^2
 rmse <- sqrt(mean((preds - obs)^2))
 c(rsq = rsq, rmse = rmse)
 ```
 
 ```{r}
 ggplot() +
-  geom_abline(slope=1,intercept = 0) +
-  geom_point(aes(x=obs,y=preds)) +
-  coord_fixed(ratio=1, xlim = range(preds,obs),ylim = range(preds,obs)) +
-  labs(x="Observed Values",
-       y="Predicted Values",
-       title="Lead log(ppm)")
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point(aes(x = obs, y = preds)) +
+  coord_fixed(ratio = 1, xlim = range(preds, obs), ylim = range(preds, obs)) +
+  labs(
+    x = "Observed Values",
+    y = "Predicted Values",
+    title = "Lead log(ppm)"
+  )
 ```
 
 We see now that skill of the model is decreased with R$^2$ = `r round(rsq,3)` and RMSE = `r round(rmse,3)` as these are out-of-sample tests. The exact numbers vary with the random split, but you should be in that neighborhood.

@@ -19,14 +19,14 @@ n <- 50
 b0 <- 4
 b1 <- 0.6
 b2 <- 3
-originalDat <- data.frame(x1=rnorm(n), x2=rnorm(n), epsilon = rnorm(n,sd = 2))
+originalDat <- data.frame(x1 = rnorm(n), x2 = rnorm(n), epsilon = rnorm(n, sd = 2))
 originalDat$y <- b0 + b1 * originalDat$x1 + b2 * originalDat$x2 + originalDat$epsilon
 ```
 
 We fit a linear model with `lm`:
 
 ```{r}
-lm1 <- lm(y~x1 + x2, data = originalDat)
+lm1 <- lm(y ~ x1 + x2, data = originalDat)
 summary(lm1)
 ```
 
@@ -39,7 +39,7 @@ See the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGeneri
 Let's imagine a new data set with `x1` and `x2` but no observed `y`:
 
 ```{r}
-newDat <- data.frame(x1=rnorm(n), x2=rnorm(n))
+newDat <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
 head(newDat)
 ```
 

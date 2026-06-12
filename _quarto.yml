@@ -8,6 +8,7 @@ project:
 book:
   title: "Spatial Analysis for Environmental Data"
   subtitle: "An R-Based Introduction"
+  favicon: assets/favicon.svg
   author: "Andy Bunn"
   date: today
   description: "An applied introduction to spatial analysis for environmental scientists using R"

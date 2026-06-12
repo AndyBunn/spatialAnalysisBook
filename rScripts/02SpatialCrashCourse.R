@@ -2,6 +2,7 @@
 library(tidyverse)
 library(sf)
 library(terra)
+library(tidyterra)
 
 
 ## -----------------------------------------------------------------------------
@@ -11,7 +12,7 @@ head(californiaOzonePoints)
 
 ## -----------------------------------------------------------------------------
 californiaOzonePointsSF <- st_as_sf(californiaOzonePoints, coords = c("longitude", "latitude"), crs = 4326)
-californiaOzonePointsSF
+head(californiaOzonePointsSF)
 
 
 ## -----------------------------------------------------------------------------
@@ -33,23 +34,39 @@ plot(californiaElevationFt)
 
 
 ## -----------------------------------------------------------------------------
-elevDF <- as.data.frame(californiaElevation, xy = TRUE)
-names(elevDF)[3] <- "elevation"
-
 ggplot() +
-  geom_raster(data = elevDF, aes(x = x, y = y, fill = elevation)) +
-  geom_contour(data = elevDF, aes(x = x, y = y, z = elevation),
-               color = "white", alpha = 0.4, bins = 15) +
-  geom_sf(data = californiaOzonePointsSF, color = "red", size = 1.5) +
-  scale_fill_viridis_c(name = "Elevation (m)") +
-  coord_sf() +
-  theme_minimal() +
-  labs(x = NULL, y = NULL)
+  geom_spatraster(data = californiaElevation) +
+  scale_fill_terrain_c(name = "Elevation (m)") +
+  geom_spatraster_contour(
+    data = californiaElevation,
+    color = "black", alpha = 0.4, bins = 10
+  ) +
+  geom_sf(
+    data = californiaOzonePointsSF, pch = 21, color = "grey",
+    fill = "white",
+    size = 2, alpha = 0.5
+  ) +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
-elevation_at_ozone_points <- terra::extract(californiaElevation, californiaOzonePointsSF)
-head(elevation_at_ozone_points)
+elevationAtOzonePoints <- terra::extract(californiaElevation, californiaOzonePointsSF)
+head(elevationAtOzonePoints)
+
+
+## -----------------------------------------------------------------------------
+californiaOzonePointsSF <- californiaOzonePointsSF %>%
+  add_column(elevation = elevationAtOzonePoints$elev)
+head(californiaOzonePointsSF)
+
+
+## -----------------------------------------------------------------------------
+californiaOzonePointsSF %>%
+  ggplot(mapping = aes(x = elevation, y = ozone)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Elevation (m)", y = "Ozone (ppb)") +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------

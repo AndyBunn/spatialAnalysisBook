@@ -11,26 +11,38 @@ library(spatstat)
 #| fig-width: 9
 #| fig-height: 6
 n <- 100
-patternA <- data.frame(x=rnorm(n),y=rnorm(n),id="A")
-patternB <- data.frame(x=runif(n),y=runif(n),id="B")
-patternC <- data.frame(expand.grid(x = seq(0, 1, length.out = sqrt(n)),
-                                   y = seq(0, 1, length.out = sqrt(n))),
-                       id="C")
+patternA <- data.frame(x = rnorm(n), y = rnorm(n), id = "A")
+patternB <- data.frame(x = runif(n), y = runif(n), id = "B")
+patternC <- data.frame(
+  expand.grid(
+    x = seq(0, 1, length.out = sqrt(n)),
+    y = seq(0, 1, length.out = sqrt(n))
+  ),
+  id = "C"
+)
 
-patternD <- data.frame(expand.grid(x = rep(seq(0, 1, length.out = n/20),2),
-                                   y = rep(seq(0, 1, length.out = n/20),2)),
-                       id="D")
+patternD <- data.frame(
+  expand.grid(
+    x = rep(seq(0, 1, length.out = n / 20), 2),
+    y = rep(seq(0, 1, length.out = n / 20), 2)
+  ),
+  id = "D"
+)
 patternD$x <- jitter(patternD$x)
 patternD$y <- jitter(patternD$y)
 
-simDat <- bind_rows(patternA,patternB,patternC,patternD)
+simDat <- bind_rows(patternA, patternB, patternC, patternD)
 
-simDat <- simDat %>% group_by(id) %>% 
-  mutate(x = scales::rescale(x), 
-         y=scales::rescale(y))
+simDat <- simDat %>%
+  group_by(id) %>%
+  mutate(
+    x = scales::rescale(x),
+    y = scales::rescale(y)
+  )
 
-ggplot(simDat,aes(x=x,y=y)) + 
-  geom_point() + coord_fixed() + 
+ggplot(simDat, aes(x = x, y = y)) +
+  geom_point() +
+  coord_fixed() +
   facet_wrap(~id)
 
 
@@ -49,29 +61,38 @@ plot(bei)
 
 
 ## -----------------------------------------------------------------------------
-tibble(x=japanesepines$x * japanesepines$window$units$multiplier, 
-           y=japanesepines$y * japanesepines$window$units$multiplier) %>%
-  ggplot(mapping = aes(x=x,y=y)) +
+tibble(
+  x = japanesepines$x * japanesepines$window$units$multiplier,
+  y = japanesepines$y * japanesepines$window$units$multiplier
+) %>%
+  ggplot(mapping = aes(x = x, y = y)) +
   geom_point() +
-  labs(x=paste("x (",
-               japanesepines$window$units$plural,
-               ")",sep=""),
-       y=paste("y (",
-               japanesepines$window$units$plural,
-               ")",sep="")) +
-  coord_fixed() + theme_minimal()
+  labs(
+    x = paste("x (",
+      japanesepines$window$units$plural,
+      ")",
+      sep = ""
+    ),
+    y = paste("y (",
+      japanesepines$window$units$plural,
+      ")",
+      sep = ""
+    )
+  ) +
+  coord_fixed() +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
 x <- rnorm(n)
-hist(x,freq=FALSE)
-lines(density(x),col="red")
+hist(x, freq = FALSE)
+lines(density(x), col = "red")
 
 
 ## -----------------------------------------------------------------------------
-ggplot() + 
-  geom_histogram(mapping = aes(x=x,after_stat(density)),fill="grey") + 
-  geom_density(mapping = aes(x=x))
+ggplot() +
+  geom_histogram(mapping = aes(x = x, after_stat(density)), fill = "grey") +
+  geom_density(mapping = aes(x = x))
 
 
 ## -----------------------------------------------------------------------------
@@ -82,13 +103,13 @@ summary(jp.den)
 ## -----------------------------------------------------------------------------
 #| fig-width: 7
 #| fig-height: 6
-persp(jp.den,theta = 30, phi = 30)
+persp(jp.den, theta = 30, phi = 30)
 
 
 ## -----------------------------------------------------------------------------
 plot(jp.den)
-contour(jp.den,add=TRUE)
-points(japanesepines,pch=20)
+contour(jp.den, add = TRUE)
+points(japanesepines, pch = 20)
 
 
 ## -----------------------------------------------------------------------------
@@ -98,9 +119,9 @@ plot(density(bei)) # points(bei,pch=20)
 
 ## -----------------------------------------------------------------------------
 n <- 100
-japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = n, verbose=FALSE)
-beiK <- envelope(bei, fun = Kest, nsim = n, verbose=FALSE)
-redwoodK <- envelope(redwood, fun = Kest, nsim = n, verbose=FALSE)
+japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = n, verbose = FALSE)
+beiK <- envelope(bei, fun = Kest, nsim = n, verbose = FALSE)
+redwoodK <- envelope(redwood, fun = Kest, nsim = n, verbose = FALSE)
 
 
 ## -----------------------------------------------------------------------------
@@ -116,28 +137,32 @@ plot(beiK)
 
 
 ## -----------------------------------------------------------------------------
-plot(envelope(redwood, fun = Kest, nsim = 100,
-              verbose=FALSE, rmax=0.5),main="")
+plot(envelope(redwood,
+  fun = Kest, nsim = 100,
+  verbose = FALSE, rmax = 0.5
+), main = "")
 
 
 ## -----------------------------------------------------------------------------
-japanesepinesK2 <- Kest(japanesepines, verbose=FALSE, 
-                       correction=c("none","isotropic","border"))
+japanesepinesK2 <- Kest(japanesepines,
+  verbose = FALSE,
+  correction = c("none", "isotropic", "border")
+)
 plot(japanesepinesK2)
 
 
 ## -----------------------------------------------------------------------------
-redwoodL <- envelope(redwood, fun = Lest, nsim = n, verbose=FALSE)
+redwoodL <- envelope(redwood, fun = Lest, nsim = n, verbose = FALSE)
 plot(redwoodL)
 
 
 ## -----------------------------------------------------------------------------
-ggplot(redwoodK, mapping = aes(x=r, ymin = lo-pi*r^2, ymax=hi-pi*r^2)) +
-  geom_ribbon(fill="grey",alpha=0.5) + 
-  geom_line(mapping = aes(y=theo-pi*r^2),col="red", linetype="dashed") +
-  geom_line(mapping = aes(y=obs-pi*r^2)) +
-  labs(y=expression(K(r) - pi~r^2), x = "r") +
-  ylim(-0.05,0.05) +
+ggplot(redwoodK, mapping = aes(x = r, ymin = lo - pi * r^2, ymax = hi - pi * r^2)) +
+  geom_ribbon(fill = "grey", alpha = 0.5) +
+  geom_line(mapping = aes(y = theo - pi * r^2), col = "red", linetype = "dashed") +
+  geom_line(mapping = aes(y = obs - pi * r^2)) +
+  labs(y = expression(K(r) - pi ~ r^2), x = "r") +
+  ylim(-0.05, 0.05) +
   theme_minimal()
 
 
@@ -153,35 +178,39 @@ hist(longleaf$marks)
 
 ## -----------------------------------------------------------------------------
 bigTrees <- subset(longleaf, marks > 50)
-plot(envelope(bigTrees, fun = Lest, nsim = n, verbose=FALSE),
-     main = "Big Trees")
+plot(envelope(bigTrees, fun = Lest, nsim = n, verbose = FALSE),
+  main = "Big Trees"
+)
 
 
 ## -----------------------------------------------------------------------------
-longleaf2 <- cut(longleaf, breaks=c(0,30,Inf), 
-                 labels=c("Sapling","Adult"))
+longleaf2 <- cut(longleaf,
+  breaks = c(0, 30, Inf),
+  labels = c("Sapling", "Adult")
+)
 summary(longleaf2)
 plot(longleaf2)
 
 
 ## -----------------------------------------------------------------------------
-adults <- subset(longleaf2, marks == "Adult",drop=TRUE)
-plot(envelope(adults, fun = Lest, verbose=FALSE), main="Adult")
+adults <- subset(longleaf2, marks == "Adult", drop = TRUE)
+plot(envelope(adults, fun = Lest, verbose = FALSE), main = "Adult")
 
-saplings <- subset(longleaf2, marks == "Sapling",drop=TRUE)
-plot(envelope(saplings, fun = Lest, verbose=FALSE), main="Sapling")
+saplings <- subset(longleaf2, marks == "Sapling", drop = TRUE)
+plot(envelope(saplings, fun = Lest, verbose = FALSE), main = "Sapling")
 
 
 ## -----------------------------------------------------------------------------
 adults.den <- density(adults)
 plot(adults.den)
-points(saplings, pch=20)
+points(saplings, pch = 20)
 
 
 ## -----------------------------------------------------------------------------
-longleaf2L <- envelope(longleaf2, "Lcross", 
-                       i ="Sapling",j = "Adult",
-                       verbose=FALSE)
+longleaf2L <- envelope(longleaf2, "Lcross",
+  i = "Sapling", j = "Adult",
+  verbose = FALSE
+)
 plot(longleaf2L)
 
 
@@ -189,7 +218,7 @@ plot(longleaf2L)
 # foo <- clickppp(n = 50) # 50 points
 # # KDE
 # plot(density(foo))
-# points(foo,pch=20)
+# points(foo, pch = 20)
 # # L
 # env <- envelope(foo, Lest, nsim = 100)
 # plot(env)
@@ -200,10 +229,12 @@ plot(longleaf2L)
 
 
 ## ----eval=F-------------------------------------------------------------------
-# patternD <- simDat %>% filter(id=="D")
-# patternD <- ppp(x = patternD$x, y=patternD$y,
-#                 xrange=c(0,1), yrange=c(0,1),
-#                 unitname="km")
+# patternD <- simDat %>% filter(id == "D")
+# patternD <- ppp(
+#   x = patternD$x, y = patternD$y,
+#   xrange = c(0, 1), yrange = c(0, 1),
+#   unitname = "km"
+# )
 # summary(patternD)
 # plot(patternD)
 
@@ -211,16 +242,18 @@ plot(longleaf2L)
 ## -----------------------------------------------------------------------------
 data(sporophores)
 summary(sporophores)
-plot(sporophores, chars=c(16,1,2), cex=0.6, leg.args=list(cex=1.1))
-points(0,0,pch=16, cex=2)
-text(15,8,"Tree", cex=0.75)
+plot(sporophores, chars = c(16, 1, 2), cex = 0.6, leg.args = list(cex = 1.1))
+points(0, 0, pch = 16, cex = 2)
+text(15, 8, "Tree", cex = 0.75)
 
 
 ## -----------------------------------------------------------------------------
 # using subset
-heb_pub <- subset(sporophores,
-                  marks %in% c("L pubescens","Hebloma spp"), drop=TRUE)
-cross_heb_pub <- envelope(heb_pub, "Lcross", verbose=FALSE)
+hebPub <- subset(sporophores,
+  marks %in% c("L pubescens", "Hebloma spp"),
+  drop = TRUE
+)
+crossHebPub <- envelope(hebPub, "Lcross", verbose = FALSE)
 # or directly in envelope (note i and j arguments)
-cross_heb_pub <- envelope(sporophores, "Lcross", i="L pubescens", j = "Hebloma spp", verbose=FALSE)
+crossHebPub <- envelope(sporophores, "Lcross", i = "L pubescens", j = "Hebloma spp", verbose = FALSE)
 

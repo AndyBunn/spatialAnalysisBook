@@ -42,35 +42,41 @@ where $|| \cdot ||$ indicates Euclidean distance and $p$ is a weighting power (o
 Let's visualize the function where weight ($w$) equals the inverse of distance ($d$): $w=d^{-1}$ as such:
 ```{r}
 foo <- data.frame(d = 1:100, w = (1:100)^-1)
-foo %>% ggplot(mapping = aes(x=d,y=w)) + geom_line() +
-  labs(x="Distance",y="Weight")
+foo %>% ggplot(mapping = aes(x = d, y = w)) +
+  geom_line() +
+  labs(x = "Distance", y = "Weight")
 ```
 
 And with a log scale to see more clearly.
 
 ```{r}
-foo %>% ggplot(mapping = aes(x=d,y=w)) + geom_line() +
-  labs(x="Distance",y="Weight") +
+foo %>% ggplot(mapping = aes(x = d, y = w)) +
+  geom_line() +
+  labs(x = "Distance", y = "Weight") +
   scale_y_log10()
 ```
 
 In that case we are using the straight inverse distance as $w=d^{-1}$ or $w=d^{-p}$ where $p=1$. But what if that curve is too steep? Or not steep enough? We can choose a value of $p$. E.g., the function can be $w=d^{-2}$ if we set $p=2$. Let's look at a range of $p$ values.
 ```{r}
-foo <- rbind(data.frame(d = 1:100, w = (1:100)^0, p = "0"),
-             data.frame(d = 1:100, w = (1:100)^-0.5, p = "0.5"),
-             data.frame(d = 1:100, w = (1:100)^-1, p = "1"),
-             data.frame(d = 1:100, w = (1:100)^-1.5, p = "1.5"),
-             data.frame(d = 1:100, w = (1:100)^-2, p = "2"),
-             data.frame(d = 1:100, w = (1:100)^-2.5, p = "2.5"))
-foo %>% ggplot(mapping = aes(x=d,y=w,color=p)) + geom_line() +
-  labs(x="Distance",y="Weight")
+foo <- rbind(
+  data.frame(d = 1:100, w = (1:100)^0, p = "0"),
+  data.frame(d = 1:100, w = (1:100)^-0.5, p = "0.5"),
+  data.frame(d = 1:100, w = (1:100)^-1, p = "1"),
+  data.frame(d = 1:100, w = (1:100)^-1.5, p = "1.5"),
+  data.frame(d = 1:100, w = (1:100)^-2, p = "2"),
+  data.frame(d = 1:100, w = (1:100)^-2.5, p = "2.5")
+)
+foo %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
+  geom_line() +
+  labs(x = "Distance", y = "Weight")
 ```
 
 And with a log scale to see more clearly (if you can think in logs -- it takes me awhile to wrap my head around it, but then I'm glad I did).
 
 ```{r}
-foo %>% ggplot(mapping = aes(x=d,y=w,color=p)) + geom_line() +
-  labs(x="Distance",y="Weight") +
+foo %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
+  geom_line() +
+  labs(x = "Distance", y = "Weight") +
   scale_y_log10()
 ```
 
@@ -82,21 +88,23 @@ Now that we have the information we need on the algorithm, let's do a quick and 
 
 Here is a small data set of five points. We have spatial coordinates ($x$ and $y$) and some measured variable ($z$).
 ```{r}
-foo <- data.frame(x = c(1,3,1,4,5),
-                  y = c(5,4,3,5,1),
-                  z = c(100,105,105,100,115))
+foo <- data.frame(
+  x = c(1, 3, 1, 4, 5),
+  y = c(5, 4, 3, 5, 1),
+  z = c(100, 105, 105, 100, 115)
+)
 foo
-p1 <- foo %>% ggplot() + 
-  geom_point(aes(x=x,y=y,size=z)) +
-  lims(x=c(0,6),y=c(0,6))
+p1 <- foo %>% ggplot() +
+  geom_point(aes(x = x, y = y, size = z)) +
+  lims(x = c(0, 6), y = c(0, 6))
 p1
 ```
 
 Let's imagine a point $x=2$ and $y=4$ where we don't know $z$.
 
 ```{r}
-p1 + geom_point(aes(x=2,y=4),color="red",size=10,shape=0) +
-  geom_point(aes(x=2,y=4),color="red",size=6,shape=63)
+p1 + geom_point(aes(x = 2, y = 4), color = "red", size = 10, shape = 0) +
+  geom_point(aes(x = 2, y = 4), color = "red", size = 6, shape = 63)
 ```
 
 ### IDW
@@ -104,7 +112,7 @@ We are now going to use IDW as a way to get an estimate of that point with a mis
 
 The Euclidean distance to our unknown point from each of the known points is a vector: 
 ```{r,echo=FALSE}
-d2s0 <- as.matrix(dist(cbind(c(foo$x,2),c(foo$y,4))))[1:5,6]
+d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
 ```
 
 $$\mathbf{d_i} = \left[\begin{array}
@@ -136,23 +144,23 @@ $$
 
 Thus the interpolated point:
 ```{r,echo=FALSE}
-zhat_s0 <- sum(w*foo$z)/sum(w)
+zhatS0 <- sum(w * foo$z) / sum(w)
 ```
 
 
 $$\hat{Z}(s_0)=\frac{0.500(100)+1.000(105)+0.500(105)+0.200(100)+0.056(115)}{0.500+1.000+0.500+0.200+0.056} = 103.7$$
 ```{r, warning=FALSE}
 # distance to missing point s0
-d2s0 <- as.matrix(dist(cbind(c(foo$x,2),c(foo$y,4))))[1:5,6]
+d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
 # power
 p <- 2
 # weights
 w <- d2s0^-p
 # and the estimation itself
-zhat_s0 <- sum(w*foo$z)/sum(w)
-zhat_s0
+zhatS0 <- sum(w * foo$z) / sum(w)
+zhatS0
 # add it to the plot
-p1 + geom_point(aes(x=2,y=4,size=zhat_s0))
+p1 + geom_point(aes(x = 2, y = 4, size = zhatS0))
 ```
 
 You can see how we interpolated (estimated) one point using inverse distance weighting. And you could imagine then how we'd do that for any point we could imagine.
@@ -175,16 +183,18 @@ meuse2$logLead <- log(meuse2$lead)
 # or for the tidyverse fans this is the same output
 meuse2 <- meuse2 %>% mutate(logLead = log(lead))
 # make into sf
-meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
+meuseSf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
-class(meuse_sf) # note change in class from data.frame to sf and data.frame
+class(meuseSf) # note change in class from data.frame to sf and data.frame
 
-p2 <- ggplot(data = meuse_sf) +
-  geom_sf(aes(fill=logLead), size=4, 
-          shape = 21, color="white",alpha=0.8)+
-  scale_fill_continuous(type = "viridis",name="log(ppm)") + 
-  labs(title="Lead concentrations")
+p2 <- ggplot(data = meuseSf) +
+  geom_sf(aes(fill = logLead),
+    size = 4,
+    shape = 21, color = "white", alpha = 0.8
+  ) +
+  scale_fill_continuous(type = "viridis", name = "log(ppm)") +
+  labs(title = "Lead concentrations")
 p2
 ```
 
@@ -199,30 +209,33 @@ This has several fields that overlap with `meuse2` (e.g., `soil`, `ffreq`), plus
 
 
 ```{r}
-meuse_grid_sf <- st_as_sf(meuse.grid2, 
-                          coords = c("x","y"), 
-                          crs = st_crs(meuse_sf))
-meuse_grid_sf
+meuseGridSf <- st_as_sf(meuse.grid2,
+  coords = c("x", "y"),
+  crs = st_crs(meuseSf)
+)
+meuseGridSf
 ```
 
 ### IDW
-So the idea here is that we will model a value for lead at each of the locations in `meuse_grid_sf`. Rather than do this by hand as we did above, we will use the very powerful `gstat` library.
+So the idea here is that we will model a value for lead at each of the locations in `meuseGridSf`. Rather than do this by hand as we did above, we will use the very powerful `gstat` library.
 
-We can use the coordinates in `meuse_grid_sf` as the locations to predict using IDW. We don't care about the data in `meuse_grid_sf` like soil type or distance to river. We just want the locations. To do this, we will use the `gstat` function which creates an object that holds all the information necessary for prediction. Here we tell `gstat` that we want an IDW model with a power of 2 using the `idp` parameter. The formula `logLead~1` tells `gstat` there are no covariates, just an intercept. The spatial weighting by distance is what makes this IDW -- that's handled by `idp`, not by the formula. This distinction will matter when we add covariates in regression kriging.
+We can use the coordinates in `meuseGridSf` as the locations to predict using IDW. We don't care about the data in `meuseGridSf` like soil type or distance to river. We just want the locations. To do this, we will use the `gstat` function which creates an object that holds all the information necessary for prediction. Here we tell `gstat` that we want an IDW model with a power of 2 using the `idp` parameter. The formula `logLead~1` tells `gstat` there are no covariates, just an intercept. The spatial weighting by distance is what makes this IDW -- that's handled by `idp`, not by the formula. This distinction will matter when we add covariates in regression kriging.
 
 ::: {.callout-note}
-Note that we're calling `predict()` here which is a generic function that will dispatch to a different method under the hood because `idw_p2_model` is a `gstats` object. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html).
+Note that we're calling `predict()` here which is a generic function that will dispatch to a different method under the hood because `idwP2Model` is a `gstats` object. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html).
 :::
 
 ```{r}
-idw_p2_model <- gstat(formula=logLead~1, 
-                      locations = meuse_sf,
-                      set=list(idp = 2))
-logLeadIDW_p2_sf <- predict(idw_p2_model,meuse_grid_sf)
-logLeadIDW_p2_sf
+idwP2Model <- gstat(
+  formula = logLead ~ 1,
+  locations = meuseSf,
+  set = list(idp = 2)
+)
+logLeadIDWP2Sf <- predict(idwP2Model, meuseGridSf)
+logLeadIDWP2Sf
 ```
 
-Now, we are going to look at the interpolated data and assess if it's a "good" interpolation in a bit. But first, let's look at the `logLeadIDW_p2_sf` object we made. This is a `sf` object returned by `predict`. The interpolated lead levels are accessed via `logLeadIDW_p2_sf$var1.pred` (we will turn a blind eye to the `logLeadIDW_p2_sf$var1.var` column of NA values for *now*. Those NAs are there because IDW is deterministic; there's no probability model underneath it and therefore no variance to estimate. When we get to kriging, that column will actually mean something). All the `gstat` functions we are going to use follow this convention so the good news is that you only have to get used to it once.
+Now, we are going to look at the interpolated data and assess if it's a "good" interpolation in a bit. But first, let's look at the `logLeadIDWP2Sf` object we made. This is a `sf` object returned by `predict`. The interpolated lead levels are accessed via `logLeadIDWP2Sf$var1.pred` (we will turn a blind eye to the `logLeadIDWP2Sf$var1.var` column of NA values for *now*. Those NAs are there because IDW is deterministic; there's no probability model underneath it and therefore no variance to estimate. When we get to kriging, that column will actually mean something). All the `gstat` functions we are going to use follow this convention so the good news is that you only have to get used to it once.
 
 But first, the `gstat` `predict` function returned a `sf` point object. We want it to be a `SpatRaster`. You'd think there would be an elegant way to convert an evenly spaced point object into a `SpatRaster` object but there isn't at the moment so we will brute force it. This is a little irksome but whatever. I'll write a little function to do this just because we'll have to do it a few times.
 
@@ -239,30 +252,31 @@ se <- function(x){
 }
 ```
 
-Now `se()` works just like any other R function. Call it on a vector, get a number back. The payoff is that you can use it as many times as you need without copy-pasting the same three-part calculation everywhere. That's exactly why we're writing `sf_2_rast` below -- we're going to need it more than once.
+Now `se()` works just like any other R function. Call it on a vector, get a number back. The payoff is that you can use it as many times as you need without copy-pasting the same three-part calculation everywhere. That's exactly why we're writing `sf2Rast` below -- we're going to need it more than once.
 :::
 
 
 ```{r}
-sf_2_rast <-function(sfObject,variableIndex = 1){
+sf2Rast <- function(sfObject, variableIndex = 1) {
   # coerce sf to a data.frame
   dfObject <- data.frame(st_coordinates(sfObject),
-                         z=as.data.frame(sfObject)[,variableIndex])
+    z = as.data.frame(sfObject)[, variableIndex]
+  )
   # coerce data.frame to SpatRaster
-  rastObject <- rast(dfObject,crs=crs(sfObject))
-  
+  rastObject <- rast(dfObject, crs = crs(sfObject))
+
   names(rastObject) <- names(sfObject)[variableIndex]
-  
+
   return(rastObject)
 }
 
-logLeadIDW_p2_rast <- sf_2_rast(logLeadIDW_p2_sf)
-logLeadIDW_p2_rast
+logLeadIDWP2Rast <- sf2Rast(logLeadIDWP2Sf)
+logLeadIDWP2Rast
 # and plot
 ggplot() +
-  geom_spatraster(data=logLeadIDW_p2_rast, mapping = aes(fill=var1.pred),alpha=0.8) +
-  scale_fill_continuous(type = "viridis",name="log(ppm)",na.value = "transparent") + 
-  labs(title="Lead concentrations", subtitle = "IDW with p=2") +
+  geom_spatraster(data = logLeadIDWP2Rast, mapping = aes(fill = var1.pred), alpha = 0.8) +
+  scale_fill_continuous(type = "viridis", name = "log(ppm)", na.value = "transparent") +
+  labs(title = "Lead concentrations", subtitle = "IDW with p=2") +
   theme_minimal()
 ```
 
@@ -270,11 +284,13 @@ We've made a prediction. Is it any good? It kind of looks funny -- especially al
 
 ```{r}
 ggplot() +
-  geom_spatraster_contour_filled(data=logLeadIDW_p2_rast,
-                                 breaks = seq(from=3.5, to=6.5,by=0.25),
-                                 alpha = 0.9) +
-  scale_fill_discrete(name="log(ppm)",na.value = "transparent") + 
-  labs(title="Lead concentrations", subtitle = "IDW with p=2") +
+  geom_spatraster_contour_filled(
+    data = logLeadIDWP2Rast,
+    breaks = seq(from = 3.5, to = 6.5, by = 0.25),
+    alpha = 0.9
+  ) +
+  scale_fill_discrete(name = "log(ppm)", na.value = "transparent") +
+  labs(title = "Lead concentrations", subtitle = "IDW with p=2") +
   theme_minimal()
 ```
 
@@ -286,42 +302,46 @@ Those craters are artifacts of IDW, not real structure in the data. Here's why t
 Now that we are making predictions we need to assess how good they are. The [Model Skill and Cross Validation aside](06xAsideModelSkill.html) covers all of this in detail and is worth reading before going further. The short version is: we'll use R$^2$, RMSE, and the observed-vs-predicted plot throughout the interpolation chapters, and we always care more about out-of-sample skill than in-sample fit. Here's the in-sample picture first, just to show why:
 
 ```{r}
-obs <- meuse_sf$logLead
-preds <- extract(logLeadIDW_p2_rast, meuse_sf) %>% pull(var1.pred)
-rsq <- cor(obs,preds)^2
+obs <- meuseSf$logLead
+preds <- extract(logLeadIDWP2Rast, meuseSf) %>% pull(var1.pred)
+rsq <- cor(obs, preds)^2
 rmse <- sqrt(mean((preds - obs)^2))
 rsq
 rmse
 ggplot() +
-  geom_abline(slope=1,intercept = 0) +
-  geom_point(aes(x=obs,y=preds)) + 
-  coord_cartesian() + 
-  labs(x="Observed Values",
-       y="Predicted Values",
-       title="Lead log(ppm)")
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point(aes(x = obs, y = preds)) +
+  coord_cartesian() +
+  labs(
+    x = "Observed Values",
+    y = "Predicted Values",
+    title = "Lead log(ppm)"
+  )
 ```
 
 The model does an excellent job of predicting the observed values with 99% variance explained and a low RMSE. It's 99% rather than 100% because we're extracting predictions from a raster grid, not from the exact observation coordinates -- there's a little rounding from the discretization. IDW is actually exact at data locations in theory (the weight to itself would be infinite, overwhelming everything else). Which is precisely why this in-sample comparison is kind of a lame test. The model knew about all those points when it made the predictions. Typically when assessing skill we withhold some portion of the data and then use that to test the model. When we test the model using the withheld data we are calculating the out-of-sample error by giving the model a chance to predict some data it hasn't seen before. E.g., let's withhold 25% of the data (38 points), do the interpolation, and then look at how well the model predicted the withheld points.
 
 ```{r}
-n <- nrow(meuse_sf)
-rows4test <- sample(x = 1:n,size = n*0.25)
-meuseTest <- meuse_sf[rows4test,]
-meuseTrain <- meuse_sf[-rows4test,]
+n <- nrow(meuseSf)
+rows4test <- sample(x = 1:n, size = n * 0.25)
+meuseTest <- meuseSf[rows4test, ]
+meuseTrain <- meuseSf[-rows4test, ]
 
 # note that we build the model with meuseTrain
-idw_p2_model <- gstat(formula=logLead~1, 
-                      locations = meuseTrain,
-                      set=list(idp = 2))
-logLeadIDW_p2_sf <- predict(idw_p2_model,meuse_grid_sf)
+idwP2Model <- gstat(
+  formula = logLead ~ 1,
+  locations = meuseTrain,
+  set = list(idp = 2)
+)
+logLeadIDWP2Sf <- predict(idwP2Model, meuseGridSf)
 
-logLeadIDW_p2_rast <- sf_2_rast(logLeadIDW_p2_sf)
+logLeadIDWP2Rast <- sf2Rast(logLeadIDWP2Sf)
 
 # and plot
 ggplot() +
-  geom_spatraster(data=logLeadIDW_p2_rast, mapping = aes(fill=var1.pred),alpha=0.8) +
-  scale_fill_continuous(type = "viridis",name="log(ppm)",na.value = "transparent") + 
-  labs(title="Lead concentrations", subtitle = "IDW with p=2") +
+  geom_spatraster(data = logLeadIDWP2Rast, mapping = aes(fill = var1.pred), alpha = 0.8) +
+  scale_fill_continuous(type = "viridis", name = "log(ppm)", na.value = "transparent") +
+  labs(title = "Lead concentrations", subtitle = "IDW with p=2") +
   theme_minimal()
 ```
 
@@ -330,19 +350,21 @@ We built the model with the training data `meuseTrain` which had 75% of the orig
 ```{r}
 # note use of meuseTest here
 obs <- meuseTest$logLead
-preds <- extract(logLeadIDW_p2_rast, meuseTest) %>% pull(var1.pred)
-rsq <- cor(obs,preds)^2
+preds <- extract(logLeadIDWP2Rast, meuseTest) %>% pull(var1.pred)
+rsq <- cor(obs, preds)^2
 rmse <- sqrt(mean((preds - obs)^2))
 rsq
 rmse
 
 ggplot() +
-  geom_abline(slope=1,intercept = 0) +
-  geom_point(aes(x=obs,y=preds)) + 
-  coord_fixed(ratio=1, xlim = range(preds,obs),ylim = range(preds,obs)) +
-  labs(x="Observed Values",
-       y="Predicted Values",
-       title="Lead log(ppm)")
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point(aes(x = obs, y = preds)) +
+  coord_fixed(ratio = 1, xlim = range(preds, obs), ylim = range(preds, obs)) +
+  labs(
+    x = "Observed Values",
+    y = "Predicted Values",
+    title = "Lead log(ppm)"
+  )
 ```
 
 Oooof. Looking at that plot and the code we see now that the skill of the model is greatly decreased with R$^2$ = `r round(rsq,3)` and RMSE = `r round(rmse,3)`. We can also see that the predicted values are less than the observed values for these points.
@@ -368,19 +390,21 @@ What can we do right now? We could start trying to "tune" the model using parame
 For example, here is the same data as above with $p=3$ instead of $p=2$.
 
 ```{r}
-idw_p3_model <- gstat(formula=logLead~1, 
-                        locations = meuseTrain,
-                        set=list(idp = 3))
+idwP3Model <- gstat(
+  formula = logLead ~ 1,
+  locations = meuseTrain,
+  set = list(idp = 3)
+)
 
-logLeadIDW_p3_sf <- predict(idw_p3_model,meuse_grid_sf)
+logLeadIDWP3Sf <- predict(idwP3Model, meuseGridSf)
 
-logLeadIDW_p3_rast <- sf_2_rast(logLeadIDW_p3_sf)
+logLeadIDWP3Rast <- sf2Rast(logLeadIDWP3Sf)
 
 # and plot
 ggplot() +
-  geom_spatraster(data=logLeadIDW_p3_rast, mapping = aes(fill=var1.pred),alpha=0.8) +
-  scale_fill_continuous(type = "viridis",name="log(ppm)",na.value = "transparent") + 
-  labs(title="Lead concentrations") +
+  geom_spatraster(data = logLeadIDWP3Rast, mapping = aes(fill = var1.pred), alpha = 0.8) +
+  scale_fill_continuous(type = "viridis", name = "log(ppm)", na.value = "transparent") +
+  labs(title = "Lead concentrations") +
   theme_minimal()
 ```
 
@@ -389,18 +413,20 @@ How does this surface differ? Here is the skill on the withheld data:
 ```{r}
 # note use of meuseTest here
 obs <- meuseTest$logLead
-preds <- extract(logLeadIDW_p3_rast, meuseTest) %>% pull(var1.pred)
-rsq <- cor(obs,preds)^2
+preds <- extract(logLeadIDWP3Rast, meuseTest) %>% pull(var1.pred)
+rsq <- cor(obs, preds)^2
 rmse <- sqrt(mean((preds - obs)^2))
 rsq
 rmse
 ggplot() +
-  geom_abline(slope=1,intercept = 0) +
-  geom_point(aes(x=obs,y=preds)) + 
-  coord_fixed(ratio=1, xlim = range(preds,obs),ylim = range(preds,obs)) +
-  labs(x="Observed Values",
-       y="Predicted Values",
-       title="Lead log(ppm)")
+  geom_abline(slope = 1, intercept = 0) +
+  geom_point(aes(x = obs, y = preds)) +
+  coord_fixed(ratio = 1, xlim = range(preds, obs), ylim = range(preds, obs)) +
+  labs(
+    x = "Observed Values",
+    y = "Predicted Values",
+    title = "Lead log(ppm)"
+  )
 ```
 
 The R$^2$ is higher and the RMSE is lower. It's a better fit but not much better. Against the same null, the skill score for $p=3$ is:
@@ -432,16 +458,19 @@ prcpCA <- readRDS("data/prcpCA.rds")
 gridCA <- readRDS("data/gridCA.rds")
 
 # make as sf
-prcpCA <- prcpCA %>% st_as_sf(coords = c("X", "Y")) %>%
+prcpCA <- prcpCA %>%
+  st_as_sf(coords = c("X", "Y")) %>%
   st_set_crs(value = 3310)
 
 # simple map
 prcpCA %>% ggplot() +
-  geom_sf(aes(fill=ANNUAL,size=ANNUAL),color="white",
-          shape=21,alpha=0.8) +
-  scale_fill_continuous(type = "viridis",name="mm") +
-  labs(title="Total Annual Precipitation") +
-  scale_size(guide="none")
+  geom_sf(aes(fill = ANNUAL, size = ANNUAL),
+    color = "white",
+    shape = 21, alpha = 0.8
+  ) +
+  scale_fill_continuous(type = "viridis", name = "mm") +
+  labs(title = "Total Annual Precipitation") +
+  scale_size(guide = "none")
 ```
 
 Use IDW to create a surface of total annual precipitation in California. Tune $p$ and assess out-of-sample skill. Interpret your surface -- what patterns do you see, and are they physically plausible? The [Model Skill and Cross Validation aside](06xAsideModelSkill.html) covers the skill metrics in detail.

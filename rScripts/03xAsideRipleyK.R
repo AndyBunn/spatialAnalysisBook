@@ -9,7 +9,7 @@ library(spatstat)
 
 ## -----------------------------------------------------------------------------
 n <- 12
-area <- 100  # 10 x 10 = 100 square units
+area <- 100 # 10 x 10 = 100 square units
 x <- runif(n = n, min = 0, max = 10)
 y <- runif(n = n, min = 0, max = 10)
 
@@ -41,8 +41,10 @@ for (i in seq_along(r)) {
 ggplot() +
   geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
   geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
-  labs(y = "K(r)", x = "r",
-       caption = "Blue = observed K. Red dashed = theoretical K under CSR.")
+  labs(
+    y = "K(r)", x = "r",
+    caption = "Blue = observed K. Red dashed = theoretical K under CSR."
+  )
 
 
 ## -----------------------------------------------------------------------------
@@ -54,7 +56,9 @@ xyK <- Kest(xy, r = r, correction = "none")
 ggplot() +
   geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
   geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
-  geom_line(data = xyK, aes(x = r, y = un),
-            linetype = "dashed", color = "white") +
+  geom_line(
+    data = xyK, aes(x = r, y = un),
+    linetype = "dashed", color = "white"
+  ) +
   labs(y = "K(r)", x = "r")
 

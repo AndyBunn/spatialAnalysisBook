@@ -38,9 +38,9 @@ We will use the Meuse River data. If you have not already loaded and prepped it,
 
 ```{r}
 meuse2 <- readRDS("data/meuse2.Rds")
-meuse_sf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
+meuseSf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
-meuse_sf$log_lead <- log(meuse_sf$lead)
+meuseSf$log_lead <- log(meuseSf$lead)
 ```
 
 We need to define what "neighbor" means before we can compute anything. For LISA we use k-nearest neighbors -- the $k$ locations closest to each point in space. Here we use $k=8$, meaning each location's neighborhood is its 8 nearest points. There is nothing magical about 8; it is a reasonable default for a dataset this size that gives each location enough neighbors to get a stable estimate without pulling in points that are too far away.
@@ -48,9 +48,9 @@ We need to define what "neighbor" means before we can compute anything. For LISA
 The `spdep` syntax for this is a three-step pipeline and yes, it is bewildering until you have seen it a few times.
 
 ```{r}
-k8 <- knearneigh(meuse_sf, k = 8)
-nb_k8 <- knn2nb(k8)
-W <- nb2listw(nb_k8, style = "W")
+k8 <- knearneigh(meuseSf, k = 8)
+nbK8 <- knn2nb(k8)
+W <- nb2listw(nbK8, style = "W")
 ```
 
 `knearneigh` finds the 8 nearest neighbors for each point and returns a raw neighbor table. `knn2nb` converts that table into a neighbor list object (`nb`) which is `spdep`'s internal format for storing who is next to whom. `nb2listw` takes that neighbor list and turns it into a weights list object (`listw`) that the rest of `spdep` can actually use. You can think of it as: find neighbors, formalize neighbors, weight neighbors.
@@ -61,20 +61,24 @@ The Moran scatterplot works like this. We standardize the variable (call it $z$)
 
 ```{r}
 # standardize log lead
-meuse_sf$z <- as.vector(scale(meuse_sf$log_lead))
+meuseSf$z <- as.vector(scale(meuseSf$log_lead))
 
 # compute the spatial lag: weighted average of neighbors' z values
-meuse_sf$lag_z <- lag.listw(W, meuse_sf$z)
+meuseSf$lag_z <- lag.listw(W, meuseSf$z)
 
-ggplot(meuse_sf, aes(x = z, y = lag_z)) +
+ggplot(meuseSf, aes(x = z, y = lag_z)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
   geom_point(alpha = 0.7) +
-  geom_smooth(method = "lm", formula = y ~ x - 1, 
-              se = FALSE, color = "firebrick") +
-  labs(x = "Standardized log lead (z)", 
-       y = "Spatial lag of z",
-       title = "Moran scatterplot: log lead, Meuse River")
+  geom_smooth(
+    method = "lm", formula = y ~ x - 1,
+    se = FALSE, color = "firebrick"
+  ) +
+  labs(
+    x = "Standardized log lead (z)",
+    y = "Spatial lag of z",
+    title = "Moran scatterplot: log lead, Meuse River"
+  )
 ```
 
 Look at the four quadrants this creates:
@@ -88,11 +92,11 @@ Now here is the cool bit! The slope of the regression line through the origin is
 
 ```{r}
 # slope of the Moran scatterplot
-moranSlope <- coef(lm(lag_z ~ z - 1, data = as.data.frame(meuse_sf)))
+moranSlope <- coef(lm(lag_z ~ z - 1, data = as.data.frame(meuseSf)))
 moranSlope
 
 # global Moran's I
-moran.test(meuse_sf$log_lead, W)$estimate[1]
+moran.test(meuseSf$log_lead, W)$estimate[1]
 ```
 
 They match. Global Moran's I is the average tendency across all points to fall in the HH and LL quadrants rather than the HL and LH quadrants. Each individual point's contribution to that slope is its local Moran's I.
@@ -122,24 +126,24 @@ Before running LISA on real data, let's plant a known hot spot in simulated data
 I will make an 8x8 grid of locations. All locations get values drawn from a standard normal distribution, except a 3x3 block in one corner which gets values drawn from a normal distribution centered at 4. That block is our planted hot spot.
 
 ```{r}
-n_side <- 8
-grid_pts <- expand.grid(
-  x = 1:n_side,
-  y = 1:n_side
+nSide <- 8
+gridPts <- expand.grid(
+  x = 1:nSide,
+  y = 1:nSide
 )
-grid_pts$z <- rnorm(nrow(grid_pts))
+gridPts$z <- rnorm(nrow(gridPts))
 
 # plant the hot spot: upper-right 3x3 corner
-hot_idx <- grid_pts$x >= 6 & grid_pts$y >= 6
-grid_pts$z[hot_idx] <- rnorm(sum(hot_idx), mean = 4, sd = 0.5)
+hotIdx <- gridPts$x >= 6 & gridPts$y >= 6
+gridPts$z[hotIdx] <- rnorm(sum(hotIdx), mean = 4, sd = 0.5)
 
-grid_sf <- st_as_sf(grid_pts, coords = c("x", "y"))
+gridSf <- st_as_sf(gridPts, coords = c("x", "y"))
 ```
 
 Map it:
 
 ```{r}
-ggplot(grid_sf) +
+ggplot(gridSf) +
   geom_sf(aes(color = z), size = 6) +
   scale_color_viridis_c(name = "z") +
   labs(title = "Simulated data with planted hot spot")
@@ -148,41 +152,41 @@ ggplot(grid_sf) +
 You can see the bright cluster in the upper right. What does global Moran's I say?
 
 ```{r}
-nb_sim <- knn2nb(knearneigh(grid_sf, k = 4))
-W_sim <- nb2listw(nb_sim, style = "W")
-moran.test(grid_sf$z, W_sim)
+nbSim <- knn2nb(knearneigh(gridSf, k = 4))
+WSim <- nb2listw(nbSim, style = "W")
+moran.test(gridSf$z, WSim)
 ```
 
 Moran's I is significantly positive. That's good, but it doesn't tell us where. Now run LISA:
 
 ```{r}
-lisa_sim <- localmoran(grid_sf$z, listw = W_sim)
-head(lisa_sim)
+lisaSim <- localmoran(gridSf$z, listw = WSim)
+head(lisaSim)
 ```
 
 `localmoran` returns a matrix with one row per location and five columns. `Ii` is the local Moran's I value for that location (the number we actually care about). `E.Ii` is the expected value under spatial randomness and `Var.Ii` is the variance, both of which feed into the test. `Z.Ii` is the z-score, and `Pr(z != E(Ii))` is the two-sided p-value asking whether that location's `Ii` is distinguishable from what you'd expect by chance. For now we just need `Ii` and the p-value, so let's pull those out and attach them to our `sf` object.
 
 ```{r}
-grid_sf$Ii <- lisa_sim[, "Ii"]
-grid_sf$pval <- lisa_sim[, "Pr(z != E(Ii))"]
+gridSf$Ii <- lisaSim[, "Ii"]
+gridSf$pval <- lisaSim[, "Pr(z != E(Ii))"]
 ```
 
 We can build a little cluster classification now to map. We need the standardized variable and its spatial lag to assign each location to a quadrant, then use the p-value to flag non-significant ones.
 
 ```{r}
-z_sim <- as.vector(scale(grid_sf$z))
-lag_sim <- lag.listw(W_sim, z_sim)
+zSim <- as.vector(scale(gridSf$z))
+lagSim <- lag.listw(WSim, zSim)
 
 sig <- 0.05
-grid_sf$cluster <- case_when(
-  z_sim > 0 & lag_sim > 0 & grid_sf$pval < sig ~ "High-High",
-  z_sim < 0 & lag_sim < 0 & grid_sf$pval < sig ~ "Low-Low",
-  z_sim > 0 & lag_sim < 0 & grid_sf$pval < sig ~ "High-Low",
-  z_sim < 0 & lag_sim > 0 & grid_sf$pval < sig ~ "Low-High",
+gridSf$cluster <- case_when(
+  zSim > 0 & lagSim > 0 & gridSf$pval < sig ~ "High-High",
+  zSim < 0 & lagSim < 0 & gridSf$pval < sig ~ "Low-Low",
+  zSim > 0 & lagSim < 0 & gridSf$pval < sig ~ "High-Low",
+  zSim < 0 & lagSim > 0 & gridSf$pval < sig ~ "Low-High",
   TRUE ~ "Not significant"
 )
 
-ggplot(grid_sf) +
+ggplot(gridSf) +
   geom_sf(aes(color = cluster), size = 6) +
   scale_color_manual(
     values = c(
@@ -193,8 +197,10 @@ ggplot(grid_sf) +
       "Not significant" = "grey80"
     )
   ) +
-  labs(title = "LISA cluster map: simulated data",
-       color = "Cluster type")
+  labs(
+    title = "LISA cluster map: simulated data",
+    color = "Cluster type"
+  )
 ```
 
 The HH cluster is exactly where we planted it. 
@@ -204,7 +210,7 @@ The HH cluster is exactly where we planted it.
 Now let's run LISA on the log lead data where we actually want to learn something.
 
 ```{r}
-lisa <- localmoran(meuse_sf$log_lead, listw = W)
+lisa <- localmoran(meuseSf$log_lead, listw = W)
 head(lisa)
 ```
 
@@ -213,26 +219,26 @@ Same five columns as before. The p-values here are based on the normal approxima
 Let's attach the results to our `sf` object and build the cluster map. Using $\alpha = 0.01$ here given the multiple testing issue.
 
 ```{r}
-meuse_sf$Ii <- lisa[, "Ii"]
-meuse_sf$pval <- lisa[, "Pr(z != E(Ii))"]
+meuseSf$Ii <- lisa[, "Ii"]
+meuseSf$pval <- lisa[, "Pr(z != E(Ii))"]
 
 sig <- 0.01
-meuse_sf$cluster <- case_when(
-  meuse_sf$z > 0 & meuse_sf$lag_z > 0 & meuse_sf$pval < sig ~ "High-High",
-  meuse_sf$z < 0 & meuse_sf$lag_z < 0 & meuse_sf$pval < sig ~ "Low-Low",
-  meuse_sf$z > 0 & meuse_sf$lag_z < 0 & meuse_sf$pval < sig ~ "High-Low",
-  meuse_sf$z < 0 & meuse_sf$lag_z > 0 & meuse_sf$pval < sig ~ "Low-High",
+meuseSf$cluster <- case_when(
+  meuseSf$z > 0 & meuseSf$lag_z > 0 & meuseSf$pval < sig ~ "High-High",
+  meuseSf$z < 0 & meuseSf$lag_z < 0 & meuseSf$pval < sig ~ "Low-Low",
+  meuseSf$z > 0 & meuseSf$lag_z < 0 & meuseSf$pval < sig ~ "High-Low",
+  meuseSf$z < 0 & meuseSf$lag_z > 0 & meuseSf$pval < sig ~ "Low-High",
   TRUE ~ "Not significant"
 )
 
-table(meuse_sf$cluster)
+table(meuseSf$cluster)
 ```
 
 Now map it. An interactive map with `tmap` is particularly useful here because you can click on individual points to see their values.
 
 ```{r}
 tmap_mode("view")
-tm_shape(meuse_sf) +
+tm_shape(meuseSf) +
   tm_symbols(
     fill = "cluster",
     fill.scale = tm_scale_categorical(
@@ -257,7 +263,7 @@ Compare this to the global Moran's I you computed in the last chapter. Log lead 
 It can also be useful to map $I_i$ directly, not just the cluster category. This gives you a continuous view of where clustering is strongest.
 
 ```{r}
-ggplot(meuse_sf) +
+ggplot(meuseSf) +
   geom_sf(aes(color = Ii), size = 2.5) +
   scale_color_gradient2(
     low = "#2c7bb6", mid = "white", high = "#d7191c",
@@ -288,7 +294,7 @@ From here the book shifts to prediction. We've been describing spatial structure
 Load the `birdRichnessMexico.rds` data from the previous chapter.
 
 ```{r, eval=FALSE}
-birds_sf <- readRDS("data/birdRichnessMexico.rds")
+birdsSf <- readRDS("data/birdRichnessMexico.rds")
 ```
 
 The previous chapter described the global spatial autocorrelation in bird richness using Moran's I and variograms. Now take the next step and decompose that global signal locally.

@@ -42,26 +42,38 @@ Let's illustrate. I'll generate four maps. Each has 100 points. Your job is to f
 #| fig-width: 9
 #| fig-height: 6
 n <- 100
-patternA <- data.frame(x=rnorm(n),y=rnorm(n),id="A")
-patternB <- data.frame(x=runif(n),y=runif(n),id="B")
-patternC <- data.frame(expand.grid(x = seq(0, 1, length.out = sqrt(n)),
-                                   y = seq(0, 1, length.out = sqrt(n))),
-                       id="C")
+patternA <- data.frame(x = rnorm(n), y = rnorm(n), id = "A")
+patternB <- data.frame(x = runif(n), y = runif(n), id = "B")
+patternC <- data.frame(
+  expand.grid(
+    x = seq(0, 1, length.out = sqrt(n)),
+    y = seq(0, 1, length.out = sqrt(n))
+  ),
+  id = "C"
+)
 
-patternD <- data.frame(expand.grid(x = rep(seq(0, 1, length.out = n/20),2),
-                                   y = rep(seq(0, 1, length.out = n/20),2)),
-                       id="D")
+patternD <- data.frame(
+  expand.grid(
+    x = rep(seq(0, 1, length.out = n / 20), 2),
+    y = rep(seq(0, 1, length.out = n / 20), 2)
+  ),
+  id = "D"
+)
 patternD$x <- jitter(patternD$x)
 patternD$y <- jitter(patternD$y)
 
-simDat <- bind_rows(patternA,patternB,patternC,patternD)
+simDat <- bind_rows(patternA, patternB, patternC, patternD)
 
-simDat <- simDat %>% group_by(id) %>% 
-  mutate(x = scales::rescale(x), 
-         y=scales::rescale(y))
+simDat <- simDat %>%
+  group_by(id) %>%
+  mutate(
+    x = scales::rescale(x),
+    y = scales::rescale(y)
+  )
 
-ggplot(simDat,aes(x=x,y=y)) + 
-  geom_point() + coord_fixed() + 
+ggplot(simDat, aes(x = x, y = y)) +
+  geom_point() +
+  coord_fixed() +
   facet_wrap(~id)
 ```
 
@@ -95,33 +107,42 @@ Note also that I'm using the `plot` function to show the point data. E.g., `plot
 If you are a die hard `ggplot` enthusiast you can figure out how to make your own plot using `ggplot`. E.g., you can get the units right and geek out on this as much as you like by looking at the plumbing of the `japanesepines` object which is a `list`. I'm not suggesting you do this. But I know many of you take your data viz seriously and might be offended by the default plots.
 
 ```{r}
-tibble(x=japanesepines$x * japanesepines$window$units$multiplier, 
-           y=japanesepines$y * japanesepines$window$units$multiplier) %>%
-  ggplot(mapping = aes(x=x,y=y)) +
+tibble(
+  x = japanesepines$x * japanesepines$window$units$multiplier,
+  y = japanesepines$y * japanesepines$window$units$multiplier
+) %>%
+  ggplot(mapping = aes(x = x, y = y)) +
   geom_point() +
-  labs(x=paste("x (",
-               japanesepines$window$units$plural,
-               ")",sep=""),
-       y=paste("y (",
-               japanesepines$window$units$plural,
-               ")",sep="")) +
-  coord_fixed() + theme_minimal()
+  labs(
+    x = paste("x (",
+      japanesepines$window$units$plural,
+      ")",
+      sep = ""
+    ),
+    y = paste("y (",
+      japanesepines$window$units$plural,
+      ")",
+      sep = ""
+    )
+  ) +
+  coord_fixed() +
+  theme_minimal()
 ```
 
 ### Kernel Density Estimation
 One way of looking for patterns with points is visually. We can do this in an intuitive way by smoothing the data by applying a kernel density estimation (KDE). KDE is a non-parametric method for estimating the probability density function of a variable. Try this for an idea of what we are going to do with spatial data:
 ```{r}
 x <- rnorm(n)
-hist(x,freq=FALSE)
-lines(density(x),col="red")
+hist(x, freq = FALSE)
+lines(density(x), col = "red")
 ```
 
 Or for `ggplot` folks. I'll stop doing the double plotting now but want to make everybody aware that you can plot any way you choose.
 
 ```{r}
-ggplot() + 
-  geom_histogram(mapping = aes(x=x,after_stat(density)),fill="grey") + 
-  geom_density(mapping = aes(x=x))
+ggplot() +
+  geom_histogram(mapping = aes(x = x, after_stat(density)), fill = "grey") +
+  geom_density(mapping = aes(x = x))
 ```
 
 Ok. What is this? We took `n` random points (`n=`r n``from above) and estimated the probability density function with a kernel. Kernel density estimation is a basic data-smoothing technique and the density estimates are closely related to histograms as you can tell.
@@ -140,15 +161,15 @@ This density object (class `density.ppp`) has methods for `summary`, `plot`, `co
 ```{r}
 #| fig-width: 7
 #| fig-height: 6
-persp(jp.den,theta = 30, phi = 30)
+persp(jp.den, theta = 30, phi = 30)
 ```
 
 You can add contour lines and even the add points back in after you plot the KDE and gander at it:
 
 ```{r}
 plot(jp.den)
-contour(jp.den,add=TRUE)
-points(japanesepines,pch=20)
+contour(jp.den, add = TRUE)
+points(japanesepines, pch = 20)
 ```
 
 You can run the same for the others too:
@@ -182,9 +203,9 @@ The `envelope` function is chatty by default and prints out information on the s
 
 ```{r}
 n <- 100
-japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = n, verbose=FALSE)
-beiK <- envelope(bei, fun = Kest, nsim = n, verbose=FALSE)
-redwoodK <- envelope(redwood, fun = Kest, nsim = n, verbose=FALSE)
+japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = n, verbose = FALSE)
+beiK <- envelope(bei, fun = Kest, nsim = n, verbose = FALSE)
+redwoodK <- envelope(redwood, fun = Kest, nsim = n, verbose = FALSE)
 ```
 
 Plot the $K$ functions one by one:
@@ -214,8 +235,10 @@ Edge effects are a perennial problem is spatial analysis. The question always na
 Look back the x-axis of the plots of $\hat K$ above. Note that the distances are much shorter than the span of the original data. Both the `japanesepines` and the `redwood` data are stored with the coordinate data on a scale from 0 to 1 (but the `japanesepines` data are on a 5.7 x 5.7 m square as discussed above) and the `bei` data are in a 1000 x 500 m rectangle. The plots above truncate at distances of 1/4 the shortest span of the data. This is a default in `spatstat` and fairly conservative. We can override that using the `rmax` argument. E.g., we could look at distances up to 50% of the study area.
 
 ```{r}
-plot(envelope(redwood, fun = Kest, nsim = 100,
-              verbose=FALSE, rmax=0.5),main="")
+plot(envelope(redwood,
+  fun = Kest, nsim = 100,
+  verbose = FALSE, rmax = 0.5
+), main = "")
 ```
 
 Is this reasonable or responsible? Ripley himself suggested the rule of 0.25 the short span of the data. There are discussions about other approaches in the literature but going deep on edge corrections is a rabbit hole.
@@ -224,8 +247,10 @@ The other way of being careful about edges is to "correct" for the effect. These
 which came out the year I took spatial analysis when I was a master's student. It's enough to be aware that there are several different edge corrections out there. The Further Reading section points to where you can go deeper.
 
 ```{r}
-japanesepinesK2 <- Kest(japanesepines, verbose=FALSE, 
-                       correction=c("none","isotropic","border"))
+japanesepinesK2 <- Kest(japanesepines,
+  verbose = FALSE,
+  correction = c("none", "isotropic", "border")
+)
 plot(japanesepinesK2)
 ```
 
@@ -237,19 +262,19 @@ $$L(r) = \sqrt{(K(r)/\pi} $$
 This has the effect that for a a completely random point pattern, the theoretical value of $L(r)=r$. We can calculate it using `Lest` rather than `Kest`.
 
 ```{r}
-redwoodL <- envelope(redwood, fun = Lest, nsim = n, verbose=FALSE)
+redwoodL <- envelope(redwood, fun = Lest, nsim = n, verbose = FALSE)
 plot(redwoodL)
 ```
 
 Bivand goes the extra step (e.g., Fig 7.9) of plotting $\hat K(r) - \pi r^2$ on the y-axis to make the theoretical expectation be zero at every distance. I'll take a crack at it using `ggplot` because I'm that kind of geek. Since `redwoodK` is a `data.frame` this is pretty simple.
 
 ```{r}
-ggplot(redwoodK, mapping = aes(x=r, ymin = lo-pi*r^2, ymax=hi-pi*r^2)) +
-  geom_ribbon(fill="grey",alpha=0.5) + 
-  geom_line(mapping = aes(y=theo-pi*r^2),col="red", linetype="dashed") +
-  geom_line(mapping = aes(y=obs-pi*r^2)) +
-  labs(y=expression(K(r) - pi~r^2), x = "r") +
-  ylim(-0.05,0.05) +
+ggplot(redwoodK, mapping = aes(x = r, ymin = lo - pi * r^2, ymax = hi - pi * r^2)) +
+  geom_ribbon(fill = "grey", alpha = 0.5) +
+  geom_line(mapping = aes(y = theo - pi * r^2), col = "red", linetype = "dashed") +
+  geom_line(mapping = aes(y = obs - pi * r^2)) +
+  labs(y = expression(K(r) - pi ~ r^2), x = "r") +
+  ylim(-0.05, 0.05) +
   theme_minimal()
 ```
 
@@ -276,8 +301,9 @@ Let's examine the spatial pattern of just the big trees (DBH > 50cm) which is mo
 
 ```{r}
 bigTrees <- subset(longleaf, marks > 50)
-plot(envelope(bigTrees, fun = Lest, nsim = n, verbose=FALSE),
-     main = "Big Trees")
+plot(envelope(bigTrees, fun = Lest, nsim = n, verbose = FALSE),
+  main = "Big Trees"
+)
 ```
 
 So in contrast to the whole data set, we see that while the entire data set shows clustering, the big trees show CSR. That's kind of cool. We could start speculating about what ecological processes might drive that pattern.
@@ -287,8 +313,10 @@ Standard practice in forestry is to consider trees as adults when they have diam
 First, we will make a new object that creates categories (`factor`) from the continuous (`numeric`) size class of DBH using the `cut` function:
 
 ```{r}
-longleaf2 <- cut(longleaf, breaks=c(0,30,Inf), 
-                 labels=c("Sapling","Adult"))
+longleaf2 <- cut(longleaf,
+  breaks = c(0, 30, Inf),
+  labels = c("Sapling", "Adult")
+)
 summary(longleaf2)
 plot(longleaf2)
 ```
@@ -296,11 +324,11 @@ plot(longleaf2)
 I think by looking at that plot that the adults are clustered and the saplings even more so. Let's investigate:
 
 ```{r}
-adults <- subset(longleaf2, marks == "Adult",drop=TRUE)
-plot(envelope(adults, fun = Lest, verbose=FALSE), main="Adult")
+adults <- subset(longleaf2, marks == "Adult", drop = TRUE)
+plot(envelope(adults, fun = Lest, verbose = FALSE), main = "Adult")
 
-saplings <- subset(longleaf2, marks == "Sapling",drop=TRUE)
-plot(envelope(saplings, fun = Lest, verbose=FALSE), main="Sapling")
+saplings <- subset(longleaf2, marks == "Sapling", drop = TRUE)
+plot(envelope(saplings, fun = Lest, verbose = FALSE), main = "Sapling")
 ```
 
 Quick aside, note that we were actually calling `subset.ppp` and `cut.ppp` above because the class `ppp` has methods for `subset` and `cut`.
@@ -310,15 +338,16 @@ In the plotted L functions above we definitely see that both age classes are clu
 ```{r}
 adults.den <- density(adults)
 plot(adults.den)
-points(saplings, pch=20)
+points(saplings, pch = 20)
 ```
 
 That is fascinating. Is it possible that the two age classes are repelled from each other?
 
 ```{r}
-longleaf2L <- envelope(longleaf2, "Lcross", 
-                       i ="Sapling",j = "Adult",
-                       verbose=FALSE)
+longleaf2L <- envelope(longleaf2, "Lcross",
+  i = "Sapling", j = "Adult",
+  verbose = FALSE
+)
 plot(longleaf2L)
 ```
 
@@ -331,7 +360,7 @@ You can create your own point pattern by clicking on the screen and then plottin
 foo <- clickppp(n = 50) # 50 points
 # KDE
 plot(density(foo))
-points(foo,pch=20)
+points(foo, pch = 20)
 # L
 env <- envelope(foo, Lest, nsim = 100)
 plot(env)
@@ -362,10 +391,12 @@ The next chapters move from point patterns to continuous variables: instead of a
 Here is a point pattern object (class `ppp`) built from the "D" pattern in `simDat` above, with units of kilometers. Before plotting the L function, predict what you expect to see. Then run it. Is it what you anticipated? Try the other patterns too -- is "B" distinguishable from "C"?
 
 ```{r, eval=F}
-patternD <- simDat %>% filter(id=="D")
-patternD <- ppp(x = patternD$x, y=patternD$y,
-                xrange=c(0,1), yrange=c(0,1),
-                unitname="km")
+patternD <- simDat %>% filter(id == "D")
+patternD <- ppp(
+  x = patternD$x, y = patternD$y,
+  xrange = c(0, 1), yrange = c(0, 1),
+  unitname = "km"
+)
 summary(patternD)
 plot(patternD)
 ```
@@ -382,9 +413,9 @@ Here is an example of three species of [ectomycorrhizae](https://en.wikipedia.or
 ```{r}
 data(sporophores)
 summary(sporophores)
-plot(sporophores, chars=c(16,1,2), cex=0.6, leg.args=list(cex=1.1))
-points(0,0,pch=16, cex=2)
-text(15,8,"Tree", cex=0.75)
+plot(sporophores, chars = c(16, 1, 2), cex = 0.6, leg.args = list(cex = 1.1))
+points(0, 0, pch = 16, cex = 2)
+text(15, 8, "Tree", cex = 0.75)
 ```
 
 This is a marked point pattern with three species of fungi. The data come from @ford1980spatial. Different species have different functional roles and differing abilities to colonize. 
@@ -395,11 +426,13 @@ To subset the data and run the cross L-function for two species, here are two eq
 
 ```{r}
 # using subset
-heb_pub <- subset(sporophores,
-                  marks %in% c("L pubescens","Hebloma spp"), drop=TRUE)
-cross_heb_pub <- envelope(heb_pub, "Lcross", verbose=FALSE)
+hebPub <- subset(sporophores,
+  marks %in% c("L pubescens", "Hebloma spp"),
+  drop = TRUE
+)
+crossHebPub <- envelope(hebPub, "Lcross", verbose = FALSE)
 # or directly in envelope (note i and j arguments)
-cross_heb_pub <- envelope(sporophores, "Lcross", i="L pubescens", j = "Hebloma spp", verbose=FALSE)
+crossHebPub <- envelope(sporophores, "Lcross", i = "L pubescens", j = "Hebloma spp", verbose = FALSE)
 ```
 
 Try changing the number of simulations. Try setting `global=TRUE` and see how that changes your understanding of what "significance" means here.

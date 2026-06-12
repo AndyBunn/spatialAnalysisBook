@@ -56,7 +56,7 @@ Here is our goal: We will create a variable `y` that is a function of `x` but wi
 First, I'm going to make some autocorrelated noise $\epsilon$. This bit of code is not for the faint of heart. You can hum your way through it and know that at the end the variable $\epsilon$ will be spatially autocorrelated. If you want to follow along: we are making a variable $\epsilon$ that has spatial autocorrelation $\rho$ in the form $\epsilon = \rho W + e$ where $W$ is a weights matrix following an inverse distance weights process and $e$ is random noise ($N(0,1)$). We make `n` random points following complete spatial randomness (using `runif`) and then do some calculations to determine how each point is linked to others based on their distances (`dnearneigh` and `nbdists`). Based on the distances we make a weights matrix following IDW with power `p`. We get the spatial autocorrelation generating operator for $\rho$ via the weights matrix and then multiply by some white noise (`rnorm`) to get $\epsilon$. The details on this last step involve some matrix inversions that we don't need to unpack.
 
 ```{r,echo=FALSE}
-set.seed(3515) #234 #104
+set.seed(3515) # 234 #104
 ```
 
 ```{r,message=FALSE, warning=FALSE}
@@ -64,9 +64,9 @@ set.seed(3515) #234 #104
 n <- 75
 
 # CSR. Our mapped points.
-easting <- runif(n,0,100)
-northing <- runif(n,0,100)
-points <- cbind(easting,northing)
+easting <- runif(n, 0, 100)
+northing <- runif(n, 0, 100)
+points <- cbind(easting, northing)
 
 # Generate the spatially autocorrelated error term, epsilon.
 # Build neighbor objects with an inclusive distance threshold
@@ -76,22 +76,24 @@ dsts <- nbdists(nb = dnb, coords = points)
 p <- 2.25 # IDW power
 idw <- lapply(dsts, function(x) x^-p)
 # Weights matrix as a list
-wList <- nb2listw(neighbours = dnb, glist=idw, style="W") 
+wList <- nb2listw(neighbours = dnb, glist = idw, style = "W")
 
 # Compute SAR generating operator via a weights matrix
 inv <- spatialreg::invIrW(x = wList, rho = 0.75)
 
 # Calculate epsilon and rescale as z scores
-epsilon <- inv %*% rnorm(n) 
-epsilon <- scale(epsilon[,1])[,1]
+epsilon <- inv %*% rnorm(n)
+epsilon <- scale(epsilon[, 1])[, 1]
 ```
 
 OK, by great magic we now have a variable that is from random spatial points but has spatially autocorrelated values (that follow an IDW process). If you want, you can imagine that $\epsilon$ is a variable in nature that is spatially autocorrelated that we didn't measure (e.g., maybe soil moisture availability following the tree example above). How intense is the spatial autocorrelation?
 
 ```{r}
-epsilonCorrelog <- spline.correlog(x=easting, y=northing,
-                                   z=epsilon, resamp=50, quiet=TRUE)
-plot(epsilonCorrelog, xlim=c(0,max(dist(points))/3))
+epsilonCorrelog <- spline.correlog(
+  x = easting, y = northing,
+  z = epsilon, resamp = 50, quiet = TRUE
+)
+plot(epsilonCorrelog, xlim = c(0, max(dist(points)) / 3))
 ```
 
 We are going to use $\epsilon$ as the error term in a model. I'll use the terms "errors" and "residuals" interchangeably throughout this book.
@@ -101,33 +103,40 @@ We'll now make `x` and then $y=\beta_0 + \beta_1(x) + \epsilon$. We will run a l
 ```{r}
 # Generate x as noise.
 x <- rnorm(n)
-# Generate y as a function of x and epsilon 
+# Generate y as a function of x and epsilon
 # (remember epsilon is spatially autocorrelated but we don't know that)
 B0 <- 3 # intercept
 B1 <- 0.5 # slope
-y <- B0 + B1*x + epsilon
+y <- B0 + B1 * x + epsilon
 
 # Make a data.frame
-dat <- data.frame(easting,northing,y,x)
+dat <- data.frame(easting, northing, y, x)
 ```
 
 So in our thought experiment here are the data. The independent variable `x`:
 ```{r}
-ggplot(data = dat, mapping = aes(x=easting,y=northing,
-                                 size=x, fill=x)) + 
-  geom_point(shape=21,alpha=0.7) +scale_fill_viridis_c() +
-  guides(fill=guide_legend(), size = guide_legend()) +
+ggplot(data = dat, mapping = aes(
+  x = easting, y = northing,
+  size = x, fill = x
+)) +
+  geom_point(shape = 21, alpha = 0.7) +
+  scale_fill_viridis_c() +
+  guides(fill = guide_legend(), size = guide_legend()) +
   coord_fixed() +
   ggtitle("x")
 ```
 
 And the dependent variable `y`:
 ```{r}
-ggplot(data = dat, mapping = aes(x=easting,y=northing,
-                                 size=y, fill=y)) +
-  geom_point(shape=21,alpha=0.7) + scale_fill_viridis_c() + 
-  guides(fill=guide_legend(), size = guide_legend()) + 
-  coord_fixed() + ggtitle("y")
+ggplot(data = dat, mapping = aes(
+  x = easting, y = northing,
+  size = y, fill = y
+)) +
+  geom_point(shape = 21, alpha = 0.7) +
+  scale_fill_viridis_c() +
+  guides(fill = guide_legend(), size = guide_legend()) +
+  coord_fixed() +
+  ggtitle("y")
 ```
 
 ### Analysis
@@ -137,7 +146,7 @@ We will start by assuming `epsilon` follows an iid process (e.g., $N(0,1)$) and 
 
 ```{r}
 # Fit a model using gls
-glsNaive <- gls(y~x, dat)
+glsNaive <- gls(y ~ x, dat)
 summary(glsNaive)
 ```
 
@@ -147,12 +156,14 @@ Since these data are spatial, the key for us is to look at the residuals and see
 
 ```{r}
 # Add residuals to dat
-dat$glsNaiveResids <- residuals(glsNaive,type="normalized")
-ggplot(data = dat, mapping = aes(x=easting,y=northing,
-                                 size=glsNaiveResids, fill=glsNaiveResids)) +
-  geom_point(shape=21) +
+dat$glsNaiveResids <- residuals(glsNaive, type = "normalized")
+ggplot(data = dat, mapping = aes(
+  x = easting, y = northing,
+  size = glsNaiveResids, fill = glsNaiveResids
+)) +
+  geom_point(shape = 21) +
   scale_fill_gradient2() +
-  guides(fill=guide_legend(), size = guide_legend()) +
+  guides(fill = guide_legend(), size = guide_legend()) +
   coord_fixed()
 ```
 
@@ -160,9 +171,11 @@ From the map, the residuals look aggressively non-random. Positive values are ne
 
 ```{r}
 # Test them for spatial autocorrelation using a correlogram.
-residsI <- spline.correlog(x=dat$easting, y=dat$northing,
-                           z=dat$glsNaiveResids, resamp=50, quiet=TRUE)
-plot(residsI,xlim=c(0,max(dist(points))/3))
+residsI <- spline.correlog(
+  x = dat$easting, y = dat$northing,
+  z = dat$glsNaiveResids, resamp = 50, quiet = TRUE
+)
+plot(residsI, xlim = c(0, max(dist(points)) / 3))
 ```
 
 The correlogram shows clear positive autocorrelation at short distances and the line pops well above the bootstrap envelope. That's the go/no-go: the envelope tells us this is not consistent with independent residuals, so we proceed to characterize the structure with a variogram and fit a GLS model. If the correlogram had stayed inside the envelope, we would stop here and use OLS.
@@ -192,9 +205,9 @@ The families available in `gls` roughly match the theoretical variogram models w
 Here we'll cheat a little and use `autofitVariogram` to get a model suggestion rather than go through the fitting process by hand with `variogram`, `vgm`, and `fit.variogram` from `gstat`.
 
 ```{r}
-datSF <- dat %>% st_as_sf(coords = c("easting","northing"))
+datSF <- dat %>% st_as_sf(coords = c("easting", "northing"))
 # A variogram of the residuals
-plot(autofitVariogram(glsNaiveResids~1, input_data = datSF, model = c("Gau","Sph","Exp")))
+plot(autofitVariogram(glsNaiveResids ~ 1, input_data = datSF, model = c("Gau", "Sph", "Exp")))
 ```
 
 Look at which theoretical model `autofitVariogram` chose. Here is a frustrating mismatch worth knowing about. `gstat` can fit a lot of variogram models: spherical, exponential, Gaussian, Matern, Stein's Matern, power, and several others. `corSpatial` supports only five: `"spherical"`, `"exponential"`, `"gaussian"`, `"linear"`, and `"rational"`. No Matern. In practice, the linear model is rarely appropriate for spatial residuals, so you are really working with three sensible options. If `autofitVariogram` returns a Matern (model code `Ste` or `Mat`), you cannot plug that directly into `corSpatial`. Your options are to re-run `autofitVariogram` restricting the candidate models to `c("Gau","Sph","Exp")` -- which is what we did above -- or to look at the empirical variogram and make a judgment call about which of the three available families it most resembles. This is not ideal but it is the reality of working across two packages with different design philosophies.
@@ -202,8 +215,8 @@ Look at which theoretical model `autofitVariogram` chose. Here is a frustrating 
 We'll use the chosen model family as the `type` argument to `corSpatial` below. One important thing to understand: we are not passing the variogram parameter estimates (the range, nugget, sill) into `corSpatial`. The `type` argument just specifies the functional form of the correlation structure. The actual parameter values are estimated by `gls` itself during model fitting. The variogram step tells us what shape to use; `gls` figures out the scale.
 
 ```{r}
-csSpatial <- corSpatial(form=~easting+northing,nugget=TRUE, type = "spherical")
-glsUpdated <- update(glsNaive,correlation=csSpatial)
+csSpatial <- corSpatial(form = ~ easting + northing, nugget = TRUE, type = "spherical")
+glsUpdated <- update(glsNaive, correlation = csSpatial)
 summary(glsUpdated)
 ```
 
@@ -221,22 +234,26 @@ This is interesting. We will interpret more below but note that the slope coeffi
 
 ```{r}
 # add the residuals to the spatial dat object
-dat$glsResids <- residuals(glsUpdated,type="normalized")
+dat$glsResids <- residuals(glsUpdated, type = "normalized")
 # Map the residuals from gls
-ggplot(data = dat, mapping = aes(x=easting,y=northing,
-                                 size=glsResids, fill=glsResids)) +
-  geom_point(shape=21) +
+ggplot(data = dat, mapping = aes(
+  x = easting, y = northing,
+  size = glsResids, fill = glsResids
+)) +
+  geom_point(shape = 21) +
   scale_fill_gradient2() +
-  guides(fill=guide_legend(), size = guide_legend()) +
+  guides(fill = guide_legend(), size = guide_legend()) +
   coord_fixed()
 ```
 
 They don't look to be autocorrelated. But we should test them:
 
 ```{r}
-residsI <- spline.correlog(x=dat$easting, y=dat$northing,
-                           z=dat$glsResids, resamp=50, quiet=TRUE)
-plot(residsI,xlim=c(0,max(dist(points))/3))
+residsI <- spline.correlog(
+  x = dat$easting, y = dat$northing,
+  z = dat$glsResids, resamp = 50, quiet = TRUE
+)
+plot(residsI, xlim = c(0, max(dist(points)) / 3))
 ```
 
 And the correlogram shows that they are clean -- autocorrelation has been accounted for.

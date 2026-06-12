@@ -2,25 +2,23 @@
 
 ## Why Spatial Analysis
 
-Species don't distribute themselves at random. Wildfire risk is not uniform across a landscape. Lead contamination in soils clusters near  roads and demolished buildings. Precipitation gradients drive vegetation boundaries that don't care about county lines. In each case, where something is happening is part of the story.
+Species don't distribute themselves at random. Wildfire risk is not uniform across a landscape. Metal contamination in soils clusters near roads and demolished buildings. Precipitation gradients follow topography. In each case, where something is happening is part of the story.
 
-The underlying idea has a name. Tobler's First Law of Geography states that everything is related to everything else, but near things are more related than distant things. It sounds obvious until you realize how much standard statistical practice ignores it.
+The underlying idea has a name. Paraphrased, Tobler's First Law of Geography states that everything is related to everything else, but near things are more related than distant things. It sounds obvious until you realize how many standard practices in data analysis ignore it.
 
-If you treat spatially dependent observations as independent, your standard errors might be too small, your p-values too optimistic, and your predictions might not hold up. This isn't a minor technical complaint. It's a systematic bias, and it runs through a lot of published environmental science.
-
-The tools to do this right have existed for decades. What's changed is that they are now implemented in open, well-documented software, with enough worked examples that you don't need a geostatistics PhD to use them correctly. There's no longer a good reason to leave spatial structure out of your analysis.
+If you treat spatially dependent observations as independent, your standard errors might be too small, your p-values too optimistic, and your predictions might not hold up. None of this is a pedantic quibble. The result is a systematic bias, and it runs through a lot of published environmental science.
 
 Spatial pattern is also information in its own right. Where something is happening, and where it isn't, tells you something about the processes driving it. Learning to read that structure is part of the fundamental job of environmental science: figuring out why things are patterned the way they are.
 
-## How to Use This Book
+The tools to understand space have existed for decades. What's changed is that they are now implemented in open, well-documented software, with enough worked examples that you don't need a geostatistics degree to use them correctly. There's no longer a good reason to leave spatial structure out of your analysis.
 
-This is a hands-on book. You will write code, look at data, make maps, fit models, and interpret results. Each chapter builds on what came before. The math shows up when it needs to, but the emphasis throughout is on doing spatial analysis and understanding what you're doing. Not deriving things for their own sake.
+This is a hands-on book. You will write code, look at data, make maps, fit models, and interpret results. Each chapter builds on what came before. The emphasis throughout is on doing spatial analysis and understanding what you're doing. The math shows up when it needs to but we don't derive things for their own sake.
 
 ## How This Book Is Laid Out
 
-Most chapters follow a natural progression, each building on the last. Scattered through the book you'll find **Asides** which are side quests that dig into something that doesn't quite fit the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.
+Most chapters follow a natural progression, each building on the last. Scattered through the book you'll find **Asides** which are side quests that dig into something that doesn't quite fit in the main flow. An Aside might work through the math behind a method, explain how R handles something under the hood, or fill in background that makes the surrounding chapters make more sense.
 
-The Asides are linked from the chapters that depend on them. Skipping one will likely leave you confused when that chapter references it. They are separate from the main chapters not because they are less important, but because pulling them out keeps the main flow readable. When you hit a link to an Aside, follow it.
+The Asides are referenced from the chapters that depend on them. They are separate from the main chapters not because they are less important, but because pulling them out keeps the main flow readable. 
 
 ## What's in This Book
 
@@ -28,15 +26,15 @@ The book is organized into four parts. Each builds on the one before it.
 
 **Foundations** gets you oriented on the two data types that show up everywhere in this book: point observations and raster surfaces. This isn't a GIS-in-R book, so we won't linger here long.
 
-- **Spatial Data: A Quick Orientation** -- A fast introduction to `sf` for point data and `terra` for rasters. Enough to follow along with the rest of the book. For the full treatment, see [Geocomputation with R](https://r.geocompx.org/) or the [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/).
+- **Spatial Data in R: A Quick Orientation** -- A fast introduction to `sf` for point data and `terra` for rasters. Enough to follow along with the rest of the book. For the full treatment, see [Geocomputation with R](https://r.geocompx.org/) or the [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/).
     - *Aside: Methods and Generics in R* -- A look under the hood at how R uses generic functions. Explains why `plot()` and `summary()` behave differently depending on what you hand them.
 
-**Point Patterns & Autocorrelation** is where the analysis starts. We ask the most basic spatial question -- are things randomly distributed, or is there structure? -- and then move on to measuring spatial dependence in continuous variables.
+**Point Patterns & Autocorrelation** is where the analysis starts. We ask a basic spatial question: are things randomly distributed, or is there structure? We then move on to measuring spatial dependence in continuous variables.
 
 - **Point Patterns** -- How to quantify whether points in space are randomly distributed, clustered, or repulsed, using kernel density estimation and Ripley's K.
     - *Aside: Distance Matrices* -- A detour into how distances between points are computed and stored. This comes up enough that it's worth understanding before you need it.
 - **Global Spatial Autocorrelation** -- How to measure and describe spatial structure in a continuous variable using variograms, Moran's I, and correlograms.
-    - *Aside: Correlation and Regression Are Not the Same Thing* -- These two ideas get conflated constantly. This aside untangles them before we lean on regression in later chapters.
+    - *Aside: Correlation and Regression Are Not the Same Thing* -- Correlation and regression get conflated constantly. This aside untangles them before we lean on regression in later chapters.
 - **Local Spatial Autocorrelation** -- Global Moran's I tells you whether spatial structure exists. LISA tells you where. We decompose the global statistic into location-specific values and map the hot spots, cold spots, and spatial outliers.
 
 **Interpolation & Geostatistics** is about prediction. We have measurements at some locations and want to estimate values at others. We start with deterministic methods and work up to kriging, which is the probabilistic workhorse of geostatistics.
@@ -49,11 +47,11 @@ The book is organized into four parts. Each builds on the one before it.
 - **Regression Kriging** -- Kriging with external predictors folded in. Useful when covariates explain part of the spatial pattern.
     - *Aside: Predicting New Data with a Fitted Model* -- A refresher on using `predict` on new data.
 
-**Regression** closes the loop. You already know how to fit a linear model: a response variable, some predictors, minimize the sum of squared residuals. That's ordinary least squares (OLS), and it works great when the residuals are independent. The problem is that spatial data often violates that assumption. If you fit an OLS model and map the residuals, you'll sometimes see patches of positive residuals in one corner and negative residuals in another. That's spatial autocorrelation in the errors, and it means your standard errors are wrong and your inference is unreliable. The fix is to model that structure explicitly rather than pretend it isn't there.
+**Regression** closes the loop. You already know how to fit a linear model: a response variable, some predictors, minimize the sum of squared residuals. That's ordinary least squares (OLS), and it works great when the residuals are independent. The problem is that spatial data often violate that assumption. If you fit an OLS model and map the residuals, you'll sometimes see patches of positive residuals in one corner and negative residuals in another. That's spatial autocorrelation in the errors, and it means your standard errors are wrong and your inference is unreliable. The fix is to model that structure explicitly rather than pretend it isn't there.
 
-- **GLS with Autocorrelated Residuals** -- What to do when your regression residuals have spatial structure. Spoiler: you use GLS, and it works.
-    - *Aside: OLS via Algebra and Matrices* -- Derives the OLS solution algebraically and in matrix form, then implements both in R. Background that makes the GLS chapter make more sense.
-- **Spatial Regression: Lag and Error Models** -- GLS treats space as nuisance in the residuals. SAR models let you go further: test whether the structure is in the errors or in the response itself, and fit accordingly.
+- **GLS with Autocorrelated Residuals** -- What to do when your regression residuals have spatial structure. Spoiler: you can use generalized least squares (GLS) to account for that structure.
+    - *Aside: OLS via Algebra and Matrices* -- Derives the OLS and GLS solution algebraically and in matrix form, then implements both in R. This is background that makes the GLS chapter make more sense.
+- **Spatial Regression: Lag and Error Models** -- GLS treats space as nuisance in the residuals. Spatial autoregressive model (SAR) models let you go further: test whether the structure is in the errors or in the response itself, and fit a model accordingly.
 
 **What You Can Do Now** closes the book. A short synthesis of the three modes of spatial analysis we covered -- description, prediction, inference -- and where to go from here.
 
@@ -64,19 +62,12 @@ One thing you will not find in this book is areal data analysis. Watersheds, lan
 
 :::
 
-## The Final Frontier
-
-You are going to learn to see the world spatially. By the end you will be able to look at a dataset, ask where things are happening and why, and have tools to answer those questions.
-
-The people who do this work well are not necessarily the ones who find it easiest. They're the ones who run the code when it breaks, read the error messages, ask questions, and keep going. That's the whole secret.
-
-So: set up your project, download the data, and let's get to work.
-
 ## Setup
 
 The book is built around R, so you'll need a working R installation. The code here was written and tested with `r R.version.string`. The package versions used in each chapter are recorded in the References section, so if something breaks you have a fixed point to compare against. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. If you're not sure, run:
 
 ``` r
+
 update.packages()
 ```
 
@@ -103,8 +94,8 @@ To follow along, you'll want a working RStudio project.
     ```
     spatial-analysis/
     ├── data/
-    │   ├── birdRichnessMexico.rds
-    │   ├── prcpCA.rds
+    │   ├── birdDiv.csv
+    │   ├── californiaOzonePoints.csv
     │   └── ...
     └── spatial-analysis.Rproj
     ```
@@ -113,18 +104,26 @@ To follow along, you'll want a working RStudio project.
     Use paths like `"data/birdRichnessMexico.rds"` rather than full file paths. This keeps the code portable -- it will run on any machine without modification.
 
     ```{r}
-    birdRichness <- readRDS("data/birdRichnessMexico.rds")
+birdRichness <- readRDS("data/birdRichnessMexico.rds")
     ```
 
-4.  **Save your `.qmd` or `.Rmd` files in the project root**\
+4.  **Save your `.R`, `.qmd` or `.Rmd` files in the project root**\
     Keep your working files in the project's root directory. Quarto (`.qmd`) and R Markdown (`.Rmd`) are close cousins -- the syntax is nearly identical and either will work fine here. After working through the point pattern chapter, your structure might look like this:
 
     ```
     spatial-analysis/
     ├── data/
-    │   ├── birdRichnessMexico.rds
-    │   ├── prcpCA.rds
+    │   ├── birdDiv.csv
+    │   ├── californiaOzonePoints.csv
     │   └── ...
     ├── pointPatternWork.qmd
     └── spatial-analysis.Rproj
     ```
+
+## The Final Frontier
+
+You are going to learn to see the world spatially. By the end you will be able to look at a dataset, ask where things are happening and why, and have tools to answer those questions.
+
+The people who do this work well are not necessarily the ones who find it easiest. They're the ones who run the code when it breaks, read the error messages, ask questions, and keep going. That's the whole secret.
+
+You've got R running and the data on your machine. Time to use it.

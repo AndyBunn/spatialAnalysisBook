@@ -23,7 +23,7 @@ Start with a small random point pattern. Twelve points, a 10 by 10 unit window. 
 
 ```{r}
 n <- 12
-area <- 100  # 10 x 10 = 100 square units
+area <- 100 # 10 x 10 = 100 square units
 x <- runif(n = n, min = 0, max = 10)
 y <- runif(n = n, min = 0, max = 10)
 
@@ -71,8 +71,10 @@ Plot it against the theoretical K under complete spatial randomness, which is $\
 ggplot() +
   geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
   geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
-  labs(y = "K(r)", x = "r",
-       caption = "Blue = observed K. Red dashed = theoretical K under CSR.")
+  labs(
+    y = "K(r)", x = "r",
+    caption = "Blue = observed K. Red dashed = theoretical K under CSR."
+  )
 ```
 
 If the blue line runs above the red, points are more clustered than random at that scale. Below it, they're more dispersed. Random points should hover around the red line with some noise.
@@ -92,8 +94,10 @@ Overlay the `spatstat` result on the plot. If everything is right, it should lan
 ggplot() +
   geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
   geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
-  geom_line(data = xyK, aes(x = r, y = un),
-            linetype = "dashed", color = "white") +
+  geom_line(
+    data = xyK, aes(x = r, y = un),
+    linetype = "dashed", color = "white"
+  ) +
   labs(y = "K(r)", x = "r")
 ```
 

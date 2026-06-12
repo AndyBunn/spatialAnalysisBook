@@ -25,7 +25,7 @@ library(PNWColors)
 We'll also mention the `caret` package [@R-caret] toward the end of this chapter. It is the standard workhorse for cross validation in R, but it has its own syntax that takes some getting used to. For now we will build things by hand so the mechanics are clear.
 
 ```{r, echo=FALSE}
-anem7 <- pnw_palette(name="Anemone", n=7, type="discrete")
+anem7 <- pnw_palette(name = "Anemone", n = 7, type = "discrete")
 ```
 
 ## Measuring Skill
@@ -80,50 +80,50 @@ mae  <- mean(abs(preds - obs))
 Let's make the overfitting problem concrete. We will simulate some data where we know the true relationship, hold out a chunk of it as a test set, and then fit polynomial models of increasing complexity. For each model we'll track in-sample and out-of-sample $R^2$ as flexibility grows.
 
 ```{r}
-n   <- 50
-x   <- runif(n, min=-4, max=4)
-eps <- rnorm(n, sd=15)
-y   <- 30 + 2*x^3 - 5*x + eps
-dat <- data.frame(x=x, y=y)
+n <- 50
+x <- runif(n, min = -4, max = 4)
+eps <- rnorm(n, sd = 15)
+y <- 30 + 2 * x^3 - 5 * x + eps
+dat <- data.frame(x = x, y = y)
 ```
 
 We have `r n` observations with one predictor $x$ and response $y$. The true relationship is $y = 30 + 2x^3 - 5x + \varepsilon$ but we don't know that when fitting.
 
 ```{r}
-ggplot(dat, aes(x=x, y=y)) +
-  geom_point(size=2.5, alpha=0.8) +
+ggplot(dat, aes(x = x, y = y)) +
+  geom_point(size = 2.5, alpha = 0.8) +
   theme_minimal()
 ```
 
 Let's hold out 1/3 of the points as a test set, then on the training data fit polynomial models of degree 1 through 10. For each one we'll compute in-sample $R^2$ on the training data and out-of-sample $R^2$ on the test data.
 
 ```{r}
-test_ov_idx <- sample(1:nrow(dat), size=round(nrow(dat) * 0.33))
-train_ov    <- dat[-test_ov_idx, ]
-test_ov     <- dat[test_ov_idx,  ]
+testOvIdx <- sample(1:nrow(dat), size = round(nrow(dat) * 0.33))
+trainOv <- dat[-testOvIdx, ]
+testOv <- dat[testOvIdx, ]
 
 degrees <- 1:10
-rsq_in  <- numeric(length(degrees))
-rsq_out <- numeric(length(degrees))
+rsqIn <- numeric(length(degrees))
+rsqOut <- numeric(length(degrees))
 
-for(d in degrees){
-  fit_d      <- lm(y ~ poly(x, d), data=train_ov)
-  rsq_in[d]  <- cor(train_ov$y, predict(fit_d))^2
-  rsq_out[d] <- cor(test_ov$y,  predict(fit_d, newdata=test_ov))^2
+for (d in degrees) {
+  fitD <- lm(y ~ poly(x, d), data = trainOv)
+  rsqIn[d] <- cor(trainOv$y, predict(fitD))^2
+  rsqOut[d] <- cor(testOv$y, predict(fitD, newdata = testOv))^2
 }
 
 bv <- data.frame(
   degree = rep(degrees, 2),
-  rsq    = c(rsq_in, rsq_out),
-  set    = rep(c("Training", "Test"), each=length(degrees))
+  rsq    = c(rsqIn, rsqOut),
+  set    = rep(c("Training", "Test"), each = length(degrees))
 )
 
-ggplot(bv, aes(x=degree, y=rsq, color=set)) +
-  geom_line(linewidth=1.1) +
-  geom_point(size=2.5) +
-  scale_x_continuous(breaks=degrees) +
-  scale_color_manual(values=c(anem7[7], anem7[1])) +
-  labs(x="Polynomial degree", y=bquote(R^2), color=NULL) +
+ggplot(bv, aes(x = degree, y = rsq, color = set)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2.5) +
+  scale_x_continuous(breaks = degrees) +
+  scale_color_manual(values = c(anem7[7], anem7[1])) +
+  labs(x = "Polynomial degree", y = bquote(R^2), color = NULL) +
   theme_minimal()
 ```
 
@@ -138,37 +138,39 @@ What we just did is the simplest form of skill assessment: split the data into a
 There is no universal rule for the split ratio. The historical advice was 2/3 training and 1/3 testing. You'll also see 70/30 and 80/20. With small datasets, giving up a third of your data for testing means you're training on less than you'd like. With large datasets it matters less. 
 
 ```{r}
-test_idx            <- sample(1:nrow(dat), size=round(nrow(dat) * 0.25))
-dat$split           <- "train"
-dat$split[test_idx] <- "test"
+testIdx <- sample(1:nrow(dat), size = round(nrow(dat) * 0.25))
+dat$split <- "train"
+dat$split[testIdx] <- "test"
 
-ggplot(dat, aes(x=x, y=y, color=split)) +
-  geom_point(size=3) +
-  scale_color_manual(values=c(anem7[1], anem7[7])) +
+ggplot(dat, aes(x = x, y = y, color = split)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c(anem7[1], anem7[7])) +
   theme_minimal()
 ```
 
 ```{r}
-train     <- dat[dat$split == "train", ]
-test      <- dat[dat$split == "test",  ]
+train <- dat[dat$split == "train", ]
+test <- dat[dat$split == "test", ]
 
-fit       <- lm(y ~ poly(x, 3), data=train)
-test$yhat <- predict(fit, newdata=test)
+fit <- lm(y ~ poly(x, 3), data = train)
+test$yhat <- predict(fit, newdata = test)
 
-rsq  <- cor(test$y, test$yhat)^2
+rsq <- cor(test$y, test$yhat)^2
 rmse <- sqrt(mean((test$yhat - test$y)^2))
-mae  <- mean(abs(test$yhat - test$y))
+mae <- mean(abs(test$yhat - test$y))
 
-c("rsq"=rsq,"rmse"=rmse,"mae"=mae)
+c("rsq" = rsq, "rmse" = rmse, "mae" = mae)
 ```
 
 ```{r}
-ggplot(test, aes(x=y, y=yhat)) +
-  geom_abline(slope=1, intercept=0, linetype="dashed") +
-  geom_point(size=3, color=anem7[7]) +
-  coord_fixed(xlim=range(test$y, test$yhat),
-              ylim=range(test$y, test$yhat)) +
-  labs(x="Observed", y="Predicted") +
+ggplot(test, aes(x = y, y = yhat)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_point(size = 3, color = anem7[7]) +
+  coord_fixed(
+    xlim = range(test$y, test$yhat),
+    ylim = range(test$y, test$yhat)
+  ) +
+  labs(x = "Observed", y = "Predicted") +
   theme_minimal()
 ```
 
@@ -198,7 +200,7 @@ One thing to be careful about: the null model should be built from the training 
 
 ```{r}
 rmseNull <- sqrt(mean((mean(train$y) - test$y)^2))
-maeNull  <- mean(abs(mean(train$y) - test$y))
+maeNull <- mean(abs(mean(train$y) - test$y))
 
 rmseNull
 1 - (rmse / rmseNull)
@@ -215,41 +217,43 @@ K-fold cross validation solves the single-split problem by repeating the train/t
 With $k=10$ you use 90% of the data for training in each iteration and 10% for testing, and every observation gets to be in the test set exactly once. The mean skill across folds is a much more stable estimate than any single train/test split.
 
 ```{r}
-k    <- 10
-dat2 <- dat[sample(nrow(dat)), c("x","y")]  # shuffle, drop the split column
-dat2$fold <- cut(seq(1, nrow(dat2)), breaks=k, labels=FALSE)
+k <- 10
+dat2 <- dat[sample(nrow(dat)), c("x", "y")] # shuffle, drop the split column
+dat2$fold <- cut(seq(1, nrow(dat2)), breaks = k, labels = FALSE)
 
-results <- data.frame(fold=1:k, rsq=NA, rmse=NA, mae=NA)
+results <- data.frame(fold = 1:k, rsq = NA, rmse = NA, mae = NA)
 
-for(i in 1:k){
-  train_i <- dat2[dat2$fold != i, ]
-  test_i  <- dat2[dat2$fold == i, ]
-  
-  fit_i  <- lm(y ~ poly(x, 3), data=train_i)
-  yhat_i <- predict(fit_i, newdata=test_i)
-  
-  results$rsq[i]  <- cor(test_i$y, yhat_i)^2
-  results$rmse[i] <- sqrt(mean((yhat_i - test_i$y)^2))
-  results$mae[i]  <- mean(abs(yhat_i - test_i$y))
+for (i in 1:k) {
+  trainI <- dat2[dat2$fold != i, ]
+  testI <- dat2[dat2$fold == i, ]
+
+  fitI <- lm(y ~ poly(x, 3), data = trainI)
+  yhatI <- predict(fitI, newdata = testI)
+
+  results$rsq[i] <- cor(testI$y, yhatI)^2
+  results$rmse[i] <- sqrt(mean((yhatI - testI$y)^2))
+  results$mae[i] <- mean(abs(yhatI - testI$y))
 }
 
 results
 ```
 
 ```{r}
-colMeans(results[, c("rsq","rmse","mae")])
+colMeans(results[, c("rsq", "rmse", "mae")])
 ```
 
 Now we have a distribution of skill estimates, not just one number. Let's look at it.
 
 ```{r}
 results %>%
-  pivot_longer(cols=c(rsq, rmse, mae),
-               names_to="metric", values_to="value") %>%
-  ggplot(aes(x=value)) +
-  geom_histogram(bins=6, fill=anem7[5], color=anem7[7]) +
-  labs(x=NULL, y=NULL) +
-  facet_wrap(~metric, scales="free_x") +
+  pivot_longer(
+    cols = c(rsq, rmse, mae),
+    names_to = "metric", values_to = "value"
+  ) %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(bins = 6, fill = anem7[5], color = anem7[7]) +
+  labs(x = NULL, y = NULL) +
+  facet_wrap(~metric, scales = "free_x") +
   theme_minimal()
 ```
 
@@ -269,18 +273,20 @@ Let's look at what a random holdout actually looks like on the Meuse floodplain 
 
 ```{r, message=FALSE}
 meuse2 <- readRDS("data/meuse2.Rds")
-meuse_sf <- st_as_sf(meuse2, coords=c("x","y"), crs=28992)
+meuseSf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
 
-test_m_idx                 <- sample(1:nrow(meuse_sf), size=round(nrow(meuse_sf) * 0.25))
-meuse_sf$split             <- "train"
-meuse_sf$split[test_m_idx] <- "test"
+testMIdx <- sample(1:nrow(meuseSf), size = round(nrow(meuseSf) * 0.25))
+meuseSf$split <- "train"
+meuseSf$split[testMIdx] <- "test"
 
-ggplot(meuse_sf) +
-  geom_sf(aes(color=split, shape=split), size=3) +
-  scale_color_manual(values=c(anem7[1], anem7[7])) +
+ggplot(meuseSf) +
+  geom_sf(aes(color = split, shape = split), size = 3) +
+  scale_color_manual(values = c(anem7[1], anem7[7])) +
   theme_minimal() +
-  labs(title="Random 75/25 holdout",
-       subtitle="Test points scattered among training points")
+  labs(
+    title = "Random 75/25 holdout",
+    subtitle = "Test points scattered among training points"
+  )
 ```
 
 Look at where the test points land. Nearly every one of them is surrounded by training points. When you predict lead concentration at a withheld location that has three or four neighbors in the training set within 50 meters, you are not testing how well the model predicts in unknown space. You are testing it on locations well surrounded by known ones, which is a much easier task.
