@@ -1,32 +1,36 @@
 ## ----echo=FALSE, message=FALSE, warning=FALSE, results='hide'-----------------
+#| label: setup
 set.seed(184)
 
 
 ## ----message=FALSE------------------------------------------------------------
+#| label: packages
 library(tidyverse)
 library(sf)
 library(gstat)
 library(terra)
 library(tidyterra)
-library(tmap)
 
 
 ## -----------------------------------------------------------------------------
-foo <- data.frame(d = 1:100, w = (1:100)^-1)
-foo %>% ggplot(mapping = aes(x = d, y = w)) +
+#| label: weight-curve
+wCurve <- data.frame(d = 1:100, w = (1:100)^-1)
+wCurve %>% ggplot(mapping = aes(x = d, y = w)) +
   geom_line() +
   labs(x = "Distance", y = "Weight")
 
 
 ## -----------------------------------------------------------------------------
-foo %>% ggplot(mapping = aes(x = d, y = w)) +
+#| label: weight-curve-log
+wCurve %>% ggplot(mapping = aes(x = d, y = w)) +
   geom_line() +
   labs(x = "Distance", y = "Weight") +
   scale_y_log10()
 
 
 ## -----------------------------------------------------------------------------
-foo <- rbind(
+#| label: power-range
+wCurve <- rbind(
   data.frame(d = 1:100, w = (1:100)^0, p = "0"),
   data.frame(d = 1:100, w = (1:100)^-0.5, p = "0.5"),
   data.frame(d = 1:100, w = (1:100)^-1, p = "1"),
@@ -34,64 +38,75 @@ foo <- rbind(
   data.frame(d = 1:100, w = (1:100)^-2, p = "2"),
   data.frame(d = 1:100, w = (1:100)^-2.5, p = "2.5")
 )
-foo %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
+wCurve %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
   geom_line() +
   labs(x = "Distance", y = "Weight")
 
 
 ## -----------------------------------------------------------------------------
-foo %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
+#| label: power-range-log
+wCurve %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
   geom_line() +
   labs(x = "Distance", y = "Weight") +
   scale_y_log10()
 
 
 ## -----------------------------------------------------------------------------
-foo <- data.frame(
+#| label: toy-data
+toyDat <- data.frame(
   x = c(1, 3, 1, 4, 5),
   y = c(5, 4, 3, 5, 1),
   z = c(100, 105, 105, 100, 115)
 )
-foo
-p1 <- foo %>% ggplot() +
+toyDat
+p1 <- toyDat %>% ggplot() +
   geom_point(aes(x = x, y = y, size = z)) +
   lims(x = c(0, 6), y = c(0, 6))
 p1
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-unknown-point
 p1 + geom_point(aes(x = 2, y = 4), color = "red", size = 10, shape = 0) +
   geom_point(aes(x = 2, y = 4), color = "red", size = 6, shape = 63)
 
 
 ## ----echo=FALSE---------------------------------------------------------------
-d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
+#| label: toy-distances
+d2s0 <- as.matrix(dist(cbind(c(toyDat$x, 2), c(toyDat$y, 4))))[1:5, 6]
 
 
 ## ----echo=FALSE---------------------------------------------------------------
+#| label: toy-weights
 p <- 2
 w <- d2s0^-p
 
 
 ## ----echo=FALSE---------------------------------------------------------------
-zhatS0 <- sum(w * foo$z) / sum(w)
+#| label: toy-estimate
+zhatS0 <- sum(w * toyDat$z) / sum(w)
 
 
 ## ----warning=FALSE------------------------------------------------------------
-# distance to missing point s0
-d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
+#| label: toy-idw
+# stack the five known points with the unknown point s0 at (2, 4)
+coords <- cbind(c(toyDat$x, 2), c(toyDat$y, 4))
+# full pairwise distance matrix, then pull each known point's distance to s0 (column 6)
+dmat <- as.matrix(dist(coords))
+d2s0 <- dmat[1:5, 6]
 # power
 p <- 2
 # weights
 w <- d2s0^-p
 # and the estimation itself
-zhatS0 <- sum(w * foo$z) / sum(w)
+zhatS0 <- sum(w * toyDat$z) / sum(w)
 zhatS0
 # add it to the plot
 p1 + geom_point(aes(x = 2, y = 4, size = zhatS0))
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-load
 meuse2 <- readRDS("../data/meuse2.Rds")
 glimpse(meuse2)
 class(meuse2)
@@ -115,11 +130,13 @@ p2
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-grid-load
 meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
 head(meuse.grid2)
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-grid-sf
 meuseGridSf <- st_as_sf(meuse.grid2,
   coords = c("x", "y"),
   crs = st_crs(meuseSf)
@@ -128,6 +145,7 @@ meuseGridSf
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-p2-model
 idwP2Model <- gstat(
   formula = logLead ~ 1,
   locations = meuseSf,
@@ -138,6 +156,7 @@ logLeadIDWP2Sf
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-p2-map
 sf2Rast <- function(sfObject, variableIndex = 1) {
   # coerce sf to a data.frame
   dfObject <- data.frame(st_coordinates(sfObject),
@@ -162,6 +181,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-p2-contour
 ggplot() +
   geom_spatraster_contour_filled(
     data = logLeadIDWP2Rast,
@@ -174,6 +194,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-insample-skill
 obs <- meuseSf$logLead
 preds <- extract(logLeadIDWP2Rast, meuseSf) %>% pull(var1.pred)
 rsq <- cor(obs, preds)^2
@@ -192,6 +213,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-traintest
 n <- nrow(meuseSf)
 rows4test <- sample(x = 1:n, size = n * 0.25)
 meuseTest <- meuseSf[rows4test, ]
@@ -216,6 +238,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-oos-skill
 # note use of meuseTest here
 obs <- meuseTest$logLead
 preds <- extract(logLeadIDWP2Rast, meuseTest) %>% pull(var1.pred)
@@ -236,12 +259,14 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: null-model
 rmseNULL <- sqrt(mean((mean(meuseTrain$logLead) - obs)^2))
 rmseNULL
 1 - (rmse / rmseNULL)
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-p3-map
 idwP3Model <- gstat(
   formula = logLead ~ 1,
   locations = meuseTrain,
@@ -261,6 +286,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-p3-skill
 # note use of meuseTest here
 obs <- meuseTest$logLead
 preds <- extract(logLeadIDWP3Rast, meuseTest) %>% pull(var1.pred)
@@ -280,10 +306,12 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: idw-p3-skillscore
 1 - (rmse / rmseNULL)
 
 
 ## -----------------------------------------------------------------------------
+#| label: prcp-ca
 # precip point data
 prcpCA <- readRDS("../data/prcpCA.rds")
 # empty grid to interpolate into

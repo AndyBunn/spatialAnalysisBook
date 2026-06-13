@@ -96,14 +96,14 @@ moran.test(gridSf$z, wListSim)
 
 ## -----------------------------------------------------------------------------
 #| label: sim-localmoran
-lisaSim <- localmoran(gridSf$z, listw = wListSim)
+lisaSim <- localmoran_perm(gridSf$z, listw = wListSim, nsim = 999)
 head(lisaSim)
 
 
 ## -----------------------------------------------------------------------------
 #| label: sim-attach
 gridSf$Ii <- lisaSim[, "Ii"]
-gridSf$pval <- lisaSim[, "Pr(z != E(Ii))"]
+gridSf$pval <- lisaSim[, "Pr(z != E(Ii)) Sim"]
 
 
 ## -----------------------------------------------------------------------------
@@ -139,14 +139,14 @@ ggplot(gridSf) +
 
 ## -----------------------------------------------------------------------------
 #| label: meuse-localmoran
-lisa <- localmoran(meuseSf$log_lead, listw = wList)
+lisa <- localmoran_perm(meuseSf$log_lead, listw = wList, nsim = 999)
 head(lisa)
 
 
 ## -----------------------------------------------------------------------------
 #| label: meuse-cluster
 meuseSf$Ii <- lisa[, "Ii"]
-meuseSf$pval <- lisa[, "Pr(z != E(Ii))"]
+meuseSf$pval <- lisa[, "Pr(z != E(Ii)) Sim"]
 
 sig <- 0.01
 meuseSf$cluster <- case_when(
@@ -192,7 +192,8 @@ ggplot(meuseSf) +
     midpoint = 0,
     name = expression(I[i])
   ) +
-  labs(title = "Local Moran's I: log lead, Meuse River")
+  labs(title = "Local Moran's I: log lead, Meuse River") +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------

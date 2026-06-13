@@ -1,8 +1,10 @@
 ## ----echo=FALSE---------------------------------------------------------------
+#| label: setup
 set.seed(2613)
 
 
 ## ----message=FALSE------------------------------------------------------------
+#| label: packages
 library(tidyverse)
 library(sf)
 library(gstat)
@@ -10,10 +12,12 @@ library(PNWColors)
 
 
 ## ----echo=FALSE---------------------------------------------------------------
+#| label: palette
 anem7 <- pnw_palette(name = "Anemone", n = 7, type = "discrete")
 
 
 ## -----------------------------------------------------------------------------
+#| label: sim-data
 n <- 50
 x <- runif(n, min = -4, max = 4)
 eps <- rnorm(n, sd = 15)
@@ -22,12 +26,14 @@ dat <- data.frame(x = x, y = y)
 
 
 ## -----------------------------------------------------------------------------
+#| label: sim-plot
 ggplot(dat, aes(x = x, y = y)) +
   geom_point(size = 2.5, alpha = 0.8) +
   theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
+#| label: overfit-curve
 testOvIdx <- sample(1:nrow(dat), size = round(nrow(dat) * 0.33))
 trainOv <- dat[-testOvIdx, ]
 testOv <- dat[testOvIdx, ]
@@ -42,13 +48,13 @@ for (d in degrees) {
   rsqOut[d] <- cor(testOv$y, predict(fitD, newdata = testOv))^2
 }
 
-bv <- data.frame(
+rsqByDegree <- data.frame(
   degree = rep(degrees, 2),
   rsq    = c(rsqIn, rsqOut),
   set    = rep(c("Training", "Test"), each = length(degrees))
 )
 
-ggplot(bv, aes(x = degree, y = rsq, color = set)) +
+ggplot(rsqByDegree, aes(x = degree, y = rsq, color = set)) +
   geom_line(linewidth = 1.1) +
   geom_point(size = 2.5) +
   scale_x_continuous(breaks = degrees) +
@@ -58,6 +64,7 @@ ggplot(bv, aes(x = degree, y = rsq, color = set)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: holdout-split
 testIdx <- sample(1:nrow(dat), size = round(nrow(dat) * 0.25))
 dat$split <- "train"
 dat$split[testIdx] <- "test"
@@ -69,6 +76,7 @@ ggplot(dat, aes(x = x, y = y, color = split)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: holdout-metrics
 train <- dat[dat$split == "train", ]
 test <- dat[dat$split == "test", ]
 
@@ -83,6 +91,7 @@ c("rsq" = rsq, "rmse" = rmse, "mae" = mae)
 
 
 ## -----------------------------------------------------------------------------
+#| label: holdout-obs-pred
 ggplot(test, aes(x = y, y = yhat)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
   geom_point(size = 3, color = anem7[7]) +
@@ -95,6 +104,7 @@ ggplot(test, aes(x = y, y = yhat)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: null-model
 rmseNull <- sqrt(mean((mean(train$y) - test$y)^2))
 maeNull <- mean(abs(mean(train$y) - test$y))
 
@@ -103,6 +113,7 @@ rmseNull
 
 
 ## -----------------------------------------------------------------------------
+#| label: kfold
 k <- 10
 dat2 <- dat[sample(nrow(dat)), c("x", "y")] # shuffle, drop the split column
 dat2$fold <- cut(seq(1, nrow(dat2)), breaks = k, labels = FALSE)
@@ -125,10 +136,12 @@ results
 
 
 ## -----------------------------------------------------------------------------
+#| label: kfold-means
 colMeans(results[, c("rsq", "rmse", "mae")])
 
 
 ## -----------------------------------------------------------------------------
+#| label: kfold-hist
 results %>%
   pivot_longer(
     cols = c(rsq, rmse, mae),
@@ -142,6 +155,7 @@ results %>%
 
 
 ## ----message=FALSE------------------------------------------------------------
+#| label: meuse-holdout
 meuse2 <- readRDS("../data/meuse2.Rds")
 meuseSf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
 

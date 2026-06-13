@@ -1,6 +1,7 @@
 # Deterministic Interpolation: Inverse Distance Weighting
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+#| label: setup
 set.seed(184)
 ```
 
@@ -8,15 +9,15 @@ set.seed(184)
 We often want to estimate phenomena at locations where we do not have measurements. Geostatistics is the field that we use to make (hopefully) accurate and reliable models of spatial data. We will use these models for prediction. We can use both deterministic and probabilistic models. This chapter focuses on deterministic methods.
 
 ## Packages
-The `gstat`[@R-gstat] package is your friend. And I'm going to plot in `ggplot` via `tidyverse`[@R-tidyverse] with `sf`[@R-sf], `terra`[@R-terra] and `tidyterra`[@R-tidyterra]. We'll also pull in `tmap`[@R-tmap] for a map or two.
+The `gstat`[@R-gstat] package is your friend. And I'm going to plot in `ggplot` via `tidyverse`[@R-tidyverse] with `sf`[@R-sf], `terra`[@R-terra] and `tidyterra`[@R-tidyterra].
 
 ```{r, message=FALSE}
+#| label: packages
 library(tidyverse)
 library(sf)
 library(gstat)
 library(terra)
 library(tidyterra)
-library(tmap)
 ```
 
 
@@ -28,7 +29,7 @@ So far we've been mostly describing spatial patterns and sometimes using those p
 ## Theory
 We are going to tackle the broader theory and application of geostatistics (which did indeed develop from the desire to get more gold out of the ground in South Africa) but we are going to start with a conceptual application that predates geostatistics as a discipline. We have already introduced the idea of inverse distance weights (IDW) with our matrix $W$ from the Moran's I calculation where $w_{ij}=d_{ij}^{-1}$.
 
-Using distance as a predictor implements the so-called first law of the geography "Everything is related to everything else, but near things are more related than distant things." IDW uses this assumption to predict a variable at unmeasured locations by using nearby measurements. The closer the measured values are to the prediction location, the more influence (weight) they have. With IDW, influence diminishes as a function of distance.
+Using distance as a predictor implements the so-called first law of geography "Everything is related to everything else, but near things are more related than distant things." IDW uses this assumption to predict a variable at unmeasured locations by using nearby measurements. The closer the measured values are to the prediction location, the more influence (weight) they have. With IDW, influence diminishes as a function of distance.
 
 We are now going to use IDW as a way to get an estimate of a variable ($\hat{Z}$) at a spatial location $s_0$ using a weighted spatial average:
 
@@ -41,8 +42,9 @@ where $|| \cdot ||$ indicates Euclidean distance and $p$ is a weighting power (o
 
 Let's visualize the function where weight ($w$) equals the inverse of distance ($d$): $w=d^{-1}$ as such:
 ```{r}
-foo <- data.frame(d = 1:100, w = (1:100)^-1)
-foo %>% ggplot(mapping = aes(x = d, y = w)) +
+#| label: weight-curve
+wCurve <- data.frame(d = 1:100, w = (1:100)^-1)
+wCurve %>% ggplot(mapping = aes(x = d, y = w)) +
   geom_line() +
   labs(x = "Distance", y = "Weight")
 ```
@@ -50,7 +52,8 @@ foo %>% ggplot(mapping = aes(x = d, y = w)) +
 And with a log scale to see more clearly.
 
 ```{r}
-foo %>% ggplot(mapping = aes(x = d, y = w)) +
+#| label: weight-curve-log
+wCurve %>% ggplot(mapping = aes(x = d, y = w)) +
   geom_line() +
   labs(x = "Distance", y = "Weight") +
   scale_y_log10()
@@ -58,7 +61,8 @@ foo %>% ggplot(mapping = aes(x = d, y = w)) +
 
 In that case we are using the straight inverse distance as $w=d^{-1}$ or $w=d^{-p}$ where $p=1$. But what if that curve is too steep? Or not steep enough? We can choose a value of $p$. E.g., the function can be $w=d^{-2}$ if we set $p=2$. Let's look at a range of $p$ values.
 ```{r}
-foo <- rbind(
+#| label: power-range
+wCurve <- rbind(
   data.frame(d = 1:100, w = (1:100)^0, p = "0"),
   data.frame(d = 1:100, w = (1:100)^-0.5, p = "0.5"),
   data.frame(d = 1:100, w = (1:100)^-1, p = "1"),
@@ -66,7 +70,7 @@ foo <- rbind(
   data.frame(d = 1:100, w = (1:100)^-2, p = "2"),
   data.frame(d = 1:100, w = (1:100)^-2.5, p = "2.5")
 )
-foo %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
+wCurve %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
   geom_line() +
   labs(x = "Distance", y = "Weight")
 ```
@@ -74,7 +78,8 @@ foo %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
 And with a log scale to see more clearly (if you can think in logs -- it takes me awhile to wrap my head around it, but then I'm glad I did).
 
 ```{r}
-foo %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
+#| label: power-range-log
+wCurve %>% ggplot(mapping = aes(x = d, y = w, color = p)) +
   geom_line() +
   labs(x = "Distance", y = "Weight") +
   scale_y_log10()
@@ -88,13 +93,14 @@ Now that we have the information we need on the algorithm, let's do a quick and 
 
 Here is a small data set of five points. We have spatial coordinates ($x$ and $y$) and some measured variable ($z$).
 ```{r}
-foo <- data.frame(
+#| label: toy-data
+toyDat <- data.frame(
   x = c(1, 3, 1, 4, 5),
   y = c(5, 4, 3, 5, 1),
   z = c(100, 105, 105, 100, 115)
 )
-foo
-p1 <- foo %>% ggplot() +
+toyDat
+p1 <- toyDat %>% ggplot() +
   geom_point(aes(x = x, y = y, size = z)) +
   lims(x = c(0, 6), y = c(0, 6))
 p1
@@ -103,6 +109,7 @@ p1
 Let's imagine a point $x=2$ and $y=4$ where we don't know $z$.
 
 ```{r}
+#| label: toy-unknown-point
 p1 + geom_point(aes(x = 2, y = 4), color = "red", size = 10, shape = 0) +
   geom_point(aes(x = 2, y = 4), color = "red", size = 6, shape = 63)
 ```
@@ -112,7 +119,8 @@ We are now going to use IDW as a way to get an estimate of that point with a mis
 
 The Euclidean distance to our unknown point from each of the known points is a vector: 
 ```{r,echo=FALSE}
-d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
+#| label: toy-distances
+d2s0 <- as.matrix(dist(cbind(c(toyDat$x, 2), c(toyDat$y, 4))))[1:5, 6]
 ```
 
 $$\mathbf{d_i} = \left[\begin{array}
@@ -128,6 +136,7 @@ $$
 If we use a value of $p=2$ to get weights we have:
 
 ```{r,echo=FALSE}
+#| label: toy-weights
 p <- 2
 w <- d2s0^-p
 ```
@@ -144,20 +153,25 @@ $$
 
 Thus the interpolated point:
 ```{r,echo=FALSE}
-zhatS0 <- sum(w * foo$z) / sum(w)
+#| label: toy-estimate
+zhatS0 <- sum(w * toyDat$z) / sum(w)
 ```
 
 
 $$\hat{Z}(s_0)=\frac{0.500(100)+1.000(105)+0.500(105)+0.200(100)+0.056(115)}{0.500+1.000+0.500+0.200+0.056} = 103.7$$
 ```{r, warning=FALSE}
-# distance to missing point s0
-d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
+#| label: toy-idw
+# stack the five known points with the unknown point s0 at (2, 4)
+coords <- cbind(c(toyDat$x, 2), c(toyDat$y, 4))
+# full pairwise distance matrix, then pull each known point's distance to s0 (column 6)
+dmat <- as.matrix(dist(coords))
+d2s0 <- dmat[1:5, 6]
 # power
 p <- 2
 # weights
 w <- d2s0^-p
 # and the estimation itself
-zhatS0 <- sum(w * foo$z) / sum(w)
+zhatS0 <- sum(w * toyDat$z) / sum(w)
 zhatS0
 # add it to the plot
 p1 + geom_point(aes(x = 2, y = 4, size = zhatS0))
@@ -173,9 +187,10 @@ If you need a refresher in `dist()`, work through the [Distance Matrices aside](
 ### Data
 Now that we've done a toy example, let's give this a shot with the lead data from the Meuse River. Because the lead data are pretty skewed, we will log transform it. First we'll load, then log the lead column, make it into a `sf` object and then plot.
 
-We use `meuse2` from the `gstat` package - not `sp::meuse`, which is a different and older version of the same data. First we load it and make it into an `sf` object.
+We use `meuse2`, a trimmed and updated version of the classic Meuse dataset, rather than the older `sp::meuse`. See the [appendix](A1DataSources.qmd) for how it was built. First we load it and make it into an `sf` object.
 
 ```{r}
+#| label: meuse-load
 meuse2 <- readRDS("data/meuse2.Rds")
 glimpse(meuse2)
 class(meuse2)
@@ -201,6 +216,7 @@ p2
 Let's interpolate those measurements to an empty grid that covers the whole study site. We will use `meuse.grid2`, a 40 x 40 m prediction grid covering the study area with 3089 cells. It includes elevation, terrain derivatives, land cover, and distance to the river from modern open data sources. See the [appendix](A1DataSources.qmd) for full variable descriptions and provenance.
 
 ```{r}
+#| label: meuse-grid-load
 meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
 head(meuse.grid2)
 ```
@@ -209,6 +225,7 @@ This has several fields that overlap with `meuse2` (e.g., `soil`, `ffreq`), plus
 
 
 ```{r}
+#| label: meuse-grid-sf
 meuseGridSf <- st_as_sf(meuse.grid2,
   coords = c("x", "y"),
   crs = st_crs(meuseSf)
@@ -222,10 +239,11 @@ So the idea here is that we will model a value for lead at each of the locations
 We can use the coordinates in `meuseGridSf` as the locations to predict using IDW. We don't care about the data in `meuseGridSf` like soil type or distance to river. We just want the locations. To do this, we will use the `gstat` function which creates an object that holds all the information necessary for prediction. Here we tell `gstat` that we want an IDW model with a power of 2 using the `idp` parameter. The formula `logLead~1` tells `gstat` there are no covariates, just an intercept. The spatial weighting by distance is what makes this IDW -- that's handled by `idp`, not by the formula. This distinction will matter when we add covariates in regression kriging.
 
 ::: {.callout-note}
-Note that we're calling `predict()` here which is a generic function that will dispatch to a different method under the hood because `idwP2Model` is a `gstats` object. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html).
+Note that we're calling `predict()` here which is a generic function that will dispatch to a different method under the hood because `idwP2Model` is a `gstat` object. That's generics doing their job. Look back at the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html).
 :::
 
 ```{r}
+#| label: idw-p2-model
 idwP2Model <- gstat(
   formula = logLead ~ 1,
   locations = meuseSf,
@@ -257,6 +275,7 @@ Now `se()` works just like any other R function. Call it on a vector, get a numb
 
 
 ```{r}
+#| label: idw-p2-map
 sf2Rast <- function(sfObject, variableIndex = 1) {
   # coerce sf to a data.frame
   dfObject <- data.frame(st_coordinates(sfObject),
@@ -283,6 +302,7 @@ ggplot() +
 We've made a prediction. Is it any good? It kind of looks funny -- especially all those craters in the middle. Let's take another look at it with a more extreme visualization.
 
 ```{r}
+#| label: idw-p2-contour
 ggplot() +
   geom_spatraster_contour_filled(
     data = logLeadIDWP2Rast,
@@ -302,6 +322,7 @@ Those craters are artifacts of IDW, not real structure in the data. Here's why t
 Now that we are making predictions we need to assess how good they are. The [Model Skill and Cross Validation aside](06xAsideModelSkill.html) covers all of this in detail and is worth reading before going further. The short version is: we'll use R$^2$, RMSE, and the observed-vs-predicted plot throughout the interpolation chapters, and we always care more about out-of-sample skill than in-sample fit. Here's the in-sample picture first, just to show why:
 
 ```{r}
+#| label: idw-insample-skill
 obs <- meuseSf$logLead
 preds <- extract(logLeadIDWP2Rast, meuseSf) %>% pull(var1.pred)
 rsq <- cor(obs, preds)^2
@@ -322,6 +343,7 @@ ggplot() +
 The model does an excellent job of predicting the observed values with 99% variance explained and a low RMSE. It's 99% rather than 100% because we're extracting predictions from a raster grid, not from the exact observation coordinates -- there's a little rounding from the discretization. IDW is actually exact at data locations in theory (the weight to itself would be infinite, overwhelming everything else). Which is precisely why this in-sample comparison is kind of a lame test. The model knew about all those points when it made the predictions. Typically when assessing skill we withhold some portion of the data and then use that to test the model. When we test the model using the withheld data we are calculating the out-of-sample error by giving the model a chance to predict some data it hasn't seen before. E.g., let's withhold 25% of the data (38 points), do the interpolation, and then look at how well the model predicted the withheld points.
 
 ```{r}
+#| label: idw-traintest
 n <- nrow(meuseSf)
 rows4test <- sample(x = 1:n, size = n * 0.25)
 meuseTest <- meuseSf[rows4test, ]
@@ -348,6 +370,7 @@ ggplot() +
 We built the model with the training data `meuseTrain` which had 75% of the original data. We kept 25% of the data hidden from the model in `meuseTest`. By comparing the predictions from the training data to the withheld values from the testing data we can assess the out-of-sample skill. 
 
 ```{r}
+#| label: idw-oos-skill
 # note use of meuseTest here
 obs <- meuseTest$logLead
 preds <- extract(logLeadIDWP2Rast, meuseTest) %>% pull(var1.pred)
@@ -374,6 +397,7 @@ Oooof. Looking at that plot and the code we see now that the skill of the model 
 How does that RMSE look against the simplest possible baseline, predicting the training mean everywhere?
 
 ```{r}
+#| label: null-model
 rmseNULL <- sqrt(mean((mean(meuseTrain$logLead) - obs)^2))
 rmseNULL
 1 - (rmse / rmseNULL)
@@ -383,13 +407,14 @@ For a full treatment of the null model and how to interpret these skill scores, 
 
 So we have to ask, "How can we improve this model in a responsible way?"
 
-Improving a model's skill (without overfitting it) is an art. In this case, IDW is a pretty blunt tool. In fact it is completely **deterministic**. I.e., there is no probability theory underlying the method, which limits how much we can do.
+Improving a model's skill (without overfitting it) is an art. In this case, IDW is a pretty blunt tool. In fact it is completely deterministic. I.e., there is no probability theory underlying the method, which limits how much we can do.
 
 What can we do right now? We could start trying to "tune" the model using parameters we can adjust. The power function is the easiest to mess with but we could also specify a minimum or maximum number of points used for the interpolation (arguments `nmax` and `nmin`) or a maximum distance that can influence the interpolation (`maxdist`).
 
 For example, here is the same data as above with $p=3$ instead of $p=2$.
 
 ```{r}
+#| label: idw-p3-map
 idwP3Model <- gstat(
   formula = logLead ~ 1,
   locations = meuseTrain,
@@ -411,6 +436,7 @@ ggplot() +
 How does this surface differ? Here is the skill on the withheld data:
 
 ```{r}
+#| label: idw-p3-skill
 # note use of meuseTest here
 obs <- meuseTest$logLead
 preds <- extract(logLeadIDWP3Rast, meuseTest) %>% pull(var1.pred)
@@ -432,6 +458,7 @@ ggplot() +
 The R$^2$ is higher and the RMSE is lower. It's a better fit but not much better. Against the same null, the skill score for $p=3$ is:
 
 ```{r}
+#| label: idw-p3-skillscore
 1 - (rmse / rmseNULL)
 ```
 
@@ -452,6 +479,7 @@ The California precipitation dataset gives you a chance to apply IDW to a differ
 2. `gridCA.rds` -- an empty 10x10 km prediction grid covering California.
 
 ```{r}
+#| label: prcp-ca
 # precip point data
 prcpCA <- readRDS("data/prcpCA.rds")
 # empty grid to interpolate into

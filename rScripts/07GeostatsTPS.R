@@ -1,19 +1,21 @@
 ## ----echo=FALSE, message=FALSE, warning=FALSE, results='hide'-----------------
+#| label: setup
 set.seed(184)
 
 
 ## -----------------------------------------------------------------------------
+#| label: packages
 #| warning: false
 #| message: false
 library(fields)
 library(tidyverse)
-library(gstat)
 library(sf)
 library(terra)
 library(tidyterra)
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-data
 #| warning: false
 #| message: false
 meuse2 <- readRDS("../data/meuse2.Rds")
@@ -25,6 +27,7 @@ meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
 
 
 ## -----------------------------------------------------------------------------
+#| label: lead-map
 ggplot(data = meuseSf) +
   geom_sf(aes(fill = logLead),
     size = 4,
@@ -35,11 +38,13 @@ ggplot(data = meuseSf) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: tps-fit
 logLeadTPSmodel <- Tps(x = meuse2[, 1:2], Y = meuse2$logLead)
 logLeadTPSmodel
 
 
 ## -----------------------------------------------------------------------------
+#| label: tps-surface
 # Predict the model over all the coordinates in meuse.grid2
 logLeadPreds <- c(predict(object = logLeadTPSmodel, x = meuse.grid2[, 1:2]))
 # Store in a data.frame with the x,y coordinates
@@ -60,6 +65,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: tps-insample-skill
 obs <- meuse2$logLead
 preds <- extract(logLeadTPSRast, meuseSf) %>% pull(logLead)
 rsq <- cor(obs, preds)^2
@@ -68,6 +74,7 @@ c(rsq = rsq, rmse = rmse)
 
 
 ## -----------------------------------------------------------------------------
+#| label: tps-insample-scatter
 ggplot() +
   geom_abline(slope = 1, intercept = 0) +
   geom_point(aes(x = obs, y = preds)) +
@@ -80,6 +87,7 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: tps-traintest
 n <- nrow(meuse2)
 rows4test <- sample(x = 1:n, size = n * 0.2)
 meuseTest <- meuse2[rows4test, ]
@@ -109,6 +117,7 @@ c(rsq = rsq, rmse = rmse)
 
 
 ## -----------------------------------------------------------------------------
+#| label: tps-traintest-scatter
 ggplot() +
   geom_abline(slope = 1, intercept = 0) +
   geom_point(aes(x = obs, y = preds)) +
@@ -121,10 +130,12 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: null-rmse
 rmseNULL <- sqrt(mean((mean(meuseTrain$logLead) - obs)^2))
 rmseNULL
 
 
 ## -----------------------------------------------------------------------------
+#| label: null-skill-score
 1 - (rmse / rmseNULL)
 

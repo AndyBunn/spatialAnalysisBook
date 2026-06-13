@@ -69,7 +69,7 @@ The two tools we'll use (variograms and Moran's I) are both trying to describe t
 
 Let me make this concrete with a tiny data set. Eight stations along a transect, spaced 100m apart. At each station we measure some variable (e.g., soil nitrogen, temperature). The point is we have one variable measured at eight locations.
 
-I'm keeping this example in one dimension, like stations strung out along a line,  because it's the easiest way to see the logic. But nothing about the math requires it. When we get to the Meuse data, each point has both an $x$ and a $y$ coordinate, and the distance between two points is just the familiar Euclidean distance $d_{ij} = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}$. The pairing logic is identical. More points, more pairs, same idea.
+I'm keeping this example in one dimension, like stations strung out along a line,  because it's the easiest way to see the logic. But nothing about the math requires it. When we get to some real data below, each point has both an $x$ and a $y$ coordinate, and the distance between two points is just the familiar Euclidean distance $d_{ij} = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}$. The pairing logic is identical. More points, more pairs, same idea.
 
 ```{r}
 #| label: transect-data
@@ -161,6 +161,12 @@ That scatter of $z_i$ vs $z_j$ is the conceptual core of everything we're doing 
 
 ## Meuse River
 Let's use the Meuse River data to illustrate the idea behind autocorrelation. This is a classic spatial data set that has coordinate data (a plain `data.frame`) with measurements on metal concentrations in soils as well as some other soil variables. We will return to these data again and again. It's a classic data set. Look at the help file for more details as well as the projection info. The site is in the Netherlands on the border with Belgium. Someday I'll visit this site after so many years of working with these data. 
+
+::: {.callout-note}
+
+We use `meuse2`, a trimmed and updated version of the classic Meuse dataset, rather than the older `sp::meuse`. See the [appendix](A1DataSources.qmd) for how it was built.
+
+:::
 
 ```{r}
 #| label: meuse-load

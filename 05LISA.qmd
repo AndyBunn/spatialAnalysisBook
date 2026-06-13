@@ -284,7 +284,7 @@ Compare this to the global Moran's I you computed in the last chapter. Log lead 
 
 ::: {.callout-note}
 ## A close cousin: Getis-Ord $G_i^*$
-Local Moran's I is not the only local statistic you'll meet. The other common one is Getis-Ord $G_i^*$, which is what ArcGIS labels "Hot Spot Analysis" (it files local Moran's I under "Cluster and Outlier Analysis"). The difference is worth knowing. $G_i^*$ asks whether the values in a location's neighborhood add up to more or less than you'd expect by chance, so it flags hot spots and cold spots by intensity. What it does not give you is the outlier categories. There is no HL or LH in $G_i^*$, because it is built on the local sum rather than the cross-product $z_i z_j$ that makes local Moran's I notice a value disagreeing with its neighbors. If all you want is "where are the highs and lows," $G_i^*$ is clean and easy to read. If you also care about the misfits, you want local Moran's I. `spdep` computes it with `localG()`.
+Local Moran's I is not the only local statistic you'll meet. The other common one is Getis-Ord $G_i^*$, which is what ArcGIS labels "Hot Spot Analysis" (it files local Moran's I under "Cluster and Outlier Analysis"). The difference is worth knowing. $G_i^*$ asks whether the values in a location's neighborhood add up to more or less than you'd expect by chance, so it flags hot spots and cold spots by intensity. What it does not give you is the outlier categories. There is no HL or LH in $G_i^*$, because it is built on the local sum rather than the cross-product $z_i z_j$ that makes local Moran's I notice a value disagreeing with its neighbors. If all you want is "where are the highs and lows," $G_i^*$ is clean and easy to read. If you also care about the misfits, you want local Moran's I. `spdep` computes it with `localG()`. 
 :::
 
 ### The Local I Values Themselves
@@ -300,7 +300,8 @@ ggplot(meuseSf) +
     midpoint = 0,
     name = expression(I[i])
   ) +
-  labs(title = "Local Moran's I: log lead, Meuse River")
+  labs(title = "Local Moran's I: log lead, Meuse River") +
+  theme_minimal()
 ```
 
 Locations with strongly positive $I_i$ are in coherent clusters, either HH or LL. Locations with negative $I_i$ are spatial outliers. Near-zero values are, statistically speaking, uninteresting.

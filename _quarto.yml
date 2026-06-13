@@ -36,7 +36,7 @@ book:
       chapters:
         - 06GeostatsIDW.qmd
         - 06xAsideModelSkill.qmd
-        - 07Geostat2TPS.qmd
+        - 07GeostatsTPS.qmd
         - 08GeostatsKriging.qmd
         - 08xAsideGeostatsKrigingVariance.qmd
         - 09GeostatsRegressionKriging.qmd

@@ -1,6 +1,7 @@
 # Aside: Model Skill and Cross Validation {- .aside-chapter}
 
 ```{r, echo=FALSE}
+#| label: setup
 set.seed(2613)
 ```
 
@@ -8,14 +9,15 @@ set.seed(2613)
 
 Fitting a model and evaluating a model are not the same thing. When you fit a model on a dataset and then evaluate it on that same dataset, you are not measuring how well the model predicts. You are measuring how well it memorizes.
 
-A model can have a high $R^2$, low residuals, and an impressive-looking summary table, and still be nearly useless for prediction. This happens when the model has learned the noise in your data along with the signal, a problem called **overfitting**. Overfit models describe your observed data well but generalize poorly to new data. The inverse is also a problem: a model that is too simple to capture the real structure in the data, called **underfitting**, will perform badly both in-sample and out-of-sample, though in a more obvious way.
+A model can have a high $R^2$, low residuals, and an impressive-looking summary table, and still be nearly useless for prediction. This happens when the model has learned the noise in your data along with the signal, a problem called overfitting. Overfit models describe your observed data well but generalize poorly to new data. The inverse is also a problem: a model that is too simple to capture the structure in the data, called underfitting, will perform badly both in-sample and out-of-sample, though in a more obvious way.
 
-**Model skill** is a term used to describe a model's ability to make accurate predictions on data it was not trained on. The metrics we'll develop here, $R^2$, RMSE, and MAE, are just numbers. What matters is whether they are computed on data the model was trained on (in-sample) or on data the model has never seen (out-of-sample). The second kind is model skill. This chapter is about how to measure it.
+Model skill is a term used to describe a model's ability to make accurate predictions on data it was not trained on. The metrics we'll develop here, $R^2$, RMSE, and MAE, are just numbers. What matters is whether they are computed on data the model was trained on (in-sample) or on data the model has never seen (out-of-sample). The second kind is model skill. This chapter is about how to measure it.
 
 ## Packages
 We'll use our usual spatial toolkit: `tidyverse`[@R-tidyverse], `sf`[@R-sf], and `gstat`[@R-gstat]. And `PNWColors`[@R-PNWColors] for color palettes that don't make your eyes bleed.
 
 ```{r, message=FALSE}
+#| label: packages
 library(tidyverse)
 library(sf)
 library(gstat)
@@ -25,6 +27,7 @@ library(PNWColors)
 We'll also mention the `caret` package [@R-caret] toward the end of this chapter. It is the standard workhorse for cross validation in R, but it has its own syntax that takes some getting used to. For now we will build things by hand so the mechanics are clear.
 
 ```{r, echo=FALSE}
+#| label: palette
 anem7 <- pnw_palette(name = "Anemone", n = 7, type = "discrete")
 ```
 
@@ -80,6 +83,7 @@ mae  <- mean(abs(preds - obs))
 Let's make the overfitting problem concrete. We will simulate some data where we know the true relationship, hold out a chunk of it as a test set, and then fit polynomial models of increasing complexity. For each model we'll track in-sample and out-of-sample $R^2$ as flexibility grows.
 
 ```{r}
+#| label: sim-data
 n <- 50
 x <- runif(n, min = -4, max = 4)
 eps <- rnorm(n, sd = 15)
@@ -90,6 +94,7 @@ dat <- data.frame(x = x, y = y)
 We have `r n` observations with one predictor $x$ and response $y$. The true relationship is $y = 30 + 2x^3 - 5x + \varepsilon$ but we don't know that when fitting.
 
 ```{r}
+#| label: sim-plot
 ggplot(dat, aes(x = x, y = y)) +
   geom_point(size = 2.5, alpha = 0.8) +
   theme_minimal()
@@ -98,6 +103,7 @@ ggplot(dat, aes(x = x, y = y)) +
 Let's hold out 1/3 of the points as a test set, then on the training data fit polynomial models of degree 1 through 10. For each one we'll compute in-sample $R^2$ on the training data and out-of-sample $R^2$ on the test data.
 
 ```{r}
+#| label: overfit-curve
 testOvIdx <- sample(1:nrow(dat), size = round(nrow(dat) * 0.33))
 trainOv <- dat[-testOvIdx, ]
 testOv <- dat[testOvIdx, ]
@@ -112,13 +118,13 @@ for (d in degrees) {
   rsqOut[d] <- cor(testOv$y, predict(fitD, newdata = testOv))^2
 }
 
-bv <- data.frame(
+rsqByDegree <- data.frame(
   degree = rep(degrees, 2),
   rsq    = c(rsqIn, rsqOut),
   set    = rep(c("Training", "Test"), each = length(degrees))
 )
 
-ggplot(bv, aes(x = degree, y = rsq, color = set)) +
+ggplot(rsqByDegree, aes(x = degree, y = rsq, color = set)) +
   geom_line(linewidth = 1.1) +
   geom_point(size = 2.5) +
   scale_x_continuous(breaks = degrees) +
@@ -133,11 +139,12 @@ That gap between the training and test curves is overfitting. And the lesson is 
 
 ## Train/Test Holdout
 
-What we just did is the simplest form of skill assessment: split the data into a **training** set and a **test** set, fit on the training data only, and evaluate on the test data. The test set acts as a stand-in for data the model has never seen.
+What we just did is the simplest form of skill assessment: split the data into a training set and a test set, fit on the training data only, and evaluate on the test data. The test set acts as a stand-in for data the model has never seen.
 
 There is no universal rule for the split ratio. The historical advice was 2/3 training and 1/3 testing. You'll also see 70/30 and 80/20. With small datasets, giving up a third of your data for testing means you're training on less than you'd like. With large datasets it matters less. 
 
 ```{r}
+#| label: holdout-split
 testIdx <- sample(1:nrow(dat), size = round(nrow(dat) * 0.25))
 dat$split <- "train"
 dat$split[testIdx] <- "test"
@@ -149,6 +156,7 @@ ggplot(dat, aes(x = x, y = y, color = split)) +
 ```
 
 ```{r}
+#| label: holdout-metrics
 train <- dat[dat$split == "train", ]
 test <- dat[dat$split == "test", ]
 
@@ -163,6 +171,7 @@ c("rsq" = rsq, "rmse" = rmse, "mae" = mae)
 ```
 
 ```{r}
+#| label: holdout-obs-pred
 ggplot(test, aes(x = y, y = yhat)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
   geom_point(size = 3, color = anem7[7]) +
@@ -199,6 +208,7 @@ The same logic applies to MAE: compute the null MAE using $\bar{y}$ as the predi
 One thing to be careful about: the null model should be built from the training data and applied to the test data, just like any other model. Use the mean of the training observations, not the mean of the test set or the full dataset. Using test data to define your baseline is the same kind of leakage as using it to fit your model.
 
 ```{r}
+#| label: null-model
 rmseNull <- sqrt(mean((mean(train$y) - test$y)^2))
 maeNull <- mean(abs(mean(train$y) - test$y))
 
@@ -208,15 +218,16 @@ rmseNull
 
 Our RMSE of `r round(rmse, 2)` against a null of `r round(rmseNull, 2)` gives a skill score of `r round(1 - rmse/rmseNull, 3)`. The model is doing good work relative to the null. The null model idea extends further than just picking a reference statistic. It forces you to ask: what is the simplest model that could plausibly describe this system, and can I beat it? In spatial prediction the null is usually the global training mean. In some applications you might use something more informative as the baseline, a spatial trend surface or a long-term climatological average for instance, and evaluate skill relative to that. The key is always having a sensible reference point so your metrics mean something beyond their raw value.
 
-Students trained on hypothesis testing often want to know whether a skill score like `r round(1 - rmse/rmseNull, 3)` is "significant." The answer is that the question doesn't quite translate. A skill score of `r round(1 - rmse/rmseNull, 3)` means your model accounts for about half the variation that the null model misses, which is  meaningful, but whether it is good depends entirely on the problem. Predicting next-week precipitation across a mountain range with a skill of `r round(1 - rmse/rmseNull, 3)` might be impressive given the chaos of atmospheric dynamics. Getting a skill of `r round(1 - rmse/rmseNull, 3)` predicting the boiling point of water as a function of elevation would be embarrassing. You can in principle run a permutation test, shuffle your $y$ values, recompute skill scores many times, and ask where your observed score falls in that null distribution, but this is rarely done in practice and doesn't really answer the question practitioners care about. The more useful questions are: does the model perform well enough for the intended purpose, and can I build something that does better? A skill score is a number on a scale with a known floor (0 = no better than the mean) and a known ceiling (1 = perfect). Interpret it relative to those anchors, relative to what competing models achieve, and relative to the costs of being wrong in your application. That is more informative than a p-value would be.
+Students trained on hypothesis testing often want to know whether a skill score like `r round(1 - rmse/rmseNull, 3)` is "significant." The answer is that the question doesn't quite translate. A skill score of `r round(1 - rmse/rmseNull, 3)` means your model accounts for about half the variation that the null model misses but whether it is "good" depends entirely on the problem. Predicting next-week precipitation across a mountain range with a skill of `r round(1 - rmse/rmseNull, 3)` might be impressive given the chaos of atmospheric dynamics. Getting a skill of `r round(1 - rmse/rmseNull, 3)` predicting the boiling point of water as a function of elevation would be embarrassing. You can in principle run a permutation test, shuffle your $y$ values, recompute skill scores many times, and ask where your observed score falls in that null distribution, but this is rarely done in practice and doesn't answer the question practitioners care about. The more useful questions are: does the model perform well enough for the intended purpose, and can I build something that does better? A skill score is a number on a scale with a known floor (0 = no better than the mean) and a known ceiling (1 = perfect). Interpret it relative to those anchors, relative to what competing models achieve, and relative to the costs of being wrong in your application. That is more informative than a p-value would be.
 
 ## K-Fold Cross Validation
 
-K-fold cross validation solves the single-split problem by repeating the train/test evaluation systematically across the whole dataset. The idea is to divide the data into $k$ roughly equal groups called **folds**. For each fold in turn, hold it out as the test set and train the model on the remaining $k-1$ folds. Evaluate skill on the held-out fold. Repeat for all $k$ folds and take the mean.
+K-fold cross validation solves the single-split problem by repeating the train/test evaluation systematically across the whole dataset. The idea is to divide the data into $k$ roughly equal groups called folds. For each fold in turn, hold it out as the test set and train the model on the remaining $k-1$ folds. Evaluate skill on the held-out fold. Repeat for all $k$ folds and take the mean.
 
 With $k=10$ you use 90% of the data for training in each iteration and 10% for testing, and every observation gets to be in the test set exactly once. The mean skill across folds is a much more stable estimate than any single train/test split.
 
 ```{r}
+#| label: kfold
 k <- 10
 dat2 <- dat[sample(nrow(dat)), c("x", "y")] # shuffle, drop the split column
 dat2$fold <- cut(seq(1, nrow(dat2)), breaks = k, labels = FALSE)
@@ -239,12 +250,14 @@ results
 ```
 
 ```{r}
+#| label: kfold-means
 colMeans(results[, c("rsq", "rmse", "mae")])
 ```
 
 Now we have a distribution of skill estimates, not just one number. Let's look at it.
 
 ```{r}
+#| label: kfold-hist
 results %>%
   pivot_longer(
     cols = c(rsq, rmse, mae),
@@ -259,9 +272,9 @@ results %>%
 
 The spread across folds is the variability in predictive performance conditional on this dataset and this model. A tight distribution means the mean is a reliable estimate. A wide one tells you a single split could easily have given you something misleading. The cross-validated mean is the number to report, not the in-sample $R^2$ from `summary(lm(...))`.
 
-One natural question is whether $k=10$ is the right choice. With larger $k$ you train on more data each time, which can help with small datasets. The extreme is **leave-one-out cross validation** (LOOCV), where $k=n$ and each test set has exactly one observation. LOOCV has low bias but can be computationally expensive and tends to produce noisy skill estimates. For most purposes $k=5$ or $k=10$ is a reasonable default.
+One natural question is whether $k=10$ is the right choice. With larger $k$ you train on more data each time, which can help with small datasets. The extreme is leave-one-out cross validation (LOOCV), where $k=n$ and each test set has exactly one observation. LOOCV has low bias but can be computationally expensive and tends to produce noisy skill estimates. For most purposes $k=5$ or $k=10$ is a reasonable default.
 
-A brief note on **repeated k-fold**: with small datasets, the k-fold estimates themselves can vary from run to run because the fold assignments are random. Repeated k-fold runs the whole procedure multiple times with different random assignments and averages across all of them, giving you an interval estimate rather than a point estimate. The `caret` package handles this with `trainControl(method="repeatedcv", number=10, repeats=10)` -- the structure is identical to what we built above, just automated and repeated.
+A brief note on repeated k-fold: with small datasets, the k-fold estimates themselves can vary from run to run because the fold assignments are random. Repeated k-fold runs the whole procedure multiple times with different random assignments and averages across all of them, giving you an interval estimate rather than a point estimate. The `caret` package handles this with `trainControl(method="repeatedcv", number=10, repeats=10)` -- the structure is identical to what we built above, just automated and repeated.
 
 ## The Spatial Problem
 
@@ -272,6 +285,7 @@ Spatial autocorrelation means observations close together tend to have similar v
 Let's look at what a random holdout actually looks like on the Meuse floodplain dataset we'll use in the interpolation chapters.
 
 ```{r, message=FALSE}
+#| label: meuse-holdout
 meuse2 <- readRDS("data/meuse2.Rds")
 meuseSf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
 
@@ -291,9 +305,9 @@ ggplot(meuseSf) +
 
 Look at where the test points land. Nearly every one of them is surrounded by training points. When you predict lead concentration at a withheld location that has three or four neighbors in the training set within 50 meters, you are not testing how well the model predicts in unknown space. You are testing it on locations well surrounded by known ones, which is a much easier task.
 
-The more principled alternative is to hold out spatially contiguous **blocks** rather than randomly scattered points. If you hold out an entire region, the model has to extrapolate into that region rather than interpolate between nearby training points. This is called **spatial block cross validation** and the `blockCV` and `spatialsample` packages implement it. We won't go into the details here, but it is the right approach if you need predictions to generalize to new areas beyond your sampling domain.
+The more principled alternative is to hold out spatially contiguous blocks rather than randomly scattered points. If you hold out an entire region, the model has to extrapolate into that region rather than interpolate between nearby training points. This is called spatial block cross validation and the `blockCV` and `spatialsample` packages implement it. We won't go into the details here, but it is the right approach if you need predictions to generalize to new areas beyond your sampling domain.
 
-For IDW and kriging, the standard approach is **leave-one-out cross validation** (LOOCV). Remove one observation, predict it from all the remaining observations, and repeat for every point. The `gstat` function `krige.cv()` implements this directly and we'll use it in the kriging chapter. LOOCV is better than a single random split because every observation gets to be a test point, but it does not fully solve the spatial dependence problem. The left-out point still has autocorrelated neighbors in the training data. In geostatistics it is the accepted standard, and it is what we will use here, with that caveat in mind.
+For IDW and kriging, the standard approach is leave-one-out cross validation (LOOCV). Remove one observation, predict it from all the remaining observations, and repeat for every point. The `gstat` function `krige.cv()` implements this directly and we'll use it in the kriging chapter. LOOCV is better than a single random split because every observation gets to be a test point, but it does not fully solve the spatial dependence problem. The left-out point still has autocorrelated neighbors in the training data. In geostatistics it is the accepted standard, and it is what we will use here, with that caveat in mind.
 
 ## A Note on Interpolation
 
