@@ -43,21 +43,22 @@ simDat <- simDat %>%
 ggplot(simDat, aes(x = x, y = y)) +
   geom_point() +
   coord_fixed() +
-  facet_wrap(~id)
+  facet_wrap(~id) +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
 data(japanesepines)
 data(redwood)
-data(bei)
 
 summary(japanesepines)
 summary(redwood)
-summary(bei)
 
+oldPar <- par(no.readonly = TRUE)
+par(mfrow = c(1, 2))
 plot(japanesepines)
 plot(redwood)
-plot(bei)
+par(oldPar)
 
 
 ## -----------------------------------------------------------------------------
@@ -84,44 +85,32 @@ tibble(
 
 
 ## -----------------------------------------------------------------------------
-x <- rnorm(n)
-hist(x, freq = FALSE)
-lines(density(x), col = "red")
-
-
-## -----------------------------------------------------------------------------
+x <- rnorm(n=1e3)
 ggplot() +
   geom_histogram(mapping = aes(x = x, after_stat(density)), fill = "grey") +
-  geom_density(mapping = aes(x = x))
+  geom_density(mapping = aes(x = x)) +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
-jp.den <- density(japanesepines)
-summary(jp.den)
+japanesepinesDensity <- density(japanesepines)
+summary(japanesepinesDensity)
 
 
 ## -----------------------------------------------------------------------------
 #| fig-width: 7
 #| fig-height: 6
-persp(jp.den, theta = 30, phi = 30)
+persp(japanesepinesDensity, theta = 30, phi = 30)
 
 
 ## -----------------------------------------------------------------------------
-plot(jp.den)
-contour(jp.den, add = TRUE)
-points(japanesepines, pch = 20)
+plot(japanesepinesDensity, main = NULL) # omit title
+contour(japanesepinesDensity, add = TRUE, col = "white")
+points(japanesepines, pch = 20, col = "white")
 
 
 ## -----------------------------------------------------------------------------
-plot(density(redwood)) # points(redwood,pch=20)
-plot(density(bei)) # points(bei,pch=20)
-
-
-## -----------------------------------------------------------------------------
-n <- 100
-japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = n, verbose = FALSE)
-beiK <- envelope(bei, fun = Kest, nsim = n, verbose = FALSE)
-redwoodK <- envelope(redwood, fun = Kest, nsim = n, verbose = FALSE)
+japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = 1e3, verbose = FALSE)
 
 
 ## -----------------------------------------------------------------------------
@@ -129,11 +118,8 @@ plot(japanesepinesK)
 
 
 ## -----------------------------------------------------------------------------
+redwoodK <- envelope(redwood, fun = Kest, nsim = 1e3, verbose = FALSE)
 plot(redwoodK)
-
-
-## -----------------------------------------------------------------------------
-plot(beiK)
 
 
 ## -----------------------------------------------------------------------------
@@ -144,25 +130,16 @@ plot(envelope(redwood,
 
 
 ## -----------------------------------------------------------------------------
-japanesepinesK2 <- Kest(japanesepines,
-  verbose = FALSE,
-  correction = c("none", "isotropic", "border")
-)
-plot(japanesepinesK2)
-
-
-## -----------------------------------------------------------------------------
-redwoodL <- envelope(redwood, fun = Lest, nsim = n, verbose = FALSE)
+redwoodL <- envelope(redwood, fun = Lest, nsim = 1e3, verbose = FALSE)
 plot(redwoodL)
 
 
 ## -----------------------------------------------------------------------------
 ggplot(redwoodK, mapping = aes(x = r, ymin = lo - pi * r^2, ymax = hi - pi * r^2)) +
-  geom_ribbon(fill = "grey", alpha = 0.5) +
-  geom_line(mapping = aes(y = theo - pi * r^2), col = "red", linetype = "dashed") +
-  geom_line(mapping = aes(y = obs - pi * r^2)) +
+  geom_ribbon(fill = "#56B4E9", alpha = 0.3) +
+  geom_line(mapping = aes(y = theo - pi * r^2), col = "grey40", linetype = "dashed") +
+  geom_line(mapping = aes(y = obs - pi * r^2), col = "#D55E00", linewidth = 0.8) +
   labs(y = expression(K(r) - pi ~ r^2), x = "r") +
-  ylim(-0.05, 0.05) +
   theme_minimal()
 
 
@@ -177,58 +154,69 @@ hist(longleaf$marks)
 
 
 ## -----------------------------------------------------------------------------
-bigTrees <- subset(longleaf, marks > 50)
-plot(envelope(bigTrees, fun = Lest, nsim = n, verbose = FALSE),
-  main = "Big Trees"
-)
+longleafL <- envelope(longleaf, fun = Lest, nsim = 1e3, verbose = FALSE)
+plot(longleafL, main = "All Trees")
 
 
 ## -----------------------------------------------------------------------------
-longleaf2 <- cut(longleaf,
+bigTrees <- subset(longleaf, marks > 50)
+bigTreesL <- envelope(bigTrees, fun = Lest, nsim = 1e3, verbose = FALSE)
+plot(bigTreesL, main = "Big Trees")
+
+
+## -----------------------------------------------------------------------------
+longleafAge <- cut(longleaf,
   breaks = c(0, 30, Inf),
   labels = c("Sapling", "Adult")
 )
-summary(longleaf2)
-plot(longleaf2)
+summary(longleafAge)
+plot(longleafAge)
 
 
 ## -----------------------------------------------------------------------------
-adults <- subset(longleaf2, marks == "Adult", drop = TRUE)
-plot(envelope(adults, fun = Lest, verbose = FALSE), main = "Adult")
+#| fig-height: 8
+adults <- subset(longleafAge, marks == "Adult", drop = TRUE)
+adultsL <- envelope(adults, fun = Lest, nsim = 1e3, verbose = FALSE)
 
-saplings <- subset(longleaf2, marks == "Sapling", drop = TRUE)
-plot(envelope(saplings, fun = Lest, verbose = FALSE), main = "Sapling")
+saplings <- subset(longleafAge, marks == "Sapling", drop = TRUE)
+saplingsL <- envelope(saplings, fun = Lest, nsim = 1e3, verbose = FALSE)
+
+
+par(mfrow = c(2, 1))
+plot(adultsL, main = "Adult")
+plot(saplingsL, main = "Sapling")
+par(oldPar)
 
 
 ## -----------------------------------------------------------------------------
-adults.den <- density(adults)
-plot(adults.den)
+adultsDensity <- density(adults)
+plot(adultsDensity)
 points(saplings, pch = 20)
 
 
 ## -----------------------------------------------------------------------------
-longleaf2L <- envelope(longleaf2, "Lcross",
+saplingAdultL <- envelope(longleafAge, "Lcross",
   i = "Sapling", j = "Adult",
   verbose = FALSE
 )
-plot(longleaf2L)
-
-
-## ----eval=FALSE---------------------------------------------------------------
-# foo <- clickppp(n = 50) # 50 points
-# # KDE
-# plot(density(foo))
-# points(foo, pch = 20)
-# # L
-# env <- envelope(foo, Lest, nsim = 100)
-# plot(env)
+plot(saplingAdultL)
 
 
 ## ----eval=FALSE---------------------------------------------------------------
 # demo(data)
 
 
-## ----eval=F-------------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
+# myPattern <- clickppp(n = 50) # click to make 50 points
+# # KDE
+# plot(density(myPattern))
+# points(myPattern, pch = 20)
+# # L
+# myPatternL <- envelope(myPattern, Lest, nsim = 100)
+# plot(myPatternL)
+
+
+## ----eval=FALSE---------------------------------------------------------------
 # patternD <- simDat %>% filter(id == "D")
 # patternD <- ppp(
 #   x = patternD$x, y = patternD$y,
@@ -237,6 +225,24 @@ plot(longleaf2L)
 # )
 # summary(patternD)
 # plot(patternD)
+
+
+## ----eval=FALSE---------------------------------------------------------------
+# data(bei)
+# summary(bei)
+# plot(bei)
+# 
+# # First order: the intensity surface. Where are the trees dense?
+# plot(density(bei))
+# 
+# # The bandwidth controls how smooth that surface is. The default
+# # picks sigma for you (about 62 m here). Bracket it with a spiky
+# # value and an over-smoothed one and watch the surface change:
+# plot(density(bei, sigma = 10))
+# plot(density(bei, sigma = 200))
+# 
+# # Second order: where does bei depart from CSR?
+# plot(envelope(bei, fun = Lest, nsim = 99, verbose = FALSE))
 
 
 ## -----------------------------------------------------------------------------

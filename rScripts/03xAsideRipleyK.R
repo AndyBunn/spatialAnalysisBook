@@ -15,7 +15,8 @@ y <- runif(n = n, min = 0, max = 10)
 
 ggplot() +
   geom_point(aes(x = x, y = y), size = 3) +
-  coord_fixed()
+  coord_fixed() +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
@@ -38,13 +39,24 @@ for (i in seq_along(r)) {
 
 
 ## -----------------------------------------------------------------------------
-ggplot() +
-  geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
-  geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
-  labs(
-    y = "K(r)", x = "r",
-    caption = "Blue = observed K. Red dashed = theoretical K under CSR."
-  )
+kCurves <- tibble(
+  r = r,
+  Observed = Kr,
+  `Theoretical (CSR)` = pi * r^2
+) %>%
+  pivot_longer(-r, names_to = "series", values_to = "K")
+
+ggplot(kCurves, aes(x = r, y = K, color = series, linetype = series)) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(
+    values = c("Observed" = "#D55E00", "Theoretical (CSR)" = "grey40")
+  ) +
+  scale_linetype_manual(
+    values = c("Observed" = "solid", "Theoretical (CSR)" = "dashed")
+  ) +
+  labs(y = "K(r)", x = "r", color = NULL, linetype = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
 
 
 ## -----------------------------------------------------------------------------
@@ -54,11 +66,22 @@ xyK <- Kest(xy, r = r, correction = "none")
 
 ## -----------------------------------------------------------------------------
 ggplot() +
-  geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
-  geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
   geom_line(
-    data = xyK, aes(x = r, y = un),
-    linetype = "dashed", color = "white"
+    data = kCurves, aes(x = r, y = K, color = series, linetype = series),
+    linewidth = 1
   ) +
-  labs(y = "K(r)", x = "r")
+  geom_point(
+    data = xyK, aes(x = r, y = un, shape = "Kest()"),
+    size = 1.8
+  ) +
+  scale_color_manual(
+    values = c("Observed" = "#D55E00", "Theoretical (CSR)" = "grey40")
+  ) +
+  scale_linetype_manual(
+    values = c("Observed" = "solid", "Theoretical (CSR)" = "dashed")
+  ) +
+  scale_shape_manual(values = c("Kest()" = 1)) +
+  labs(y = "K(r)", x = "r", color = NULL, linetype = NULL, shape = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
 

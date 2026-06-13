@@ -11,7 +11,7 @@ We can quantify the pattern of points themselves or in the presence of an explan
 
 There are two kinds of spatial structure we care about in PPA. First-order effects describe how intensity varies across space: are some areas simply denser than others, regardless of what the neighboring points are doing? Second-order effects describe the interactions between points at various distances: do nearby points attract or repel each other? Kernel density estimation gets at the first question. Ripley's K gets at the second. Keeping that distinction in your head makes the rest of this chapter easier to follow.
 
-That said, the two are not always easy to separate. If you see a cluster of points, is it because intensity is genuinely higher in that area, or because points attract each other? The conventional answer is that interaction tends to operate at small scales while large-scale variation in density reflects intensity. So if clustering only shows up at short distances, think second-order. If the whole map looks uneven, think first-order. In practice you often need both tools to tell the story.
+That said, the two are not always easy to separate. If you see a cluster of points, is it because intensity really is higher in that area, or because points attract each other? The conventional answer is that interaction tends to operate at small scales while large-scale variation in density reflects intensity. So if clustering only shows up at short distances, think second-order. If the whole map looks uneven, think first-order. In practice you often need both tools to tell the story.
 
 ::: {.callout-note}
 Before diving in, make sure you're comfortable with distance matrices. If you need a refresher, work through the [Distance Matrix aside](03xAsideDistanceMatrices.html).
@@ -26,10 +26,10 @@ library(tidyverse)
 library(spatstat)
 ```
 
-## Point Patterns
+## What Is a Point Pattern?
 Point pattern analysis (PPA) is the study of the spatial arrangements of points in space. It fundamentally deals with whether or not points are randomly distributed, clumped, or repulsed from each other.
 
-PPA doesn't require any other measurement besides the location of points. The easiest way to think about this is to imagine a scatter plot of the points (i.e., a simple point map of the locations). Quantifying the pattern of these points is the goal of the analysis and we do so over the boundary of the data which is called the bounding box, or the convex hull of the points.
+PPA doesn't require any other measurement besides the location of points. The easiest way to think about this is to imagine a scatter plot of the points (i.e., a simple point map of the locations). Quantifying the pattern of these points is the goal of the analysis, and we do so within a boundary, or window, drawn around the data. That window might be a simple bounding box (a rectangle around the points) or the convex hull (the tightest convex polygon that contains them).
 
 What we want to know is whether a bunch of points are randomly arranged or if they have some kind of spatial structure. We call a random pattern complete spatial randomness (CSR) and model it as a Poisson point process (which has convenient mathematical properties discussed in the reading). If a pattern doesn't look like CSR we are generally interested in whether the points are clumped or repulsed. But we can't just eyeball it. Our brains make patterns where there are none. Thus, we'll look at two methods for determining CSR: kernel estimation and Ripley's K. As always we hope to make inference about process (e.g., contagion or competition) by understanding pattern.
 
@@ -74,31 +74,32 @@ simDat <- simDat %>%
 ggplot(simDat, aes(x = x, y = y)) +
   geom_point() +
   coord_fixed() +
-  facet_wrap(~id)
+  facet_wrap(~id) +
+  theme_minimal()
 ```
 
 So, looking at the various plots, can you classify them? E.g., are the points random? Are they clustered? Are they repulsed? Or perhaps both?
 
 ### Data
-Plant ecologists (and astronomers and cell biologists) love point patterns. Tree stem locations are ideal data for exploring spatial patterns. We'll look at three different data sets of tree locations. When you load the data below make sure to summarize, look at `str` of the objects, and plot them. Note that all of these are `ppp` objects. The `spatstat` package uses the `ppp` class as a handy way of storing this type of spatial data. We will use it here and we could certainly convert other spatial data (e.g., shp files) to `ppp` objects as needed.
+Plant ecologists (and astronomers and cell biologists) love point patterns. Tree stem locations are ideal data for exploring spatial patterns. We'll work with two data sets of tree locations in the chapter and save a third for the exercises. When you load the data below make sure to summarize, look at `str` of the objects, and plot them. Note that both of these are `ppp` objects. The `spatstat` package uses the `ppp` class as a handy way of storing this type of spatial data. We will use it here and we could certainly convert other spatial data (e.g., shp files) to `ppp` objects as needed.
 
-Below we will look at data using the `japanesepines`, `redwood`, and `bei` data sets. You should look at the help file for each, e.g., `?japanesepines`, to learn more.
+Below we will look at the `japanesepines` and `redwood` data sets. You should look at the help file for each, e.g., `?japanesepines`, to learn more.
 
 ```{r}
 data(japanesepines)
 data(redwood)
-data(bei)
 
 summary(japanesepines)
 summary(redwood)
-summary(bei)
 
+oldPar <- par(no.readonly = TRUE)
+par(mfrow = c(1, 2))
 plot(japanesepines)
 plot(redwood)
-plot(bei)
+par(oldPar)
 ```
 
-Note that the units on these data are not the same. The `japanesepines` data are measured where one unit equals 5.7 meters, `redwood` is unitless (re-scaled at some point to an xy grid ranging from 0,1), `bei` is actually in meters in a 1000x500m bounding box. This doesn't really matter when we interpret each data set on its own, but we should keep it in mind when comparing numbers down below.
+Note that the units on these data are not the same. The `japanesepines` data are measured where one unit equals 5.7 meters and `redwood` is unitless (rescaled at some point to an xy grid ranging from 0 to 1). This doesn't matter much when we interpret each data set on its own, but it's worth keeping in mind when comparing numbers down below.
 
 ::: {.callout-note}
 Note also that I'm using the `plot` function to show the point data. E.g., `plot(japanesepines)`. Because `japanesepines` is class `ppp`, the generic function `plot.ppp` is being used with the authors of `spatstat` having made the visualization choices for you. Look back at the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGenerics.html). 
@@ -132,28 +133,22 @@ tibble(
 ### Kernel Density Estimation
 One way of looking for patterns with points is visually. We can do this in an intuitive way by smoothing the data by applying a kernel density estimation (KDE). KDE is a non-parametric method for estimating the probability density function of a variable. Try this for an idea of what we are going to do with spatial data:
 ```{r}
-x <- rnorm(n)
-hist(x, freq = FALSE)
-lines(density(x), col = "red")
-```
-
-Or for `ggplot` folks. I'll stop doing the double plotting now but want to make everybody aware that you can plot any way you choose.
-
-```{r}
+x <- rnorm(n=1e3)
 ggplot() +
   geom_histogram(mapping = aes(x = x, after_stat(density)), fill = "grey") +
-  geom_density(mapping = aes(x = x))
+  geom_density(mapping = aes(x = x)) +
+  theme_minimal()
 ```
 
-Ok. What is this? We took `n` random points (`n=`r n``from above) and estimated the probability density function with a kernel. Kernel density estimation is a basic data-smoothing technique and the density estimates are closely related to histograms as you can tell.
+Ok. What is this? We took 1000 random points and estimated the probability density function with a kernel. Kernel density estimation is a basic data-smoothing technique and the density estimates are closely related to histograms as you can tell.
 
 The key to using kernels is selecting the bandwidth. The bandwidth of the kernel is a parameter which indicates the degree of smoothing. When we plot a histogram, we need to consider how many bins to break the data into. Choosing the bandwidth of the kernel is a Goldilocks problem. We want one that is just right. Too small and your kernel is spiky (not enough smoothing) and too big leads to over smoothing. There is no perfect answer for how smooth to make your kernel, although there is much gnashing of teeth about getting a "good" answer.
 
 With point patterns we basically want to plot the `x` data and the `y` data against each other and look for patterns in the intensity of the points. Let's leave the bandwidth issue alone for now and look at some plots.
 
 ```{r}
-jp.den <- density(japanesepines)
-summary(jp.den)
+japanesepinesDensity <- density(japanesepines)
+summary(japanesepinesDensity)
 ```
 
 This density object (class `density.ppp`) has methods for `summary`, `plot`, `contour` and `persp`. E.g., here is a perspective plot:
@@ -161,29 +156,25 @@ This density object (class `density.ppp`) has methods for `summary`, `plot`, `co
 ```{r}
 #| fig-width: 7
 #| fig-height: 6
-persp(jp.den, theta = 30, phi = 30)
+persp(japanesepinesDensity, theta = 30, phi = 30)
 ```
 
 You can add contour lines and even the add points back in after you plot the KDE and gander at it:
 
 ```{r}
-plot(jp.den)
-contour(jp.den, add = TRUE)
-points(japanesepines, pch = 20)
+plot(japanesepinesDensity, main = NULL) # omit title
+contour(japanesepinesDensity, add = TRUE, col = "white")
+points(japanesepines, pch = 20, col = "white")
 ```
 
-You can run the same for the others too:
-```{r}
-plot(density(redwood)) # points(redwood,pch=20)
-plot(density(bei)) # points(bei,pch=20)
-```
+Try the same plot for the redwoods.
 
-These are plots of the intensity of the points. They show the expected density and thus the units are points per unit area. If the plot surface has peaks it means that intensity is a function of spatial location. This is a non-parametric estimate and the function above `density.ppp` selects the bandwidth of the kernel for you. If you want to look at different bandwidths change the argument `sigma`. For instance try values of 0.1, 1, 10 like so `plot(density(bei,sigma=10))`.
+These are plots of the intensity of the points. They show the expected density and thus the units are points per unit area. If the plot surface has peaks it means that intensity is a function of spatial location. This is a non-parametric estimate and the function above `density.ppp` selects the bandwidth of the kernel for you. If you want to look at different bandwidths, change the argument `sigma`: smaller values give a spikier surface and larger ones smooth it out. The exercises put you to work on this with the `bei` data.
 
-There are ways of parametrically estimating the intensity of a point pattern by identifying the specific function for the intensity with parameters fit by maximum likelihood estimation. In practice, I've never seen this done but rather see people using kernels to get a feel for the order in the pattern. So what can we see in the above figures? Which patterns look random, which look clumped?
+There are ways of parametrically estimating the intensity of a point pattern by identifying the specific function for the intensity with parameters fit by maximum likelihood estimation. In practice, I've never seen this done but rather see people using kernels to get a feel for the order in the pattern. So what can we see in the above figures? Do the pines (or redwoods) look random? Clumped?
 
 ## Ripley's K
-The kernel approach is pretty and mucking about with the bandwidth gives you an idea as to what distances are important in driving pattern. But it would be nice to quantify at what distances a point pattern conforms to, or deviates from, CSR. The reading describes at least three ways of quantifying whether a pattern fits CSR at a given distance. These include the $\hat{G}$ function (which measures the distance to the nearest event) and $\hat{F}$ function (which measures the distance from a point to the nearest event) but we are going to use the Cadillac of point pattern tools: Ripley's K. Ripley's K is a statistic for detecting deviations from spatial homogeneity. Its estimate is:
+The kernel approach is pretty and mucking about with the bandwidth gives you an idea as to what distances are important in driving pattern. But it would be nice to quantify at what distances a point pattern conforms to, or deviates from, CSR. The Bivand reading below describes at least three ways of quantifying whether a pattern fits CSR at a given distance. These include the $\hat{G}$ function (which measures the distance to the nearest event) and $\hat{F}$ function (which measures the distance from a point to the nearest event) but we are going to use the Cadillac of point pattern tools: Ripley's K. Ripley's K is a statistic for detecting deviations from spatial homogeneity. Its estimate is:
 
 $$\hat{K}(r)=\frac{\lambda^{-1}}{n-1} \sum_{i \neq j} I(d_{ij}<r)$$
 
@@ -191,48 +182,46 @@ where $d_{ij}$ is the distance between points $i$ and $j$, $n$ is the number of 
 
 Ripley's K describes the point processes at many distance scales. This is an attractive property of the statistic because many environmental point patterns can cluster at one distance and become random or uniform at another. 
 
-We can test $\hat{K}$ against CSR which has a value of $K(r)=\pi r^2$ for a homogeneous Poisson process. We are going to do this with the `envelope` function.
+We can test $\hat{K}$ against CSR, which has a value of $K(r)=\pi r^2$ for a homogeneous Poisson process. A Poisson process is the formal model for "no structure": points land independently of one another, and homogeneous means the intensity $\lambda$ is constant across the window, so no spot is any more likely to catch a point than any other. CSR is that process.
 
-We can calculate an envelope of possible values of $K(r)$ in a Monte Carlo framework where the number of simulations specifies the significance level as $\alpha = 2/(1 + n)$ where $n$ is the number of simulations. If the observed function value lies outside the envelope we can reject the null hypothesis of CSR at the distance $r$. With the default of 99 simulations you have $\alpha = 2/(1+99) = 0.02$. 
+Where does the $\pi r^2$ come from? Look back at the definition of $\hat K$. It counts the points within distance $r$ of a typical point and scales by $1/\lambda$. Under CSR the expected number of points in a disk of radius $r$ is the intensity times the area, $\lambda \pi r^2$. Divide by $\lambda$ and it drops out, leaving $\pi r^2$. The theoretical $K$ under CSR is nothing more than the area of the circle you are searching.
+
+So why not draw that $\pi r^2$ curve, lay the observed $\hat K$ on top, and eyeball whether they match? Because $\hat K$ is an estimate, and estimates wiggle. Even a pattern that truly is CSR won't trace $\pi r^2$ cleanly, and it strays more at large $r$ where there are fewer pairs of points to count and the edge corrections are doing more work. What we want is a band showing what CSR could plausibly look like for this many points, in this window, with this edge correction. There is no tidy formula for that band, so we build it by brute force. Scatter the same number of points at random in the same window, compute $\hat K$, and repeat a few hundred times. The spread of those simulated curves is the envelope, our picture of the null, and building it is what the `envelope` function does for us. This is the Monte Carlo part.
+
+The number of simulations sets the significance level. If the observed function lies outside the envelope at a given distance, we reject the null of CSR at that $r$, and with $n$ simulations the pointwise level is $\alpha = 2/(1 + n)$. The default of 99 simulations gives $\alpha = 2/(1+99) = 0.02$.
 
 A heads up though. That significance level is technically only valid if you pick a single value of $r$ before looking at the data and test only there. In practice nobody does that -- you look at the whole curve. When you do that you are implicitly running many tests at once (one per value of $r$), which is the same problem as running a bunch of t-tests without correcting for multiple comparisons. Your true $\alpha$ is higher than advertised. The fix is to use `global=TRUE` in the `envelope` call, which builds the envelope based on the maximum deviation of each simulated curve across all $r$ values rather than pointwise. This gives you a single test of the whole curve at $\alpha = 1/(1 + n)$ with the default `nrank=1`. For a deeper treatment see @baddeley2014tests who go after this problem directly.
 
 And even if you do use `global=TRUE` and get a clean test, keep in mind that a p-value only tells you whether the pattern is distinguishable from CSR. It doesn't tell you why. Two different processes can produce identical patterns, and a non-significant result doesn't mean the process is random, just that you couldn't detect structure with this data and this statistic. The goal is always to use pattern to think about process, not to collect p-values.
 
-The `envelope` function is chatty by default and prints out information on the simulations as it runs them. In the code chunk below I'll quiet it down by setting the argument `verbose=FALSE`. If you leave it as the default value of `TRUE`, the markdown doc gets messy.
+The `envelope` function is chatty by default and prints out information on the simulations as it runs them. In the code chunk below I'll quiet it down by setting the argument `verbose=FALSE` so the page doesn't get messy.
 
 ```{r}
-n <- 100
-japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = n, verbose = FALSE)
-beiK <- envelope(bei, fun = Kest, nsim = n, verbose = FALSE)
-redwoodK <- envelope(redwood, fun = Kest, nsim = n, verbose = FALSE)
+japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = 1e3, verbose = FALSE)
 ```
 
-Plot the $K$ functions one by one:
+Before we plot, here is how to read these. Each plot shows the observed $\hat K(r)$, the theoretical $\pi r^2$ line for CSR, and the simulation envelope around it. When the observed curve runs above the envelope there are more neighbors than CSR predicts, which is clustering. When it dips below there are fewer, which is regularity or inhibition. Inside the band, you can't tell the pattern apart from CSR. Plot the $K$ functions one by one:
 ```{r}
 plot(japanesepinesK)
 ```
 
 Here we see the observed $\hat{K}(r)$ function within the envelope. This means the data follow CSR at every distance.
 
+Onto the redwoods.
+
 ```{r}
+redwoodK <- envelope(redwood, fun = Kest, nsim = 1e3, verbose = FALSE)
 plot(redwoodK)
 ```
 
 The redwoods show clumping at shorter distances and then randomness at longer distances.
 
-```{r}
-plot(beiK)
-```
-
-This shows intense clumping at all distances.
-
-Thus, the `japanesepines` are randomly distributed while the other two are clumped but in different ways. The `redwood` data are clumped out to a radius of a fifth of the bounding box while the `bei` data are clustered out as far as we can measure. Oh, and how far can we measure before running into edge effects?
+Thus the `japanesepines` are randomly distributed while the `redwood` are clumped, at least out to a radius of about a fifth of the bounding box, beyond which they settle back toward random. Oh, and how far can we measure before running into edge effects?
 
 ### Distances and edges
-Edge effects are a perennial problem is spatial analysis. The question always nags at us: what's over the edge of the map? Edge effects arise because points outside the boundary can't be counted, right? And points near the edge have to be down weighted in some way because we have less information about them. When we do distance-based analysis we have to be conservative about edges and there are two conceptual ways of thinking about this. One, we can limit our analysis to short distances to reduce the number of edge cases. Two, we can try to correct for the edge effects. 
+Edge effects are a perennial problem in spatial analysis. The question always nags at us: what's over the edge of the map? Edge effects arise because points outside the boundary can't be counted, right? And points near the edge have to be down weighted in some way because we have less information about them. When we do distance-based analysis we have to be conservative about edges and there are two conceptual ways of thinking about this. One, we can limit our analysis to short distances to reduce the number of edge cases. Two, we can try to correct for the edge effects. 
 
-Look back the x-axis of the plots of $\hat K$ above. Note that the distances are much shorter than the span of the original data. Both the `japanesepines` and the `redwood` data are stored with the coordinate data on a scale from 0 to 1 (but the `japanesepines` data are on a 5.7 x 5.7 m square as discussed above) and the `bei` data are in a 1000 x 500 m rectangle. The plots above truncate at distances of 1/4 the shortest span of the data. This is a default in `spatstat` and fairly conservative. We can override that using the `rmax` argument. E.g., we could look at distances up to 50% of the study area.
+Look back at the x-axis of the plots of $\hat K$ above. Note that the distances are much shorter than the span of the original data. Both the `japanesepines` and the `redwood` data are stored with the coordinate data on a scale from 0 to 1 (but the `japanesepines` data are on a 5.7 x 5.7 m square as discussed above). The plots above truncate at distances of 1/4 the shortest span of the data. This is a default in `spatstat` and fairly conservative. We can override that using the `rmax` argument. E.g., we could look at distances up to 50% of the study area.
 
 ```{r}
 plot(envelope(redwood,
@@ -243,26 +232,17 @@ plot(envelope(redwood,
 
 Is this reasonable or responsible? Ripley himself suggested the rule of 0.25 the short span of the data. There are discussions about other approaches in the literature but going deep on edge corrections is a rabbit hole.
 
-The other way of being careful about edges is to "correct" for the effect. These are similarly tough reading. I remember slogging through Goreaud's 1999 [paper](https://www.jstor.org/stable/3237072?seq=1#metadata_info_tab_contents)
-which came out the year I took spatial analysis when I was a master's student. It's enough to be aware that there are several different edge corrections out there. The Further Reading section points to where you can go deeper.
-
-```{r}
-japanesepinesK2 <- Kest(japanesepines,
-  verbose = FALSE,
-  correction = c("none", "isotropic", "border")
-)
-plot(japanesepinesK2)
-```
+The other way of being careful about edges is to "correct" for the effect. These are similarly tough reading. I remember slogging through @goreaud1999edge, which came out the year I took spatial analysis when I was a master's student. It's enough to be aware that there are several different edge corrections out there. The Further Reading section points to where you can go deeper.
 
 ### L hat
 I've dragged you through $\hat K$ and the plots above and now I'm going to tell you that I'm not a fan of the way the $\hat K(r)$ as a function of $r$ looks. I think those plots are hard to interpret because the random expectation is non-linear and that is hard to visualize. I prefer looking them transformed so that the y-axis and x-axis are on a 1:1 scale. This is referred to as $L$ and is a simple transformation of the $K$ function:
 
-$$L(r) = \sqrt{(K(r)/\pi} $$
+$$L(r) = \sqrt{K(r)/\pi}$$
 
 This has the effect that for a a completely random point pattern, the theoretical value of $L(r)=r$. We can calculate it using `Lest` rather than `Kest`.
 
 ```{r}
-redwoodL <- envelope(redwood, fun = Lest, nsim = n, verbose = FALSE)
+redwoodL <- envelope(redwood, fun = Lest, nsim = 1e3, verbose = FALSE)
 plot(redwoodL)
 ```
 
@@ -270,20 +250,17 @@ Bivand goes the extra step (e.g., Fig 7.9) of plotting $\hat K(r) - \pi r^2$ on 
 
 ```{r}
 ggplot(redwoodK, mapping = aes(x = r, ymin = lo - pi * r^2, ymax = hi - pi * r^2)) +
-  geom_ribbon(fill = "grey", alpha = 0.5) +
-  geom_line(mapping = aes(y = theo - pi * r^2), col = "red", linetype = "dashed") +
-  geom_line(mapping = aes(y = obs - pi * r^2)) +
+  geom_ribbon(fill = "#56B4E9", alpha = 0.3) +
+  geom_line(mapping = aes(y = theo - pi * r^2), col = "grey40", linetype = "dashed") +
+  geom_line(mapping = aes(y = obs - pi * r^2), col = "#D55E00", linewidth = 0.8) +
   labs(y = expression(K(r) - pi ~ r^2), x = "r") +
-  ylim(-0.05, 0.05) +
   theme_minimal()
 ```
 
 I find this plot to be the simplest to interpret (it's also the way I was taught which influences that probably), the $L$ function next, and the raw $K$ function the hardest. But I tend to use $L$ plots because they are bundled in `spatstat` and redoing all the plots takes more work.
 
 ### Marked point patterns
-Let's look at something a little more subtle and interesting. The `longleaf` data are what is called a marked point pattern. This means that we know something else about a point besides its location. In this case we know the diameter of each stem. You can do some more interesting things with marked point patterns. 
-
-The `longleaf` data are a marked point pattern meaning that we have some other information on the points besides their locations. In this case we have the diameters of the trees at breast height (DBH=1.4m above ground) which is standard measure in forestry. These are stored as `marks` in the `longleaf` object. Again, look at the help file: `?longleaf`.
+Let's look at something a little more subtle and interesting. The `longleaf` data are what is called a marked point pattern, meaning we know something about each point besides its location. In this case we have the diameter of each tree at breast height (DBH=1.4m above ground), a standard measure in forestry. These are stored as `marks` in the `longleaf` object. Marked patterns let us ask more interesting questions, as we'll see. As always, look at the help file: `?longleaf`.
 
 ```{r}
 data(longleaf)
@@ -297,38 +274,53 @@ Note in the plot that the points are sized according to their diameter. We can l
 hist(longleaf$marks)
 ```
 
-Let's examine the spatial pattern of just the big trees (DBH > 50cm) which is moderately big for a Longleaf pine.
+Before slicing the data up, let's look at the whole stand. I'll compute the L envelope first and then plot it rather than nesting the two calls, which reads more cleanly and is the pattern we'll use from here on.
+
+```{r}
+longleafL <- envelope(longleaf, fun = Lest, nsim = 1e3, verbose = FALSE)
+plot(longleafL, main = "All Trees")
+```
+
+The whole stand is clustered: the observed L runs above the envelope across the distances we can measure.
+
+Now let's examine just the big trees (DBH > 50cm), which is moderately big for a Longleaf pine.
 
 ```{r}
 bigTrees <- subset(longleaf, marks > 50)
-plot(envelope(bigTrees, fun = Lest, nsim = n, verbose = FALSE),
-  main = "Big Trees"
-)
+bigTreesL <- envelope(bigTrees, fun = Lest, nsim = 1e3, verbose = FALSE)
+plot(bigTreesL, main = "Big Trees")
 ```
 
-So in contrast to the whole data set, we see that while the entire data set shows clustering, the big trees show CSR. That's kind of cool. We could start speculating about what ecological processes might drive that pattern.
+So in contrast to the whole stand, the big trees show CSR. That's kind of cool. We could start speculating about what ecological processes might drive that pattern.
 
-Standard practice in forestry is to consider trees as adults when they have diameters of 30cm of greater.  Let's see if our understanding of the point patterns change by age class. 
+A common practice in forestry is to consider trees as adults when they have diameters of 30cm or greater. Let's see if our understanding of the point patterns change by age class. 
 
 First, we will make a new object that creates categories (`factor`) from the continuous (`numeric`) size class of DBH using the `cut` function:
 
 ```{r}
-longleaf2 <- cut(longleaf,
+longleafAge <- cut(longleaf,
   breaks = c(0, 30, Inf),
   labels = c("Sapling", "Adult")
 )
-summary(longleaf2)
-plot(longleaf2)
+summary(longleafAge)
+plot(longleafAge)
 ```
 
 I think by looking at that plot that the adults are clustered and the saplings even more so. Let's investigate:
 
 ```{r}
-adults <- subset(longleaf2, marks == "Adult", drop = TRUE)
-plot(envelope(adults, fun = Lest, verbose = FALSE), main = "Adult")
+#| fig-height: 8
+adults <- subset(longleafAge, marks == "Adult", drop = TRUE)
+adultsL <- envelope(adults, fun = Lest, nsim = 1e3, verbose = FALSE)
 
-saplings <- subset(longleaf2, marks == "Sapling", drop = TRUE)
-plot(envelope(saplings, fun = Lest, verbose = FALSE), main = "Sapling")
+saplings <- subset(longleafAge, marks == "Sapling", drop = TRUE)
+saplingsL <- envelope(saplings, fun = Lest, nsim = 1e3, verbose = FALSE)
+
+
+par(mfrow = c(2, 1))
+plot(adultsL, main = "Adult")
+plot(saplingsL, main = "Sapling")
+par(oldPar)
 ```
 
 Quick aside, note that we were actually calling `subset.ppp` and `cut.ppp` above because the class `ppp` has methods for `subset` and `cut`.
@@ -336,37 +328,22 @@ Quick aside, note that we were actually calling `subset.ppp` and `cut.ppp` above
 In the plotted L functions above we definitely see that both age classes are clustered and the saplings much more so than the adults. But looking at the map I think we should see how those age classes interact. Because it looks to me like they are in different places. Let's plot the density map of the adults and put the points where the sapling occur on top.
 
 ```{r}
-adults.den <- density(adults)
-plot(adults.den)
+adultsDensity <- density(adults)
+plot(adultsDensity)
 points(saplings, pch = 20)
 ```
 
 That is fascinating. Is it possible that the two age classes are repelled from each other?
 
 ```{r}
-longleaf2L <- envelope(longleaf2, "Lcross",
+saplingAdultL <- envelope(longleafAge, "Lcross",
   i = "Sapling", j = "Adult",
   verbose = FALSE
 )
-plot(longleaf2L)
+plot(saplingAdultL)
 ```
 
-This shows the cross L-function between saplings and adults. The L-function is based on distances from points from one age class to points from the other class. Thus, the plot shows the L-function for saplings to adult pairs.This suggests that while there is within class attraction (the clustering seen previously), there is between class repulsion (inhibition). Can you put on your ecologist hat and figure out why this might be happening?  
-
-## Roll Your Own
-You can create your own point pattern by clicking on the screen and then plotting the kernel density and Ripley's K (or L). Try it several times, making different types of patterns: uniform, clumped, CSR. It's a useful calibration exercise -- CSR looks less random than most people expect.
-
-```{r, eval=FALSE}
-foo <- clickppp(n = 50) # 50 points
-# KDE
-plot(density(foo))
-points(foo, pch = 20)
-# L
-env <- envelope(foo, Lest, nsim = 100)
-plot(env)
-```
-
-Note that `clickppp` is interactive, so this won't run in a compiled document without some extra work (save with `saveRDS`, load with `readRDS`). It's worth doing at the console at least once.
+This shows the cross L-function between saplings and adults. The L-function is based on distances from points from one age class to points from the other class. Thus, the plot shows the L-function for saplings to adult pairs. This suggests that while there is within class attraction (the clustering seen previously), there is between class repulsion (inhibition). Can you put on your ecologist hat and figure out why this might be happening?  
 
 ## More Than Trees
 The `spatstat` library has a ludicrous number of data sets to work with. If you are not interested in trees for some reason (weird, I know) you can look at point patterns for all kinds of things: anemones, ants, gorilla nests, mycorrhizal fungi, waterstriders. Type `demo(data)` at the prompt to see everything available.
@@ -387,10 +364,25 @@ The next chapters move from point patterns to continuous variables: instead of a
 
 ## Exercises
 
+### Roll Your Own
+You can create your own point pattern by clicking on the screen and then plotting the kernel density and Ripley's K (or L). Try it several times, making different types of patterns: uniform, clumped, CSR. It's a useful calibration exercise -- CSR looks less random than most people expect.
+
+```{r, eval=FALSE}
+myPattern <- clickppp(n = 50) # click to make 50 points
+# KDE
+plot(density(myPattern))
+points(myPattern, pch = 20)
+# L
+myPatternL <- envelope(myPattern, Lest, nsim = 100)
+plot(myPatternL)
+```
+
+Note that `clickppp` is interactive, so this won't run in a compiled document without some extra work. But it's worth doing at the console a few times to get a feel for how to make patterns or lack thereof.
+
 ### Simulated Data
 Here is a point pattern object (class `ppp`) built from the "D" pattern in `simDat` above, with units of kilometers. Before plotting the L function, predict what you expect to see. Then run it. Is it what you anticipated? Try the other patterns too -- is "B" distinguishable from "C"?
 
-```{r, eval=F}
+```{r, eval=FALSE}
 patternD <- simDat %>% filter(id == "D")
 patternD <- ppp(
   x = patternD$x, y = patternD$y,
@@ -401,6 +393,31 @@ summary(patternD)
 plot(patternD)
 ```
 
+
+### Barro Colorado Island
+We set `bei` aside in the chapter to keep things to two data sets, but it's a good one to practice on. These are the locations of 3,604 *Beilschmiedia pendula* trees in a 1000 by 500 meter plot on Barro Colorado Island in Panama. Two things set it apart from the data above: the coordinates are in meters rather than a rescaled grid, and there are a lot of points.
+
+Load it, summarize it, and plot it. Then work through both tools on your own.
+
+```{r, eval=FALSE}
+data(bei)
+summary(bei)
+plot(bei)
+
+# First order: the intensity surface. Where are the trees dense?
+plot(density(bei))
+
+# The bandwidth controls how smooth that surface is. The default
+# picks sigma for you (about 62 m here). Bracket it with a spiky
+# value and an over-smoothed one and watch the surface change:
+plot(density(bei, sigma = 10))
+plot(density(bei, sigma = 200))
+
+# Second order: where does bei depart from CSR?
+plot(envelope(bei, fun = Lest, nsim = 99, verbose = FALSE))
+```
+
+Before you run the envelope, predict it. At what distances do you expect `bei` to look clumped? Then push `rmax` past the conservative default and watch the edge effects creep in. Does `global = TRUE` change the story?
 
 ### Mycorrhizal Fungi
 Here is an example of three species of [ectomycorrhizae](https://en.wikipedia.org/wiki/Ectomycorrhiza) distributed around a tree.

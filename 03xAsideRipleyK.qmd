@@ -29,14 +29,15 @@ y <- runif(n = n, min = 0, max = 10)
 
 ggplot() +
   geom_point(aes(x = x, y = y), size = 3) +
-  coord_fixed()
+  coord_fixed() +
+  theme_minimal()
 ```
 
 ## Building K Step by Step
 
 Ripley's K at radius $r$ is:
 
-$$K(r) = \frac{A}{n(n-1)} \sum_{i \neq j} \mathbf{1}(d_{ij} \leq r)$$
+$$\hat{K}(r) = \frac{A}{n(n-1)} \sum_{i \neq j} I(d_{ij} \leq r)$$
 
 Read it out loud: for each pair of distinct points $i$ and $j$, count whether they're within distance $r$ of each other. Sum those up, then scale by the area divided by $n(n-1)$. That's it.
 
@@ -68,16 +69,27 @@ for (i in seq_along(r)) {
 Plot it against the theoretical K under complete spatial randomness, which is $\pi r^2$.
 
 ```{r}
-ggplot() +
-  geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
-  geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
-  labs(
-    y = "K(r)", x = "r",
-    caption = "Blue = observed K. Red dashed = theoretical K under CSR."
-  )
+kCurves <- tibble(
+  r = r,
+  Observed = Kr,
+  `Theoretical (CSR)` = pi * r^2
+) %>%
+  pivot_longer(-r, names_to = "series", values_to = "K")
+
+ggplot(kCurves, aes(x = r, y = K, color = series, linetype = series)) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(
+    values = c("Observed" = "#D55E00", "Theoretical (CSR)" = "grey40")
+  ) +
+  scale_linetype_manual(
+    values = c("Observed" = "solid", "Theoretical (CSR)" = "dashed")
+  ) +
+  labs(y = "K(r)", x = "r", color = NULL, linetype = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
 ```
 
-If the blue line runs above the red, points are more clustered than random at that scale. Below it, they're more dispersed. Random points should hover around the red line with some noise.
+When the observed curve runs above the CSR reference, points are more clustered than random at that scale. Below it, they're more dispersed. Random points should track the reference line with some noise.
 
 ## Checking Against `Kest()`
 
@@ -88,19 +100,30 @@ xy <- as.ppp(cbind(x, y), W = c(0, 10, 0, 10))
 xyK <- Kest(xy, r = r, correction = "none")
 ```
 
-Overlay the `spatstat` result on the plot. If everything is right, it should land exactly on our blue line.
+Overlay the `spatstat` result on the plot. If everything is right, it should land exactly on our observed curve.
 
 ```{r}
 ggplot() +
-  geom_line(aes(x = r, y = pi * r^2), color = "red", linetype = "dashed") +
-  geom_line(aes(x = r, y = Kr), color = "blue", linewidth = 1) +
   geom_line(
-    data = xyK, aes(x = r, y = un),
-    linetype = "dashed", color = "white"
+    data = kCurves, aes(x = r, y = K, color = series, linetype = series),
+    linewidth = 1
   ) +
-  labs(y = "K(r)", x = "r")
+  geom_point(
+    data = xyK, aes(x = r, y = un, shape = "Kest()"),
+    size = 1.8
+  ) +
+  scale_color_manual(
+    values = c("Observed" = "#D55E00", "Theoretical (CSR)" = "grey40")
+  ) +
+  scale_linetype_manual(
+    values = c("Observed" = "solid", "Theoretical (CSR)" = "dashed")
+  ) +
+  scale_shape_manual(values = c("Kest()" = 1)) +
+  labs(y = "K(r)", x = "r", color = NULL, linetype = NULL, shape = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
 ```
 
-The white dashed line from `Kest()` sits right on top of our hand-computed K. That's reassuring. It also means that when you use `Kest()` in the main chapter, you know exactly what it's computing.
+The open circles from `Kest()` sit right on top of our hand-computed curve. That's reassuring. It also means that when you use `Kest()` in the main chapter, you know exactly what it's computing.
 
-One thing `Kest()` does that we didn't do here: edge corrections. Points near the boundary of the study area have fewer neighbors within radius $r$ than interior points do, simply because part of the circle falls outside the window. Without a correction, K is systematically underestimated at larger radii. The `correction` argument in `Kest()` handles this. The default is `"isotropic"`, which is appropriate for most cases. Now that you understand the core calculation, the correction is a detail -- not a mystery.
+One thing `Kest()` does that we didn't do here: edge corrections. Points near the boundary of the study area have fewer neighbors within radius $r$ than interior points do, simply because part of the circle falls outside the window. Without a correction, K is systematically underestimated at larger radii. The `correction` argument in `Kest()` handles this. The default is `"isotropic"`, which is appropriate for most cases. Now that you understand the core calculation, the correction is a detail and not a mystery.
