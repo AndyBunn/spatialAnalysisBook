@@ -1,6 +1,8 @@
 # Aside: Ripley's K by Hand {- .aside-chapter}
 
-```{r, echo=FALSE}
+```{r}
+#| label: setup
+#| echo: false
 set.seed(1984)
 ```
 
@@ -12,7 +14,9 @@ This aside walks through the K function from scratch on a tiny random dataset, t
 
 ## Packages
 
-```{r, message=FALSE}
+```{r}
+#| label: packages
+#| message: false
 library(tidyverse)
 library(spatstat)
 ```
@@ -22,6 +26,7 @@ library(spatstat)
 Start with a small random point pattern. Twelve points, a 10 by 10 unit window. Small enough that you can look at the intermediate objects and follow what's happening.
 
 ```{r}
+#| label: point-pattern
 n <- 12
 area <- 100 # 10 x 10 = 100 square units
 x <- runif(n = n, min = 0, max = 10)
@@ -44,11 +49,13 @@ Read it out loud: for each pair of distinct points $i$ and $j$, count whether th
 So the first thing we need is all the pairwise distances. Build the distance matrix, then pull out every $d_{ij}$ where $i \neq j$ -- that means both the upper and lower triangles.
 
 ```{r}
+#| label: dist-matrix
 Dmat <- as.matrix(dist(cbind(x, y)))
 Dmat
 ```
 
 ```{r}
+#| label: dist-vector
 Dvec <- c(Dmat[upper.tri(Dmat)], Dmat[lower.tri(Dmat)])
 Dvec
 ```
@@ -58,6 +65,7 @@ Why both triangles? Because $d_{ij}$ and $d_{ji}$ are the same distance, but the
 Now set a sequence of radii to evaluate K at, and loop.
 
 ```{r}
+#| label: k-by-hand
 r <- seq(0, 2.5, by = 0.1)
 
 Kr <- numeric(length(r))
@@ -69,6 +77,7 @@ for (i in seq_along(r)) {
 Plot it against the theoretical K under complete spatial randomness, which is $\pi r^2$.
 
 ```{r}
+#| label: k-curve-plot
 kCurves <- tibble(
   r = r,
   Observed = Kr,
@@ -96,6 +105,7 @@ When the observed curve runs above the CSR reference, points are more clustered 
 Now verify the hand calculation against `spatstat`. Convert to a `ppp` object with the same window, pass the same radii, and use `correction = "none"` to match the uncorrected version we computed.
 
 ```{r}
+#| label: kest-check
 xy <- as.ppp(cbind(x, y), W = c(0, 10, 0, 10))
 xyK <- Kest(xy, r = r, correction = "none")
 ```
@@ -103,6 +113,7 @@ xyK <- Kest(xy, r = r, correction = "none")
 Overlay the `spatstat` result on the plot. If everything is right, it should land exactly on our observed curve.
 
 ```{r}
+#| label: k-overlay-plot
 ggplot() +
   geom_line(
     data = kCurves, aes(x = r, y = K, color = series, linetype = series),

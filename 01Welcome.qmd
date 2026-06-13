@@ -26,7 +26,7 @@ The book is organized into four parts. Each builds on the one before it.
 
 **Foundations** gets you oriented on the two data types that show up everywhere in this book: point observations and raster surfaces. This isn't a GIS-in-R book, so we won't linger here long.
 
-- **Spatial Data in R: A Quick Orientation** -- A fast introduction to `sf` for point data and `terra` for rasters. Enough to follow along with the rest of the book. For the full treatment, see [Geocomputation with R](https://r.geocompx.org/) or the [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/).
+- **Spatial Data in R: A Quick Orientation** -- A fast introduction to `sf` for point data and `terra` for rasters. Enough to follow along with the rest of the book. For the full treatment, see Geocomputation with R^[<https://r.geocompx.org/>] or the Data Carpentries spatial curriculum^[<https://datacarpentry.org/r-raster-vector-geospatial/>].
     - *Aside: Methods and Generics in R* -- A look under the hood at how R uses generic functions. Explains why `plot()` and `summary()` behave differently depending on what you hand them.
 
 **Point Patterns & Autocorrelation** is where the analysis starts. We ask a basic spatial question: are things randomly distributed, or is there structure? We then move on to measuring spatial dependence in continuous variables.
@@ -74,7 +74,7 @@ This isn't a book for absolute beginners, and a few things will go more smoothly
 
 **GIS is helpful but not required.** If you've made a map in QGIS or ArcGIS, some of the spatial concepts will already make sense. If you haven't, no problem. We cover what you need as we go, and this isn't a GIS book anyway.
 
-One more thing about the code. We mostly use **tidyverse** syntax: `dplyr` for wrangling, `ggplot2` for plots, the pipe to chain it together. If that style is new to you, don't let it slow you down. There are loads and loads of free resources out there for learning it. The place to start is [tidyverse.org](https://www.tidyverse.org/), and from there [R for Data Science](https://r4ds.hadley.nz/)[@wickham2023r4ds] is the canonical free book.
+One more thing about the code. We mostly use **tidyverse** syntax: `dplyr` for wrangling, `ggplot2` for plots, the pipe to chain it together. If that style is new to you, don't let it slow you down. There are loads and loads of free resources out there for learning it. The place to start is tidyverse.org^[<https://www.tidyverse.org/>], and from there R for Data Science [@wickham2023r4ds] is the canonical free book.
 
 ## Setup
 
@@ -97,7 +97,7 @@ To follow along, you'll want a working RStudio project.
 2.  **Download the `data/` folder**\
     The datasets used in the examples are bundled into a single `data.zip`. Download it and unzip it inside your project directory.
 
-    You can [download the data directly](https://spatial.andybunn.org/data.zip):
+    You can download the data directly:
 
     ```
     https://spatial.andybunn.org/data.zip

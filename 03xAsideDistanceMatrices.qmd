@@ -1,6 +1,8 @@
 # Aside: Distance Matrices {- .aside-chapter}
 
-```{r, echo=FALSE}
+```{r}
+#| label: setup
+#| echo: false
 set.seed(1984)
 ```
 
@@ -11,7 +13,9 @@ Distance matrices show up everywhere in this book: point pattern analysis, vario
 ## Packages
 We'll use `tidyverse`[@R-tidyverse] and `sf`[@R-sf] for the usual data wrangling.
 
-```{r, message=FALSE}
+```{r}
+#| label: packages
+#| message: false
 library(tidyverse)
 library(sf)
 ```
@@ -27,13 +31,16 @@ Nothing new here, right? This is the Pythagorean theorem. We're just being preci
 Let's make a small dataset to work with throughout this aside: six points in a hypothetical coordinate space.
 
 ```{r}
+#| label: sample-points
 dat <- data.frame(
   x = c(1, 3, 5, 2, 6, 4),
   y = c(1, 4, 2, 6, 5, 3)
 )
 ```
 
-```{r, echo=FALSE}
+```{r}
+#| label: sample-points-plot
+#| echo: false
 ggplot(dat, aes(x = x, y = y, label = 1:nrow(dat))) +
   geom_point(size = 4) +
   geom_text(nudge_y = 0.3, size = 3.5) +
@@ -47,6 +54,7 @@ ggplot(dat, aes(x = x, y = y, label = 1:nrow(dat))) +
 The natural way to compute a distance matrix in R is `dist()`:
 
 ```{r}
+#| label: dist-object
 D <- dist(dat)
 D
 ```
@@ -54,6 +62,7 @@ D
 Look carefully at what that prints. It's a triangular table, showing only the lower half of what you'd see in a full square matrix. That's deliberate. But before getting into why, check the class of `D`:
 
 ```{r}
+#| label: class-dist
 class(D)
 ```
 
@@ -67,6 +76,7 @@ Here's why that compactness makes sense. With $n$ points, the full distance matr
 That means we only need the lower triangle, just $n(n-1)/2$ unique values. For our 6 points that's $6 \times 5 / 2 = 15$ distances. R stores exactly those 15 numbers in the `dist` object rather than a full 36-element matrix. That's fine for printing and for passing to functions that know how to handle the `dist` class, but it can matter a lot when you try to pass it to something expecting class `matrix`. You'll get used to converting to a matrix first:
 
 ```{r}
+#| label: dist-matrix
 Dmat <- as.matrix(D)
 Dmat
 ```
@@ -74,6 +84,7 @@ Dmat
 Check the class of `Dmat` vs `D`:
 
 ```{r}
+#| label: class-compare
 class(Dmat)
 class(D)
 ```
@@ -86,6 +97,7 @@ A few things to notice in this full matrix:
 - The diagonal is all zeros
 
 ```{r}
+#| label: verify-symmetry
 # Verify symmetry
 all(Dmat == t(Dmat))
 
@@ -100,6 +112,7 @@ Once you have the full matrix, finding nearest neighbors is just a row-wise sort
 The trick is to handle the diagonal. A zero on the diagonal will always "win" if you don't deal with it, and every point would be its own nearest neighbor. Mask the diagonal with `NA` first:
 
 ```{r}
+#| label: nearest-neighbor
 Dnn <- Dmat
 diag(Dnn) <- NA
 
@@ -113,6 +126,7 @@ So point 1's nearest neighbor is point `r nn1[1]`, point 2's nearest neighbor is
 For $k$ nearest neighbors, you sort each row and take the first $k$ non-NA indices:
 
 ```{r}
+#| label: knn
 # 2 nearest neighbors for each point
 nn2 <- apply(Dnn, 1, function(row) order(row)[1:2])
 nn2
@@ -133,6 +147,7 @@ When distances are asymmetric like this, you can't use a `dist` object, since th
 Here's a simple example. Imagine three sites along a stream where site 1 is downstream and site 3 is upstream. The straight-line distances between them are 300, 400, and 700 meters. But upstream travel is hard, so let's say it costs four times as much as the equivalent downstream leg.
 
 ```{r}
+#| label: stream-cost
 # cost[i,j] = effective distance traveling FROM site i TO site j
 # Sites: 1=downstream, 2=mid, 3=upstream
 # Upstream travel (against current) penalized 4x
@@ -153,6 +168,7 @@ streamCost
 The asymmetry is obvious in the numbers. Traveling from `down` to `up` costs `r streamCost["down","up"]` effective meters, while the return trip costs only `r streamCost["up","down"]`. You can verify formally:
 
 ```{r}
+#| label: check-symmetry
 isSymmetric(streamCost) # FALSE -- as expected
 isSymmetric(Dmat) # TRUE  -- Euclidean is always symmetric
 ```
@@ -180,6 +196,7 @@ LCP analyses are outside the scope of this book, but worth knowing the concept e
 Here's something that will eventually bite you if you're not thinking about it. The number of pairwise distances grows as $n(n-1)/2$, which feels abstract until you see the numbers:
 
 ```{r}
+#| label: pair-counts
 nVals <- c(10, 100, 500, 1000, 5000, 10000)
 nPairs <- nVals * (nVals - 1) / 2
 
@@ -189,6 +206,7 @@ data.frame(n = nVals, pairs = format(nPairs, big.mark = ","))
 Ten thousand points, which is not an unusually large spatial dataset, gives you nearly 50 million pairwise distances. That's a lot of numbers to compute and store, and `dist()` will try to hold all of them in memory at once. Let's see how the size of the `dist` object scales:
 
 ```{r}
+#| label: dist-memory
 sizes <- sapply(c(100, 500, 1000, 2000), function(n) {
   fake <- data.frame(x = runif(n), y = runif(n))
   object.size(dist(fake))
@@ -211,6 +229,7 @@ Why use `st_distance()` instead of just pulling the coordinates out and passing 
 Let's see both approaches on our toy dataset:
 
 ```{r}
+#| label: st-distance-compare
 # First approach: dist() on raw coordinates
 DDist <- dist(dat)
 
@@ -232,6 +251,7 @@ You've probably heard "make sure your data are projected" enough times that it s
 Let's place a few sample sites around the Mt. Baker Ski area near my home in Bellingham. We'll compute distances from their raw lat/lon coordinates and then from their properly projected coordinates and see what happens.
 
 ```{r}
+#| label: mtbaker-sites
 sites <- data.frame(
   name = c("Bellingham", "Glacier", "Concrete", "Anacortes"),
   lon  = c(-122.48, -121.93, -121.75, -122.61),
@@ -242,6 +262,7 @@ sites <- data.frame(
 First, the naive approach: just hand the lat/lon columns to `dist()`:
 
 ```{r}
+#| label: latlon-distances
 DLatlon <- as.matrix(dist(sites[, c("lon", "lat")]))
 round(DLatlon, 3)
 ```
@@ -251,6 +272,7 @@ These numbers are in *decimal degrees*, which is not a unit of distance. The val
 Now let's do it properly. We'll create an `sf` object and project to UTM Zone 10N (EPSG:32610), which puts everything in meters:
 
 ```{r}
+#| label: projected-distances
 sitesSf <- st_as_sf(sites, coords = c("lon", "lat"), crs = 4326) %>%
   st_transform(32610)
 

@@ -1,9 +1,14 @@
-## ----echo=FALSE, message=FALSE, warning=FALSE---------------------------------
+## -----------------------------------------------------------------------------
+#| label: setup
+#| echo: false
+#| message: false
+#| warning: false
 library(tidyverse)
 set.seed(42)
 
 
 ## -----------------------------------------------------------------------------
+#| label: make-data
 n <- 80
 x <- rnorm(n, mean = 50, sd = 10)
 y <- 2 + 0.6 * x + rnorm(n, sd = 6)
@@ -14,11 +19,13 @@ ggplot(data.frame(x, y), aes(x = x, y = y)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: correlation
 cor(x, y)
 cor(y, x)
 
 
 ## -----------------------------------------------------------------------------
+#| label: two-regressions
 # Regression of y on x
 fitYx <- lm(y ~ x)
 # Regression of x on y
@@ -26,6 +33,7 @@ fitXy <- lm(x ~ y)
 
 
 ## -----------------------------------------------------------------------------
+#| label: rearrange-xy
 a <- coef(fitXy)[1]
 b <- coef(fitXy)[2]
 
@@ -34,7 +42,9 @@ interceptRearranged <- -a / b
 slopeRearranged <- 1 / b
 
 
-## ----echo=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: two-lines-plot
+#| echo: false
 ggplot(data.frame(x, y), aes(x = x, y = y)) +
   geom_point(alpha = 0.5) +
   geom_abline(
@@ -61,6 +71,7 @@ ggplot(data.frame(x, y), aes(x = x, y = y)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: slope-from-correlation
 r <- cor(x, y)
 slopeFormula <- r * (sd(y) / sd(x))
 slopeLm <- coef(fitYx)[2]
@@ -69,6 +80,7 @@ round(c(from_formula = slopeFormula, from_lm = slopeLm), 6)
 
 
 ## -----------------------------------------------------------------------------
+#| label: correlation-test
 # Small correlation, large n
 rSmall <- 0.11
 nLarge <- 1000

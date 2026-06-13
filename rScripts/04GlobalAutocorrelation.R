@@ -1,8 +1,13 @@
-## ----echo=FALSE, include=FALSE------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: setup
+#| echo: false
+#| include: false
 set.seed(1984)
 
 
-## ----message=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: packages
+#| message: false
 library(sf)
 library(tidyverse)
 library(tmap)
@@ -10,10 +15,10 @@ library(gstat)
 library(ncf)
 library(spdep)
 library(fields)
-library(plotly)
 
 
 ## -----------------------------------------------------------------------------
+#| label: transect-data
 transect <- data.frame(
   x = seq(0, 700, by = 100),
   z = c(10, 12, 11, 13, 5, 4, 6, 5)
@@ -21,13 +26,16 @@ transect <- data.frame(
 
 
 ## -----------------------------------------------------------------------------
+#| label: transect-plot
 ggplot(transect, aes(x = x, y = z)) +
   geom_line() +
   geom_point(size = 4) +
-  labs(x = "Location (m)", y = "z")
+  labs(x = "Location (m)", y = "z") +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
+#| label: transect-pairs
 # Step 1: compute all pairwise distances between stations.
 # dist() returns a distance object; we convert it to a plain matrix
 # so we can index into it like a spreadsheet.
@@ -54,6 +62,7 @@ pairsDf
 
 
 ## -----------------------------------------------------------------------------
+#| label: transect-pairs-plot
 # compute r for each group to use as labels in the plot
 corLabels <- pairsDf %>%
   filter(dist <= 100 | dist > 200) %>%
@@ -72,46 +81,45 @@ pairsDf %>%
     x = Inf, y = Inf, hjust = 1.1, vjust = 1.5
   ) +
   facet_wrap(~group) +
-  labs(x = expression(z[i]), y = expression(z[j]))
+  labs(x = expression(z[i]), y = expression(z[j])) +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-load
 meuse2 <- readRDS("../data/meuse2.Rds")
 class(meuse2)
 head(meuse2)
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-sf
 meuseSf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-log-lead
 meuseSf$log_lead <- log(meuseSf$lead)
 
 
 ## -----------------------------------------------------------------------------
-ggplot(data = meuseSf) +
-  geom_sf(mapping = aes(fill = lead, size = lead), shape = 21, alpha = 0.6) +
-  scale_fill_continuous(type = "viridis", name = "ppm")
-
-
-## -----------------------------------------------------------------------------
-tmap_mode("view")
-tm_shape(meuseSf) +
+#| label: meuse-lead-map
+tmap_mode("plot")
+tm_basemap("Esri.WorldGrayCanvas") +
+  tm_shape(meuseSf) +
   tm_bubbles(
-    size        = "lead",
-    fill        = "lead",
-    fill.scale  = tm_scale_intervals(values = "viridis"),
-    fill_alpha  = 0.7,
+    size = "lead",
+    fill = "lead",
+    fill.scale = tm_scale_intervals(values = "viridis"),
+    fill_alpha = 0.7,
     fill.legend = tm_legend(title = "Lead (ppm)"),
-    size.legend = tm_legend(title = "Lead (ppm)"),
-    id          = "lead"
-  ) +
-  tm_scalebar(position = c("left", "bottom"))
+    size.legend = tm_legend(title = "Lead (ppm)")
+  )
 
 
 ## -----------------------------------------------------------------------------
+#| label: lead-variogram-cloud
 leadVarCloud <- variogram(log_lead ~ 1, locations = meuseSf, cloud = TRUE)
 plot(leadVarCloud,
   pch = 20, cex = 1.5, col = "black", alpha = 0.1,
@@ -121,6 +129,7 @@ plot(leadVarCloud,
 
 
 ## -----------------------------------------------------------------------------
+#| label: lead-variogram
 leadVar <- variogram(log_lead ~ 1, locations = meuseSf, cloud = FALSE)
 plot(leadVar,
   pch = 20, cex = 1.5, col = "black",
@@ -130,15 +139,18 @@ plot(leadVar,
 
 
 ## -----------------------------------------------------------------------------
+#| label: intercept-lm
 summary(lm(log_lead ~ 1, data = meuseSf))
 
 
 ## -----------------------------------------------------------------------------
+#| label: intercept-mean-se
 mean(meuseSf$log_lead)
 sd(meuseSf$log_lead) / sqrt(nrow(meuseSf))
 
 
 ## -----------------------------------------------------------------------------
+#| label: moran-extremes
 #| echo: false
 #| fig-width: 9
 #| fig-height: 3
@@ -181,64 +193,76 @@ bind_rows(chess, random, gradient) %>%
   )
 
 
-## ----warning=FALSE------------------------------------------------------------
-# distance matrix
-D <- dist(st_coordinates(meuseSf))
-# inverse distance matrix
-W <- as.matrix(1 / D)
-# convert a the weights matrix to a weights list object
+## -----------------------------------------------------------------------------
+#| label: moran-inverse-distance
+#| warning: false
+# coordinates and the full pairwise distance matrix; we reuse Dmat below
+coords <- st_coordinates(meuseSf)
+Dmat <- as.matrix(dist(coords))
+# inverse-distance weights, with the diagonal set to 0 instead of Inf
+W <- 1 / Dmat
+diag(W) <- 0
+# convert the weights matrix to a weights list object
 # so spdep is happy
 wList <- mat2listw(W)
 # calculate I
 moran.test(meuseSf$log_lead, wList)
 
 
-## ----warning=FALSE------------------------------------------------------------
-x <- as.vector(as.matrix(dist(st_coordinates(meuseSf))))
+## -----------------------------------------------------------------------------
+#| label: inverse-distance-plot
+#| warning: false
+# flatten the distance matrix and the inverse distances (W) into vectors
+x <- as.vector(Dmat)
 y <- as.vector(W)
 ggplot() +
   geom_line(aes(x = x[x > 0], y = y[x > 0])) +
   labs(x = "Distance (m)", y = "Inverse distance (aka W)") +
-  lims(x = c(0, 1500))
+  lims(x = c(0, 1500)) +
+  theme_minimal()
 
 
-## ----warning=FALSE------------------------------------------------------------
-D <- as.matrix(dist(st_coordinates(meuseSf)))
-# make an empty weights matrix
-W <- matrix(0, ncol = ncol(D), nrow = nrow(D))
-# set some values to 1 using a logical mask of D<100
-W[D < 100] <- 1
-# convert a the weights matrix to a weights list object
+## -----------------------------------------------------------------------------
+#| label: moran-band-100
+#| warning: false
+# reuse Dmat from above; start from an empty weights matrix
+W <- matrix(0, ncol = ncol(Dmat), nrow = nrow(Dmat))
+# set some values to 1 using a logical mask of Dmat < 100
+W[Dmat < 100] <- 1
+# convert the weights matrix to a weights list object
 # so spdep is happy
 wList <- mat2listw(W)
 # calculate I
 moran.test(meuseSf$log_lead, wList)
 
 
-## ----warning=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: moran-band-500-1000
+#| warning: false
 # make an empty weights matrix of the right dimensions
-W <- matrix(0, ncol = ncol(D), nrow = nrow(D))
+W <- matrix(0, ncol = ncol(Dmat), nrow = nrow(Dmat))
 # set some values to 1
-W[D > 500 & D <= 1000] <- 1
-# convert a the weights matrix to a weights list object
+W[Dmat > 500 & Dmat <= 1000] <- 1
+# convert the weights matrix to a weights list object
 # so spdep is happy
 wList <- mat2listw(W)
 # calculate I
 moran.test(meuseSf$log_lead, wList)
 
 
-## ----warning=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: moran-correlogram-loop
+#| warning: false
 distanceInterval <- 100
 distanceVector <- seq(0, 1500, by = distanceInterval)
 n <- length(distanceVector)
-D <- as.matrix(dist(st_coordinates(meuseSf)))
 # make an object to hold results
 res <- data.frame(midBin = rep(NA, n - 1), I = rep(NA, n - 1))
 for (i in 2:n) {
-  W <- matrix(0, ncol = ncol(D), nrow = nrow(D))
-  # set some values to 1
-  W[D >= distanceVector[i - 1] & D < distanceVector[i]] <- 1
-  # convert a the weights matrix to a weights list object
+  # reuse Dmat; 1 inside the current distance band, 0 otherwise
+  W <- matrix(0, ncol = ncol(Dmat), nrow = nrow(Dmat))
+  W[Dmat >= distanceVector[i - 1] & Dmat < distanceVector[i]] <- 1
+  # convert the weights matrix to a weights list object
   # so spdep is happy
   wList <- mat2listw(W)
   # calculate I
@@ -250,35 +274,48 @@ ggplot(data = res, mapping = aes(x = midBin, y = I)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_line() +
   geom_point(size = 3) +
-  labs(x = "Distance (m)", y = "Moran's I")
+  labs(x = "Distance (m)", y = "Moran's I") +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
-W <- knn2nb(knearneigh(meuseSf, k = 8))
-moran.test(meuseSf$log_lead, nb2listw(W))
+#| label: moran-knn8
+# knearneigh finds the k nearest neighbors of each point
+knn <- knearneigh(meuseSf, k = 8)
+# knn2nb turns those into a neighbor (nb) object
+nb <- knn2nb(knn)
+# nb2listw turns the nb object into the weights list moran.test wants
+wList <- nb2listw(nb)
+# now we can calculate I
+moran.test(meuseSf$log_lead, wList)
 
 
-## ----warning=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: moran-knn-loop
+#| warning: false
 n <- 7
 res <- data.frame(k = 2^(1:n), I = rep(NA, n))
 for (i in 1:n) {
-  W <- knn2nb(knearneigh(meuseSf, k = 2^i))
-  res$I[i] <- moran.test(meuseSf$log_lead, nb2listw(W))$estimate[1]
+  nb <- knn2nb(knearneigh(meuseSf, k = 2^i))
+  res$I[i] <- moran.test(meuseSf$log_lead, nb2listw(nb))$estimate[1]
 }
 ggplot(data = res, mapping = aes(x = k, y = I)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_line() +
   geom_point(size = 3) +
-  labs(x = "K neighbors", y = "Moran's I")
+  labs(x = "K neighbors", y = "Moran's I") +
+  theme_minimal()
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-xyz
 meuseX <- st_coordinates(meuseSf)[, 1]
 meuseY <- st_coordinates(meuseSf)[, 2]
 meuseLead <- meuseSf$log_lead
 
 
 ## -----------------------------------------------------------------------------
+#| label: correlog-discrete
 leadI <- correlog(
   x = meuseX, y = meuseY, z = meuseLead,
   increment = 100, resamp = 100, quiet = TRUE
@@ -288,21 +325,25 @@ abline(h = 0, lty = "dashed")
 
 
 ## -----------------------------------------------------------------------------
+#| label: correlog-full
 plot(leadI)
 abline(h = 0, lty = "dashed")
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-span
 max(meuseX) - min(meuseX)
 max(meuseY) - min(meuseY)
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-maxdist
 meuseD <- dist(cbind(meuseX, meuseY))
 max(meuseD)
 
 
 ## -----------------------------------------------------------------------------
+#| label: correlog-ggplot
 data.frame(
   n = leadI$n,
   I = leadI$correlation,
@@ -320,12 +361,15 @@ data.frame(
   labs(
     x = "Distance (m)", y = "Moran's I",
     title = "Autocorrelation of log(Lead)", subtitle = "Crit value of p<0.01"
-  )
+  ) +
+  theme_minimal()
 
 
-## ----echo=FALSE, message=FALSE------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: sim-surfaces
+#| echo: false
+#| message: false
 library(fields)
-library(plotly)
 
 n <- 100
 nVec <- 0:(n - 1)
@@ -357,19 +401,6 @@ p10BumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
   theme_minimal() +
   theme(legend.position = "none")
 
-
-fooMat <- matrix(foo$z, n, n)
-p10BumpsPersp <- plot_ly(z = fooMat) %>%
-  add_surface() %>%
-  hide_colorbar() %>%
-  layout(
-    title = "",
-    scene = list(
-      xaxis = list(title = "Easting (m)"),
-      yaxis = list(title = "Northing (m)"),
-      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-    )
-  )
 
 samps2get <- sample(n^2, size = 500)
 bar <- foo[samps2get, ]
@@ -420,19 +451,6 @@ p5BumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
   labs(x = "Easting (m)", y = "Northing (m)") +
   theme_minimal() +
   theme(legend.position = "none")
-
-fooMat <- matrix(foo$z, n, n)
-p5BumpsPersp <- plot_ly(z = fooMat) %>%
-  add_surface() %>%
-  hide_colorbar() %>%
-  layout(
-    title = "",
-    scene = list(
-      xaxis = list(title = "Easting (m)"),
-      yaxis = list(title = "Northing (m)"),
-      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-    )
-  )
 
 samps2get <- sample(n^2, size = 500)
 bar <- foo[samps2get, ]
@@ -501,19 +519,6 @@ pRanBumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
   theme_minimal() +
   theme(legend.position = "none")
 
-fooMat <- matrix(foo$z, n, n)
-pRanBumpsPersp <- plot_ly(z = fooMat) %>%
-  add_surface() %>%
-  hide_colorbar() %>%
-  layout(
-    title = "",
-    scene = list(
-      xaxis = list(title = "Easting (m)"),
-      yaxis = list(title = "Northing (m)"),
-      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-    )
-  )
-
 samps2get <- sample(n^2, size = 500)
 bar <- foo[samps2get, ]
 
@@ -558,20 +563,6 @@ pGradBumpsMap <- ggplot(foo, aes(x = x, y = y, fill = z)) +
   theme_minimal() +
   theme(legend.position = "none")
 
-fooMat <- matrix(foo$z, n, n)
-pGradBumpsPersp <- plot_ly(z = fooMat) %>%
-  add_surface() %>%
-  hide_colorbar() %>%
-  layout(
-    title = "",
-    scene = list(
-      xaxis = list(title = "Easting (m)"),
-      yaxis = list(title = "Northing (m)"),
-      camera = list(eye = list(x = 1.95, y = -1.25, z = 1.25))
-    )
-  )
-
-
 samps2get <- sample(n^2, size = 500)
 bar <- foo[samps2get, ]
 zI <- correlog(x = bar$x, y = bar$y, z = bar$z, increment = 1, resamp = 200, quiet = TRUE)
@@ -597,6 +588,7 @@ pGradBumpsI <- data.frame(
 
 
 ## -----------------------------------------------------------------------------
+#| label: bumps5-map
 #| echo: false
 #| fig-width: 6
 #| fig-height: 6
@@ -604,16 +596,13 @@ p5BumpsMap
 
 
 ## -----------------------------------------------------------------------------
-#| echo: false
-p5BumpsPersp
-
-
-## -----------------------------------------------------------------------------
+#| label: bumps5-correlogram
 #| echo: false
 p5BumpsI
 
 
 ## -----------------------------------------------------------------------------
+#| label: bumps10-map
 #| echo: false
 #| fig-width: 6
 #| fig-height: 6
@@ -621,16 +610,13 @@ p10BumpsMap
 
 
 ## -----------------------------------------------------------------------------
-#| echo: false
-p10BumpsPersp
-
-
-## -----------------------------------------------------------------------------
+#| label: bumps10-correlogram
 #| echo: false
 p10BumpsI
 
 
 ## -----------------------------------------------------------------------------
+#| label: random-bumps-map
 #| echo: false
 #| fig-width: 6
 #| fig-height: 6
@@ -638,16 +624,13 @@ pRanBumpsMap
 
 
 ## -----------------------------------------------------------------------------
-#| echo: false
-pRanBumpsPersp
-
-
-## -----------------------------------------------------------------------------
+#| label: random-bumps-correlogram
 #| echo: false
 pRanBumpsI
 
 
 ## -----------------------------------------------------------------------------
+#| label: gradient-bumps-map
 #| echo: false
 #| fig-width: 6
 #| fig-height: 6
@@ -655,16 +638,13 @@ pGradBumpsMap
 
 
 ## -----------------------------------------------------------------------------
-#| echo: false
-pGradBumpsPersp
-
-
-## -----------------------------------------------------------------------------
+#| label: gradient-bumps-correlogram
 #| echo: false
 pGradBumpsI
 
 
 ## -----------------------------------------------------------------------------
+#| label: spline-correlog
 leadI <- spline.correlog(
   x = meuseX, y = meuseY, z = meuseSf$log_lead,
   resamp = 100, xmax = 1500, quiet = TRUE
@@ -672,22 +652,30 @@ leadI <- spline.correlog(
 plot(leadI)
 
 
-## ----message=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: birds-map
+#| message: false
 library(tmap)
 birdsSf <- readRDS("../data/birdRichnessMexico.rds")
-tmap_mode("view")
-tm_shape(birdsSf) +
-  tm_symbols(col = "nSpecies", alpha = 0.7)
+
+tmap_mode("plot")
+tm_basemap("OpenStreetMap") +
+  tm_shape(birdsSf) +
+  tm_symbols(fill = "nSpecies", size = 0.4, fill_alpha = 0.7)
 
 
 ## -----------------------------------------------------------------------------
+#| label: birds-df
 birdsDF <- data.frame(st_coordinates(birdsSf), nSpecies = birdsSf$nSpecies)
 
 
 ## -----------------------------------------------------------------------------
+#| label: birds-maxdist
 max(dist(st_coordinates(birdsSf))) / 3
 
 
-## ----eval=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: birds-directional-variogram
+#| eval: false
 # birdVar <- variogram(nSpecies ~ 1, data = birdsSf, alpha = c(0, 90))
 

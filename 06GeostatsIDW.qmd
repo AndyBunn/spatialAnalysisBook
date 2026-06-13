@@ -447,7 +447,7 @@ After a detour into thin-plate splines we'll tackle these problems. Kriging uses
 
 The California precipitation dataset gives you a chance to apply IDW to a different kind of environmental variable. There are two files:
 
-1. `prcpCA.rds` -- 432 long-term precipitation station records. Columns `X` and `Y` are coordinates in California Albers [EPSG:3310](https://epsg.io/3310) with units in meters. The `ANNUAL` column is total annual precipitation in mm.
+1. `prcpCA.rds` -- 432 long-term precipitation station records. Columns `X` and `Y` are coordinates in California Albers (EPSG:3310) with units in meters. The `ANNUAL` column is total annual precipitation in mm.
 
 2. `gridCA.rds` -- an empty 10x10 km prediction grid covering California.
 

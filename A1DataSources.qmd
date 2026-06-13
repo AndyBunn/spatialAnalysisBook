@@ -205,7 +205,7 @@ The file `birdRichnessMexico.rds` contains 200 point locations across Mexico, ea
 
 ### Origin
 
-The richness values come from the global bird species richness maps at [BiodiversityMapping.org](https://biodiversitymapping.org/index.php/birds/), assembled by Clinton Jenkins at Florida International University. The maps are derived from BirdLife International v7 range maps (2018), processed at 10x10 km resolution in the Eckert IV equal-area projection, native extant species only.
+The richness values come from the global bird species richness maps at BiodiversityMapping.org^[<https://biodiversitymapping.org/index.php/birds/>], assembled by Clinton Jenkins at Florida International University. The maps are derived from BirdLife International v7 range maps (2018), processed at 10x10 km resolution in the Eckert IV equal-area projection, native extant species only.
 
 We sampled 500 random points across Mexico from the richness raster, then subsampled to 200 for the exercises. The points were reprojected to North America Albers Equal Area Conic centered on Mexico (SR-ORG:38), giving coordinates in kilometers.
 
@@ -236,7 +236,7 @@ Pimm SL, Jenkins CN, Abell R, Brooks TM, Gittleman JL, Joppa LN, Raven PH, Rober
 
 ## California Ozone and Precipitation
 
-Two California datasets appear in the spatial data crash course and the interpolation chapters: ozone monitoring station records and weather station precipitation records. Both come from the `rspat` package by Robert Hijmans, which bundles teaching datasets for the [rspatial.org](https://rspatial.org) tutorials.
+Two California datasets appear in the spatial data crash course and the interpolation chapters: ozone monitoring station records and weather station precipitation records. Both come from the `rspat` package by Robert Hijmans, which bundles teaching datasets for the rspatial.org tutorials.
 
 ### California ozone (`californiaOzonePoints.csv`)
 

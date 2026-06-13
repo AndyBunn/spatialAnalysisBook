@@ -1,13 +1,19 @@
-## ----echo=FALSE, include=FALSE------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: setup
+#| echo: false
+#| include: false
 set.seed(1984)
 
 
-## ----message=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: packages
+#| message: false
 library(tidyverse)
 library(spatstat)
 
 
 ## -----------------------------------------------------------------------------
+#| label: sim-patterns
 #| fig-width: 9
 #| fig-height: 6
 n <- 100
@@ -48,6 +54,7 @@ ggplot(simDat, aes(x = x, y = y)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: tree-data
 data(japanesepines)
 data(redwood)
 
@@ -62,6 +69,7 @@ par(oldPar)
 
 
 ## -----------------------------------------------------------------------------
+#| label: japanesepines-ggplot
 tibble(
   x = japanesepines$x * japanesepines$window$units$multiplier,
   y = japanesepines$y * japanesepines$window$units$multiplier
@@ -85,6 +93,7 @@ tibble(
 
 
 ## -----------------------------------------------------------------------------
+#| label: kde-1d-demo
 x <- rnorm(n=1e3)
 ggplot() +
   geom_histogram(mapping = aes(x = x, after_stat(density)), fill = "grey") +
@@ -93,48 +102,58 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: japanesepines-density
 japanesepinesDensity <- density(japanesepines)
 summary(japanesepinesDensity)
 
 
 ## -----------------------------------------------------------------------------
+#| label: japanesepines-persp
 #| fig-width: 7
 #| fig-height: 6
 persp(japanesepinesDensity, theta = 30, phi = 30)
 
 
 ## -----------------------------------------------------------------------------
+#| label: japanesepines-density-contour
 plot(japanesepinesDensity, main = NULL) # omit title
 contour(japanesepinesDensity, add = TRUE, col = "white")
 points(japanesepines, pch = 20, col = "white")
 
 
 ## -----------------------------------------------------------------------------
+#| label: japanesepines-kenvelope
 japanesepinesK <- envelope(japanesepines, fun = Kest, nsim = 1e3, verbose = FALSE)
 
 
 ## -----------------------------------------------------------------------------
+#| label: japanesepines-kplot
 plot(japanesepinesK)
 
 
 ## -----------------------------------------------------------------------------
+#| label: redwood-k
 redwoodK <- envelope(redwood, fun = Kest, nsim = 1e3, verbose = FALSE)
 plot(redwoodK)
 
 
 ## -----------------------------------------------------------------------------
-plot(envelope(redwood,
+#| label: redwood-k-rmax
+redwoodKRmax <- envelope(redwood,
   fun = Kest, nsim = 100,
   verbose = FALSE, rmax = 0.5
-), main = "")
+)
+plot(redwoodKRmax, main = "")
 
 
 ## -----------------------------------------------------------------------------
+#| label: redwood-l
 redwoodL <- envelope(redwood, fun = Lest, nsim = 1e3, verbose = FALSE)
 plot(redwoodL)
 
 
 ## -----------------------------------------------------------------------------
+#| label: redwood-k-centered
 ggplot(redwoodK, mapping = aes(x = r, ymin = lo - pi * r^2, ymax = hi - pi * r^2)) +
   geom_ribbon(fill = "#56B4E9", alpha = 0.3) +
   geom_line(mapping = aes(y = theo - pi * r^2), col = "grey40", linetype = "dashed") +
@@ -144,27 +163,32 @@ ggplot(redwoodK, mapping = aes(x = r, ymin = lo - pi * r^2, ymax = hi - pi * r^2
 
 
 ## -----------------------------------------------------------------------------
+#| label: longleaf-data
 data(longleaf)
 summary(longleaf)
 plot(longleaf)
 
 
 ## -----------------------------------------------------------------------------
+#| label: longleaf-marks-hist
 hist(longleaf$marks)
 
 
 ## -----------------------------------------------------------------------------
+#| label: longleaf-l
 longleafL <- envelope(longleaf, fun = Lest, nsim = 1e3, verbose = FALSE)
 plot(longleafL, main = "All Trees")
 
 
 ## -----------------------------------------------------------------------------
+#| label: bigtrees-l
 bigTrees <- subset(longleaf, marks > 50)
 bigTreesL <- envelope(bigTrees, fun = Lest, nsim = 1e3, verbose = FALSE)
 plot(bigTreesL, main = "Big Trees")
 
 
 ## -----------------------------------------------------------------------------
+#| label: longleaf-age
 longleafAge <- cut(longleaf,
   breaks = c(0, 30, Inf),
   labels = c("Sapling", "Adult")
@@ -174,6 +198,7 @@ plot(longleafAge)
 
 
 ## -----------------------------------------------------------------------------
+#| label: age-class-l
 #| fig-height: 8
 adults <- subset(longleafAge, marks == "Adult", drop = TRUE)
 adultsL <- envelope(adults, fun = Lest, nsim = 1e3, verbose = FALSE)
@@ -189,12 +214,14 @@ par(oldPar)
 
 
 ## -----------------------------------------------------------------------------
+#| label: adults-density
 adultsDensity <- density(adults)
 plot(adultsDensity)
 points(saplings, pch = 20)
 
 
 ## -----------------------------------------------------------------------------
+#| label: sapling-adult-lcross
 saplingAdultL <- envelope(longleafAge, "Lcross",
   i = "Sapling", j = "Adult",
   verbose = FALSE
@@ -202,11 +229,15 @@ saplingAdultL <- envelope(longleafAge, "Lcross",
 plot(saplingAdultL)
 
 
-## ----eval=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: demo-data
+#| eval: false
 # demo(data)
 
 
-## ----eval=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: clickppp-exercise
+#| eval: false
 # myPattern <- clickppp(n = 50) # click to make 50 points
 # # KDE
 # plot(density(myPattern))
@@ -216,7 +247,9 @@ plot(saplingAdultL)
 # plot(myPatternL)
 
 
-## ----eval=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: patternd-ppp
+#| eval: false
 # patternD <- simDat %>% filter(id == "D")
 # patternD <- ppp(
 #   x = patternD$x, y = patternD$y,
@@ -227,7 +260,9 @@ plot(saplingAdultL)
 # plot(patternD)
 
 
-## ----eval=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: bei-exercise
+#| eval: false
 # data(bei)
 # summary(bei)
 # plot(bei)
@@ -246,6 +281,7 @@ plot(saplingAdultL)
 
 
 ## -----------------------------------------------------------------------------
+#| label: sporophores-data
 data(sporophores)
 summary(sporophores)
 plot(sporophores, chars = c(16, 1, 2), cex = 0.6, leg.args = list(cex = 1.1))
@@ -254,6 +290,7 @@ text(15, 8, "Tree", cex = 0.75)
 
 
 ## -----------------------------------------------------------------------------
+#| label: sporophores-cross
 # using subset
 hebPub <- subset(sporophores,
   marks %in% c("L pubescens", "Hebloma spp"),

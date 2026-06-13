@@ -1,70 +1,77 @@
 # Local Spatial Autocorrelation
 
-```{r,echo=FALSE, include=FALSE}
+```{r}
+#| label: setup
+#| echo: false
+#| include: false
 set.seed(1984)
 ```
 
 ## Big Idea
-Space matters: Spatial pattern lets us understand process. Global Moran's I tells you *whether* spatial autocorrelation exists across your study area and perhaps at what distances. Local Indicators of Spatial Association (LISA) tell you *where*. LISA lets us go from a single number that summarizes the entire map to a map of where the clustering and the outliers actually live.
+Space matters: Spatial pattern lets us understand process. Global Moran's I tells you whether spatial autocorrelation exists across your study area and perhaps at what distances. Local Indicators of Spatial Association (LISA) tell you where. LISA lets us go from a single number that summarizes the entire map to a map of where the clustering and the outliers actually live.
 
 ::: {.callout-note}
 This module builds directly on the [Spatial Autocorrelation chapter](04GlobalAutocorrelation.html). Make sure you are comfortable with Moran's I and how spatial weights matrices work before diving in.
 :::
 
 ## Packages
-Same cast as the autocorrelation chapter with `sf`[@R-sf], `tidyverse`[@R-tidyverse]  `tmap`[@R-tmap], `gstat`[@R-gstat], and `spdep`[@R-spdep].
+Same cast as the autocorrelation chapter: `sf`[@R-sf], `tidyverse`[@R-tidyverse], `tmap`[@R-tmap], and `spdep`[@R-spdep].
 
-```{r, message=FALSE}
+```{r}
+#| label: packages
+#| message: false
 library(sf)
 library(tidyverse)
 library(spdep)
 library(tmap)
-library(gstat)
 ```
 
 ## Where Global Moran's I Falls Short
 
-Think back to what global Moran's I gives you. One number. For the entire study area. That number can be positive, negative, or close to zero, and it summarizes the overall tendency for similar values to cluster together or disperse.
+Think back to what global Moran's I gives you. One number. For the entire study area. That number can be positive, negative, or close to zero, and it summarizes the overall tendency for similar values to cluster together or disperse. We often bin Moran's I into distances but that's just a sleight of hand in order to get at the spatial scale of the whole study area.
 
-But what if your study area has a hot spot of high values in one corner, a cold spot of low values in another, and a bunch of spatial noise in between? The global statistic averages all of that together. The hot spot and cold spot might be driving most of the signal, or the noise might be drowning it out. You can not tell from the single number which it is, or where any of it is happening.
+But what if your study area has a hot spot of high values in one corner, a cold spot of low values in another, and a bunch of spatial noise in between? The global statistic averages all of that together. The hot spot and cold spot might be driving most of the signal, or the noise might be drowning it out. You cannot tell from the single number which it is, or where any of it is happening.
 
 This matters practically. Say you are mapping soil lead contamination across an old industrial site. You want to know where the worst contamination is clustered and not just whether the overall dataset is autocorrelated. Or if you are mapping bird richness you want to identify the biodiversity hotspots, not just confirm that richness is spatially structured in general.
 
 ## The Moran Scatterplot
 
-Before getting into the mechanics of local I, let's build some intuition using a tool called the Moran scatterplot. This is worth understanding carefully because it is the conceptual bridge from global to local.
+Before getting into the mechanics of local I, let's build some intuition using a tool called the Moran scatterplot. This is worth understanding because it is the conceptual bridge from global to local.
 
-We will use the Meuse River data. If you have not already loaded and prepped it, here it is:
+We will use the Meuse River data.
 
 ```{r}
+#| label: meuse-load
 meuse2 <- readRDS("data/meuse2.Rds")
 meuseSf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
 meuseSf$log_lead <- log(meuseSf$lead)
 ```
 
-We need to define what "neighbor" means before we can compute anything. For LISA we use k-nearest neighbors -- the $k$ locations closest to each point in space. Here we use $k=8$, meaning each location's neighborhood is its 8 nearest points. There is nothing magical about 8; it is a reasonable default for a dataset this size that gives each location enough neighbors to get a stable estimate without pulling in points that are too far away.
+We need to define what "neighbor" means before we can compute anything. For LISA we use k-nearest neighbors, the $k$ locations closest to each point in space. Here we use $k=8$, meaning each location's neighborhood is its 8 nearest points. There is nothing magical about $k=8$; it is a reasonable default for a dataset this size that gives each location enough neighbors to get a stable estimate without pulling in points that are too far away.
 
 The `spdep` syntax for this is a three-step pipeline and yes, it is bewildering until you have seen it a few times.
 
 ```{r}
-k8 <- knearneigh(meuseSf, k = 8)
-nbK8 <- knn2nb(k8)
-W <- nb2listw(nbK8, style = "W")
+#| label: knn-weights
+knn <- knearneigh(meuseSf, k = 8)
+nb <- knn2nb(knn)
+wList <- nb2listw(nb, style = "W")
 ```
 
-`knearneigh` finds the 8 nearest neighbors for each point and returns a raw neighbor table. `knn2nb` converts that table into a neighbor list object (`nb`) which is `spdep`'s internal format for storing who is next to whom. `nb2listw` takes that neighbor list and turns it into a weights list object (`listw`) that the rest of `spdep` can actually use. You can think of it as: find neighbors, formalize neighbors, weight neighbors.
+`knearneigh` finds the 8 nearest neighbors for each point and returns a raw neighbor table. `knn2nb` converts that table into a neighbor list object (`nb`) which is `spdep`'s internal format for storing who is next to whom. `nb2listw` takes that neighbor list and turns it into a weights list object (`listw`) that the rest of `spdep` can actually use. I think about it as: find neighbors, formalize neighbors, weight neighbors.
 
-The `style = "W"` argument is important. It row-standardizes the weights, meaning each location's weights sum to one. If a location has 8 neighbors, each one gets a weight of 1/8. The practical effect is that the spatial lag -- the weighted average of neighbors' values -- is a simple average of those 8 neighbors. This makes the Moran scatterplot interpretable and is the standard choice for LISA.
+The `style = "W"` argument is important. It row-standardizes the weights, meaning each location's weights sum to one. If a location has 8 neighbors, each one gets a weight of 1/8. The practical effect is that the spatial lag (the weighted average of neighbors' values) is a simple average of those 8 neighbors. This makes the Moran scatterplot interpretable and is the standard choice for LISA.
 
-The Moran scatterplot works like this. We standardize the variable (call it $z$) so it has mean zero and standard deviation one. Then we compute the *spatial lag* of $z$ at each location: the weighted average of $z$ at that location's neighbors. We plot $z$ on the x-axis and the spatial lag on the y-axis. Every point on that scatterplot is a location in your data set.
+The Moran scatterplot works like this. We standardize the variable (call it $z$) so it has mean zero and standard deviation one. Then we compute the spatial lag of $z$ at each location: the weighted average of $z$ at that location's neighbors. We plot $z$ on the x-axis and the spatial lag on the y-axis. Every point on that scatterplot is a location in the data.
 
 ```{r}
+#| label: moran-scatterplot
 # standardize log lead
 meuseSf$z <- as.vector(scale(meuseSf$log_lead))
 
 # compute the spatial lag: weighted average of neighbors' z values
-meuseSf$lag_z <- lag.listw(W, meuseSf$z)
+meuseSf$lag_z <- lag.listw(wList, meuseSf$z)
 
 ggplot(meuseSf, aes(x = z, y = lag_z)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
@@ -83,31 +90,32 @@ ggplot(meuseSf, aes(x = z, y = lag_z)) +
 
 Look at the four quadrants this creates:
 
-- **Upper right**: high $z$, high lag -- a location with high values *surrounded by* high values. This is a hot spot. We call it **High-High (HH)**.
-- **Lower left**: low $z$, low lag -- a location with low values surrounded by low values. Cold spot. **Low-Low (LL)**.
-- **Upper left**: low $z$, high lag -- a low-value location surrounded by high values. Spatial outlier. **Low-High (LH)**.
-- **Lower right**: high $z$, low lag -- a high-value location surrounded by low values. Also a spatial outlier. **High-Low (HL)**.
+- **Upper right**: high $z$, high lag, a location with high values surrounded by high values. This is a hot spot. We call it **High-High (HH)**.
+- **Lower left**: low $z$, low lag, a location with low values surrounded by low values. Cold spot. **Low-Low (LL)**.
+- **Upper left**: low $z$, high lag, a low-value location surrounded by high values. Spatial outlier. **Low-High (LH)**.
+- **Lower right**: high $z$, low lag, a high-value location surrounded by low values. Also a spatial outlier. **High-Low (HL)**.
 
 Now here is the cool bit! The slope of the regression line through the origin is global Moran's I. You can verify that:
 
 ```{r}
+#| label: moran-slope-check
 # slope of the Moran scatterplot
 moranSlope <- coef(lm(lag_z ~ z - 1, data = as.data.frame(meuseSf)))
 moranSlope
 
 # global Moran's I
-moran.test(meuseSf$log_lead, W)$estimate[1]
+moran.test(meuseSf$log_lead, wList)$estimate[1]
 ```
 
-They match. Global Moran's I is the average tendency across all points to fall in the HH and LL quadrants rather than the HL and LH quadrants. Each individual point's contribution to that slope is its local Moran's I.
+They match. So cool. Global Moran's I is the average tendency across all points to fall in the HH and LL quadrants rather than the HL and LH quadrants. Each individual point's contribution to that slope is its local Moran's I.
 
 ## Local Moran's I
 
-Let's make this concrete. Local Moran's I for location $i$ is:
+Let's make this a little more concrete. Local Moran's I for location $i$ is:
 
 $$I_i = z_i \sum_j w_{ij} z_j$$
 
-where $z_i = (y_i - \bar{y})/s$ is the standardized value at location $i$, and $\sum_j w_{ij} z_j$ is the spatial lag -- the weighted average of standardized values at $i$'s neighbors. With row-standardized weights, this simplifies nicely: $I_i$ is just the product of $z_i$ and its spatial lag.
+where $z_i = (y_i - \bar{y})/s$ is the standardized value at location $i$, and $\sum_j w_{ij} z_j$ is the spatial lag, the weighted average of standardized values at $i$'s neighbors. With row-standardized weights, this simplifies nicely: $I_i$ is just the product of $z_i$ and its spatial lag.
 
 If that product is large and positive, location $i$ is either a high-value location surrounded by high-value neighbors (HH) or a low-value location surrounded by low-value neighbors (LL). Either way, it is contributing to positive spatial autocorrelation. If the product is negative, it is a spatial outlier: a high value surrounded by lows, or vice versa.
 
@@ -115,17 +123,18 @@ The sum of all local $I_i$ values is proportional to global Moran's $I$. Local $
 
 ### Significance Testing
 
-Each local $I_i$ comes with a p-value, answering the question: could this value have arisen by chance if the data had no spatial structure? The test works by conditional randomization -- holding the value at location $i$ fixed and permuting the values at all other locations, then asking how often a more extreme $I_i$ would result. We will use `localmoran()` from `spdep` which handles this under the hood.
+Each local $I_i$ comes with a p-value, answering the question: could this value have arisen by chance if the data had no spatial structure? The cleanest way to get at that is conditional randomization: hold the value at location $i$ fixed, permute the values at all other locations many times, recompute $I_i$ each time, and ask how often a permuted $I_i$ is more extreme than the one you actually observed. We will use `localmoran_perm()` from `spdep`, which runs those permutations for us. There is also an analytical `localmoran()` that gets the p-value from a normal approximation instead of permuting. It is faster, but local statistics are exactly the situation where the normal approximation is shakiest (small neighborhoods, skewed data), so the permutation version is the safer default.
 
 One important caveat: you are testing one hypothesis per location. With 164 locations in the Meuse data, running tests at $\alpha = 0.05$ would produce about 8 false positives even if there were no spatial structure at all. A common and practical fix is to use a stricter threshold ($\alpha = 0.01$ or even $0.001$) for the local tests. You can also use `p.adjust()` to apply a multiple comparisons correction, but for exploratory mapping, the stricter threshold is often good enough.
 
 ## A Simulated Example
 
-Before running LISA on real data, let's plant a known hot spot in simulated data and confirm that we can find it. This is a recurring move throughout this book -- if a method can not detect a pattern we deliberately created, we should not trust it on data where we do not know the answer.
+Before running LISA on real data, let's plant a known hot spot in simulated data and confirm that we can find it. This is a recurring move throughout this book. If a method cannot detect a pattern we deliberately created, we should not trust it on data where we do not know the answer.
 
 I will make an 8x8 grid of locations. All locations get values drawn from a standard normal distribution, except a 3x3 block in one corner which gets values drawn from a normal distribution centered at 4. That block is our planted hot spot.
 
 ```{r}
+#| label: sim-grid
 nSide <- 8
 gridPts <- expand.grid(
   x = 1:nSide,
@@ -143,6 +152,7 @@ gridSf <- st_as_sf(gridPts, coords = c("x", "y"))
 Map it:
 
 ```{r}
+#| label: sim-map
 ggplot(gridSf) +
   geom_sf(aes(color = z), size = 6) +
   scale_color_viridis_c(name = "z") +
@@ -152,30 +162,35 @@ ggplot(gridSf) +
 You can see the bright cluster in the upper right. What does global Moran's I say?
 
 ```{r}
-nbSim <- knn2nb(knearneigh(gridSf, k = 4))
-WSim <- nb2listw(nbSim, style = "W")
-moran.test(gridSf$z, WSim)
+#| label: sim-moran-global
+knnSim <- knearneigh(gridSf, k = 4)
+nbSim <- knn2nb(knnSim)
+wListSim <- nb2listw(nbSim, style = "W")
+moran.test(gridSf$z, wListSim)
 ```
 
 Moran's I is significantly positive. That's good, but it doesn't tell us where. Now run LISA:
 
 ```{r}
-lisaSim <- localmoran(gridSf$z, listw = WSim)
+#| label: sim-localmoran
+lisaSim <- localmoran_perm(gridSf$z, listw = wListSim, nsim = 999)
 head(lisaSim)
 ```
 
-`localmoran` returns a matrix with one row per location and five columns. `Ii` is the local Moran's I value for that location (the number we actually care about). `E.Ii` is the expected value under spatial randomness and `Var.Ii` is the variance, both of which feed into the test. `Z.Ii` is the z-score, and `Pr(z != E(Ii))` is the two-sided p-value asking whether that location's `Ii` is distinguishable from what you'd expect by chance. For now we just need `Ii` and the p-value, so let's pull those out and attach them to our `sf` object.
+`localmoran_perm` returns a matrix with one row per location. `Ii` is the local Moran's I value for that location, the number we actually care about. The next block of columns (`E.Ii`, `Var.Ii`, `Z.Ii`, and `Pr(z != E(Ii))`) is the analytical version of the test: the expected value, variance, z-score, and normal-approximation p-value. The columns ending in `Sim` are the ones from the permutations, and `Pr(z != E(Ii)) Sim` is the permutation p-value, asking how often a reshuffled $I_i$ is more extreme than the observed one. For now we just need `Ii` and that permutation p-value, so let's pull those out and attach them to our `sf` object.
 
 ```{r}
+#| label: sim-attach
 gridSf$Ii <- lisaSim[, "Ii"]
-gridSf$pval <- lisaSim[, "Pr(z != E(Ii))"]
+gridSf$pval <- lisaSim[, "Pr(z != E(Ii)) Sim"]
 ```
 
 We can build a little cluster classification now to map. We need the standardized variable and its spatial lag to assign each location to a quadrant, then use the p-value to flag non-significant ones.
 
 ```{r}
+#| label: sim-cluster-map
 zSim <- as.vector(scale(gridSf$z))
-lagSim <- lag.listw(WSim, zSim)
+lagSim <- lag.listw(wListSim, zSim)
 
 sig <- 0.05
 gridSf$cluster <- case_when(
@@ -190,10 +205,10 @@ ggplot(gridSf) +
   geom_sf(aes(color = cluster), size = 6) +
   scale_color_manual(
     values = c(
-      "High-High"      = "#d7191c",
-      "Low-Low"        = "#2c7bb6",
-      "High-Low"       = "#fdae61",
-      "Low-High"       = "#abd9e9",
+      "High-High"       = "#d7191c",
+      "Low-Low"         = "#2c7bb6",
+      "High-Low"        = "#fdae61",
+      "Low-High"        = "#abd9e9",
       "Not significant" = "grey80"
     )
   ) +
@@ -203,24 +218,26 @@ ggplot(gridSf) +
   )
 ```
 
-The HH cluster is exactly where we planted it. 
+The HH cluster is exactly where we planted it. I used $\alpha = 0.05$ here to keep the demo simple. With only 64 locations and one obvious planted signal the multiple-comparison worry is minor, but on the real data below we tighten it.
 
 ## Back to the Meuse
 
 Now let's run LISA on the log lead data where we actually want to learn something.
 
 ```{r}
-lisa <- localmoran(meuseSf$log_lead, listw = W)
+#| label: meuse-localmoran
+lisa <- localmoran_perm(meuseSf$log_lead, listw = wList, nsim = 999)
 head(lisa)
 ```
 
-Same five columns as before. The p-values here are based on the normal approximation, which is reasonable for this sample size.
+Same columns as before, and again we'll use the permutation p-value, `Pr(z != E(Ii)) Sim`, for the cluster map.
 
 Let's attach the results to our `sf` object and build the cluster map. Using $\alpha = 0.01$ here given the multiple testing issue.
 
 ```{r}
+#| label: meuse-cluster
 meuseSf$Ii <- lisa[, "Ii"]
-meuseSf$pval <- lisa[, "Pr(z != E(Ii))"]
+meuseSf$pval <- lisa[, "Pr(z != E(Ii)) Sim"]
 
 sig <- 0.01
 meuseSf$cluster <- case_when(
@@ -234,11 +251,14 @@ meuseSf$cluster <- case_when(
 table(meuseSf$cluster)
 ```
 
-Now map it. An interactive map with `tmap` is particularly useful here because you can click on individual points to see their values.
+Now map it. We'll draw the clusters with `tmap`, pulling in a basemap so you can see how the pattern sits relative to the river.
 
 ```{r}
-tmap_mode("view")
-tm_shape(meuseSf) +
+#| label: meuse-lisa-map
+#| message: false
+tmap_mode("plot")
+tm_basemap("Esri.WorldGrayCanvas") +
+  tm_shape(meuseSf) +
   tm_symbols(
     fill = "cluster",
     fill.scale = tm_scale_categorical(
@@ -256,13 +276,23 @@ tm_shape(meuseSf) +
   )
 ```
 
-Compare this to the global Moran's I you computed in the last chapter. Log lead is positively autocorrelated overall -- that was the message from the global statistic. The LISA map tells you where: the HH cluster near the river is driving most of that signal. The LL locations are farther from the river where contamination is lower. That spatial pattern is not just a statistical artifact -- it maps directly onto the physical process of flood deposition from the Meuse. High-lead sediment gets deposited close to the channel, and both the contamination and its spatial coherence decay with distance.
+::: {.callout-note}
+We're drawing this statically with `tmap_mode("plot")` so it renders the same way to both the HTML and PDF versions of the book. A static map travels to print; an interactive one doesn't. If you're at the console and want to click individual points to read their values, switch to `tmap_mode("view")` and rerun the exact same `tm_*` code. You'll get an interactive Leaflet map with a slippy basemap, and everything else stays the same.
+:::
+
+Compare this to the global Moran's I you computed in the last chapter. Log lead is positively autocorrelated overall, which was the message from the global statistic. The LISA map tells you where: the HH cluster near the river is driving most of that signal. The LL locations are farther from the river where contamination is lower. That spatial pattern maps directly onto the physical process of flood deposition from the Meuse, so it is more than a statistical artifact. High-lead sediment gets deposited close to the channel, and both the contamination and its spatial coherence decay with distance.
+
+::: {.callout-note}
+## A close cousin: Getis-Ord $G_i^*$
+Local Moran's I is not the only local statistic you'll meet. The other common one is Getis-Ord $G_i^*$, which is what ArcGIS labels "Hot Spot Analysis" (it files local Moran's I under "Cluster and Outlier Analysis"). The difference is worth knowing. $G_i^*$ asks whether the values in a location's neighborhood add up to more or less than you'd expect by chance, so it flags hot spots and cold spots by intensity. What it does not give you is the outlier categories. There is no HL or LH in $G_i^*$, because it is built on the local sum rather than the cross-product $z_i z_j$ that makes local Moran's I notice a value disagreeing with its neighbors. If all you want is "where are the highs and lows," $G_i^*$ is clean and easy to read. If you also care about the misfits, you want local Moran's I. `spdep` computes it with `localG()`.
+:::
 
 ### The Local I Values Themselves
 
 It can also be useful to map $I_i$ directly, not just the cluster category. This gives you a continuous view of where clustering is strongest.
 
 ```{r}
+#| label: meuse-local-i-map
 ggplot(meuseSf) +
   geom_sf(aes(color = Ii), size = 2.5) +
   scale_color_gradient2(
@@ -273,19 +303,19 @@ ggplot(meuseSf) +
   labs(title = "Local Moran's I: log lead, Meuse River")
 ```
 
-Locations with strongly positive $I_i$ are in coherent clusters -- either HH or LL. Locations with negative $I_i$ are spatial outliers. Near-zero values are, statistically speaking, uninteresting.
+Locations with strongly positive $I_i$ are in coherent clusters, either HH or LL. Locations with negative $I_i$ are spatial outliers. Near-zero values are, statistically speaking, uninteresting.
 
 ## Spatial Outliers Are Worth Your Attention
 
-The HL and LH categories tend to get overlooked in favor of the hot spots and cold spots. That would be a mistake. A high-value location surrounded by low-value neighbors -- an HL outlier -- is asking you a question about process. Why is that location different from everywhere around it? Did something happen there? Is it a sampling artifact? Is there a local source or sink that your coarser-grained understanding of the system doesn't account for?
+The HL and LH categories tend to get overlooked in favor of the hot spots and cold spots. That would be a mistake. A high-value location surrounded by low-value neighbors, an HL outlier, is asking you a question about process. Why is that location different from everywhere around it? Did something happen there? Is it a sampling artifact? Is there a local source or sink that your coarser-grained understanding of the system doesn't account for?
 
 In the lead data, an HL outlier would be a location with high lead concentrations in an area that is otherwise clean. That is worth a field visit. It might be an old refuse pile, a spill site, or a measurement error. You wouldn't find it by looking at the global statistics or even the raw map without this kind of formal local analysis.
 
-The answer is that not every spatial outlier has a good story. Some are noise. But the ones that do have a story often have a good one, and LISA is what surfaces them for investigation.
+Not every spatial outlier has a good story. Some are noise. But the ones that do are often worth chasing down, and LISA is what surfaces them for investigation.
 
 ## Wrapping Up
 
-LISA takes a global measure and makes it local. You go from "there is spatial structure in this variable" to "here is where that structure lives, and here is where the exceptions are." Hot spots and cold spots tell you where the signal is concentrated. Spatial outliers tell you where something is off -- and those are often the most ecologically interesting locations in the dataset.
+LISA takes a global measure and makes it local. You go from "there is spatial structure in this variable" to "here is where that structure lives, and here is where the exceptions are." Hot spots and cold spots tell you where the signal is concentrated. Spatial outliers tell you where something is off, and those are often the most ecologically interesting locations in the dataset.
 
 From here the book shifts to prediction. We've been describing spatial structure; now we're going to use it. Interpolation methods like IDW and kriging take what you know at sampled locations and estimate values everywhere else. The variogram you met in the autocorrelation chapter is about to become a lot more useful.
 
@@ -293,7 +323,9 @@ From here the book shifts to prediction. We've been describing spatial structure
 
 Load the `birdRichnessMexico.rds` data from the previous chapter.
 
-```{r, eval=FALSE}
+```{r}
+#| label: birds-load
+#| eval: false
 birdsSf <- readRDS("data/birdRichnessMexico.rds")
 ```
 
@@ -301,18 +333,24 @@ The previous chapter described the global spatial autocorrelation in bird richne
 
 1. Build a k-nearest-neighbor weights matrix with $k = 8$ and row-standardize it.
 
-2. Make a Moran scatterplot for `nSpecies`. Eyeball the four quadrants -- where do most of the points fall?
+2. Make a Moran scatterplot for `nSpecies`. Eyeball the four quadrants. Where do most of the points fall?
 
 3. Run `localmoran` and build a LISA cluster map. Use $\alpha = 0.01$.
 
 4. The global analysis showed that richness is highly structured in space. The LISA map tells you *where* that structure is concentrated. Does the pattern of HH and LL clusters correspond to what you'd expect from Mexican biogeography? Think about where the species-rich areas of Mexico are and what drives them.
 
-5. Are there any spatial outliers -- HL or LH locations -- that catch your eye? Pick one and offer a plausible ecological or geographic explanation for why that location might differ from its neighbors.
+5. Are there any spatial outliers, HL or LH locations, that catch your eye? Pick one and offer a plausible ecological or geographic explanation for why that location might differ from its neighbors.
 
 ### Comparing Global to Local
 
-Think about what you would have missed by stopping at the global Moran's I. How does the LISA map change or sharpen the story? This comparison -- global statistic to local decomposition -- is the kind of thing that belongs in a methods and results section when you are reporting spatial analysis.
+Think about what you would have missed by stopping at the global Moran's I. How does the LISA map change or sharpen the story? This comparison, global statistic to local decomposition, is the kind of thing that belongs in a methods and results section when you are reporting spatial analysis.
 
 ## Further Reading
 
-@anselin1995local is the original paper introducing LISA. Sections 1 through 3 are worth the effort -- the conceptual motivation for why a global statistic is insufficient, and the four categories of local spatial association, are laid out clearly even if the full mathematical treatment is dense.
+@anselin1995local is the original paper introducing LISA. Sections 1 through 3 are worth the effort. The conceptual motivation for why a global statistic is insufficient, and the four categories of local spatial association, are laid out clearly even if the full mathematical treatment is dense.
+
+@getisord1992 introduces the $G_i$ and $G_i^*$ statistics. Read it for the hot-spot view that sits alongside local Moran's I, especially since it is the engine behind the hot-spot tools in desktop GIS.
+
+@fortin2016spatial is a compact overview of spatial autocorrelation, global and local both, and a good place to see how the pieces fit together without wading through a full textbook.
+
+@dormann2007methods surveys how spatial autocorrelation gets handled across ecological analyses. It is less about LISA specifically and more about why you should care, which is a useful frame for deciding when local structure is worth chasing.

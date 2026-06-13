@@ -1,13 +1,18 @@
-## ----echo=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: setup
+#| echo: false
 set.seed(1984)
 
 
-## ----message=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: packages
+#| message: false
 library(tidyverse)
 library(spatstat)
 
 
 ## -----------------------------------------------------------------------------
+#| label: point-pattern
 n <- 12
 area <- 100 # 10 x 10 = 100 square units
 x <- runif(n = n, min = 0, max = 10)
@@ -20,16 +25,19 @@ ggplot() +
 
 
 ## -----------------------------------------------------------------------------
+#| label: dist-matrix
 Dmat <- as.matrix(dist(cbind(x, y)))
 Dmat
 
 
 ## -----------------------------------------------------------------------------
+#| label: dist-vector
 Dvec <- c(Dmat[upper.tri(Dmat)], Dmat[lower.tri(Dmat)])
 Dvec
 
 
 ## -----------------------------------------------------------------------------
+#| label: k-by-hand
 r <- seq(0, 2.5, by = 0.1)
 
 Kr <- numeric(length(r))
@@ -39,6 +47,7 @@ for (i in seq_along(r)) {
 
 
 ## -----------------------------------------------------------------------------
+#| label: k-curve-plot
 kCurves <- tibble(
   r = r,
   Observed = Kr,
@@ -60,11 +69,13 @@ ggplot(kCurves, aes(x = r, y = K, color = series, linetype = series)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: kest-check
 xy <- as.ppp(cbind(x, y), W = c(0, 10, 0, 10))
 xyK <- Kest(xy, r = r, correction = "none")
 
 
 ## -----------------------------------------------------------------------------
+#| label: k-overlay-plot
 ggplot() +
   geom_line(
     data = kCurves, aes(x = r, y = K, color = series, linetype = series),

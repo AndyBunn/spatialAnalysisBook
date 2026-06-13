@@ -36,7 +36,7 @@ Before we get to numbers, let's talk about a plot. The most informative single d
 
 ![](assets/obs_vs_pred_explainer.svg) 
 
-Get in the habit of making this plot whenever you make a model. Summary statistics like those below are useful but they can mislead you in ways this plot makes immediately obvious. A model with a strong systematic bias, where it consistently predicts twice the true value for instance, can produce a respectable-looking $R^2$ depending on how you compute it. The classic example of this is [Anscombe's quartet](https://en.wikipedia.org/wiki/Anscombe%27s_quartet), a set of four datasets constructed to make exactly this point: identical summary statistics can arise from completely different underlying structures, and the numbers alone will never tell you which one you have. Anscombe built it in 1973 specifically to push back against the then-common attitude that plots were unnecessary once you had the statistics. The observed-vs-predicted plot reveals that kind of problem at a glance. We will see many examples of it in the interpolation chapters.
+Get in the habit of making this plot whenever you make a model. Summary statistics like those below are useful but they can mislead you in ways this plot makes immediately obvious. A model with a strong systematic bias, where it consistently predicts twice the true value for instance, can produce a respectable-looking $R^2$ depending on how you compute it. The classic example of this is Anscombe's quartet, a set of four datasets constructed to make exactly this point: identical summary statistics can arise from completely different underlying structures, and the numbers alone will never tell you which one you have. Anscombe built it in 1973 specifically to push back against the then-common attitude that plots were unnecessary once you had the statistics. The observed-vs-predicted plot reveals that kind of problem at a glance. We will see many examples of it in the interpolation chapters.
 
 ### $R^2$
 
@@ -68,7 +68,7 @@ RMSE squares each error before averaging, then takes the square root to return t
 
 In practice this means RMSE is more sensitive to outliers than MAE. If your model makes mostly small errors but occasionally produces a very wrong prediction, RMSE will show that more dramatically than MAE will. There is a useful side effect here: if RMSE is substantially larger than MAE on the same predictions, that is a signal your error distribution has a long tail, meaning a few predictions are quite a lot worse than the rest. When RMSE and MAE are close to each other your errors are more uniformly distributed. RMSE is always greater than or equal to MAE for the same set of predictions. They are equal only when every error is exactly the same size, which never happens in practice.
 
-Statisticians argue about which to use with some dedication. I'm happy to let them [fight about it](https://stats.stackexchange.com/questions/48267/mean-absolute-error-or-root-mean-squared-error). I prefer MAE because it's simpler to interpret. RMSE is more standard in many subfields, including geostatistics, so you should be comfortable computing and interpreting both.
+Statisticians argue about which to use with some dedication. I'm happy to let them fight about it. I prefer MAE because it's simpler to interpret. RMSE is more standard in many subfields, including geostatistics, so you should be comfortable computing and interpreting both.
 
 ```r
 rmse <- sqrt(mean((preds - obs)^2))

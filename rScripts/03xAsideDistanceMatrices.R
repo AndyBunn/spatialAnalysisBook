@@ -1,20 +1,27 @@
-## ----echo=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: setup
+#| echo: false
 set.seed(1984)
 
 
-## ----message=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: packages
+#| message: false
 library(tidyverse)
 library(sf)
 
 
 ## -----------------------------------------------------------------------------
+#| label: sample-points
 dat <- data.frame(
   x = c(1, 3, 5, 2, 6, 4),
   y = c(1, 4, 2, 6, 5, 3)
 )
 
 
-## ----echo=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: sample-points-plot
+#| echo: false
 ggplot(dat, aes(x = x, y = y, label = 1:nrow(dat))) +
   geom_point(size = 4) +
   geom_text(nudge_y = 0.3, size = 3.5) +
@@ -24,25 +31,30 @@ ggplot(dat, aes(x = x, y = y, label = 1:nrow(dat))) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: dist-object
 D <- dist(dat)
 D
 
 
 ## -----------------------------------------------------------------------------
+#| label: class-dist
 class(D)
 
 
 ## -----------------------------------------------------------------------------
+#| label: dist-matrix
 Dmat <- as.matrix(D)
 Dmat
 
 
 ## -----------------------------------------------------------------------------
+#| label: class-compare
 class(Dmat)
 class(D)
 
 
 ## -----------------------------------------------------------------------------
+#| label: verify-symmetry
 # Verify symmetry
 all(Dmat == t(Dmat))
 
@@ -51,6 +63,7 @@ all(diag(Dmat) == 0)
 
 
 ## -----------------------------------------------------------------------------
+#| label: nearest-neighbor
 Dnn <- Dmat
 diag(Dnn) <- NA
 
@@ -60,12 +73,14 @@ nn1
 
 
 ## -----------------------------------------------------------------------------
+#| label: knn
 # 2 nearest neighbors for each point
 nn2 <- apply(Dnn, 1, function(row) order(row)[1:2])
 nn2
 
 
 ## -----------------------------------------------------------------------------
+#| label: stream-cost
 # cost[i,j] = effective distance traveling FROM site i TO site j
 # Sites: 1=downstream, 2=mid, 3=upstream
 # Upstream travel (against current) penalized 4x
@@ -84,11 +99,13 @@ streamCost
 
 
 ## -----------------------------------------------------------------------------
+#| label: check-symmetry
 isSymmetric(streamCost) # FALSE -- as expected
 isSymmetric(Dmat) # TRUE  -- Euclidean is always symmetric
 
 
 ## -----------------------------------------------------------------------------
+#| label: pair-counts
 nVals <- c(10, 100, 500, 1000, 5000, 10000)
 nPairs <- nVals * (nVals - 1) / 2
 
@@ -96,6 +113,7 @@ data.frame(n = nVals, pairs = format(nPairs, big.mark = ","))
 
 
 ## -----------------------------------------------------------------------------
+#| label: dist-memory
 sizes <- sapply(c(100, 500, 1000, 2000), function(n) {
   fake <- data.frame(x = runif(n), y = runif(n))
   object.size(dist(fake))
@@ -108,6 +126,7 @@ data.frame(
 
 
 ## -----------------------------------------------------------------------------
+#| label: st-distance-compare
 # First approach: dist() on raw coordinates
 DDist <- dist(dat)
 
@@ -121,6 +140,7 @@ round(DSf[1:3, 1:3], 3)
 
 
 ## -----------------------------------------------------------------------------
+#| label: mtbaker-sites
 sites <- data.frame(
   name = c("Bellingham", "Glacier", "Concrete", "Anacortes"),
   lon  = c(-122.48, -121.93, -121.75, -122.61),
@@ -129,11 +149,13 @@ sites <- data.frame(
 
 
 ## -----------------------------------------------------------------------------
+#| label: latlon-distances
 DLatlon <- as.matrix(dist(sites[, c("lon", "lat")]))
 round(DLatlon, 3)
 
 
 ## -----------------------------------------------------------------------------
+#| label: projected-distances
 sitesSf <- st_as_sf(sites, coords = c("lon", "lat"), crs = 4326) %>%
   st_transform(32610)
 

@@ -1,16 +1,21 @@
-## ----echo=FALSE, include=FALSE------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: setup
+#| echo: false
+#| include: false
 set.seed(1984)
 
 
-## ----message=FALSE------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: packages
+#| message: false
 library(sf)
 library(tidyverse)
 library(spdep)
 library(tmap)
-library(gstat)
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-load
 meuse2 <- readRDS("../data/meuse2.Rds")
 meuseSf <- st_as_sf(meuse2, coords = c("x", "y")) %>%
   st_set_crs(value = 28992)
@@ -18,17 +23,19 @@ meuseSf$log_lead <- log(meuseSf$lead)
 
 
 ## -----------------------------------------------------------------------------
-k8 <- knearneigh(meuseSf, k = 8)
-nbK8 <- knn2nb(k8)
-W <- nb2listw(nbK8, style = "W")
+#| label: knn-weights
+knn <- knearneigh(meuseSf, k = 8)
+nb <- knn2nb(knn)
+wList <- nb2listw(nb, style = "W")
 
 
 ## -----------------------------------------------------------------------------
+#| label: moran-scatterplot
 # standardize log lead
 meuseSf$z <- as.vector(scale(meuseSf$log_lead))
 
 # compute the spatial lag: weighted average of neighbors' z values
-meuseSf$lag_z <- lag.listw(W, meuseSf$z)
+meuseSf$lag_z <- lag.listw(wList, meuseSf$z)
 
 ggplot(meuseSf, aes(x = z, y = lag_z)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
@@ -46,15 +53,17 @@ ggplot(meuseSf, aes(x = z, y = lag_z)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: moran-slope-check
 # slope of the Moran scatterplot
 moranSlope <- coef(lm(lag_z ~ z - 1, data = as.data.frame(meuseSf)))
 moranSlope
 
 # global Moran's I
-moran.test(meuseSf$log_lead, W)$estimate[1]
+moran.test(meuseSf$log_lead, wList)$estimate[1]
 
 
 ## -----------------------------------------------------------------------------
+#| label: sim-grid
 nSide <- 8
 gridPts <- expand.grid(
   x = 1:nSide,
@@ -70,6 +79,7 @@ gridSf <- st_as_sf(gridPts, coords = c("x", "y"))
 
 
 ## -----------------------------------------------------------------------------
+#| label: sim-map
 ggplot(gridSf) +
   geom_sf(aes(color = z), size = 6) +
   scale_color_viridis_c(name = "z") +
@@ -77,24 +87,29 @@ ggplot(gridSf) +
 
 
 ## -----------------------------------------------------------------------------
-nbSim <- knn2nb(knearneigh(gridSf, k = 4))
-WSim <- nb2listw(nbSim, style = "W")
-moran.test(gridSf$z, WSim)
+#| label: sim-moran-global
+knnSim <- knearneigh(gridSf, k = 4)
+nbSim <- knn2nb(knnSim)
+wListSim <- nb2listw(nbSim, style = "W")
+moran.test(gridSf$z, wListSim)
 
 
 ## -----------------------------------------------------------------------------
-lisaSim <- localmoran(gridSf$z, listw = WSim)
+#| label: sim-localmoran
+lisaSim <- localmoran(gridSf$z, listw = wListSim)
 head(lisaSim)
 
 
 ## -----------------------------------------------------------------------------
+#| label: sim-attach
 gridSf$Ii <- lisaSim[, "Ii"]
 gridSf$pval <- lisaSim[, "Pr(z != E(Ii))"]
 
 
 ## -----------------------------------------------------------------------------
+#| label: sim-cluster-map
 zSim <- as.vector(scale(gridSf$z))
-lagSim <- lag.listw(WSim, zSim)
+lagSim <- lag.listw(wListSim, zSim)
 
 sig <- 0.05
 gridSf$cluster <- case_when(
@@ -109,10 +124,10 @@ ggplot(gridSf) +
   geom_sf(aes(color = cluster), size = 6) +
   scale_color_manual(
     values = c(
-      "High-High"      = "#d7191c",
-      "Low-Low"        = "#2c7bb6",
-      "High-Low"       = "#fdae61",
-      "Low-High"       = "#abd9e9",
+      "High-High"       = "#d7191c",
+      "Low-Low"         = "#2c7bb6",
+      "High-Low"        = "#fdae61",
+      "Low-High"        = "#abd9e9",
       "Not significant" = "grey80"
     )
   ) +
@@ -123,11 +138,13 @@ ggplot(gridSf) +
 
 
 ## -----------------------------------------------------------------------------
-lisa <- localmoran(meuseSf$log_lead, listw = W)
+#| label: meuse-localmoran
+lisa <- localmoran(meuseSf$log_lead, listw = wList)
 head(lisa)
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-cluster
 meuseSf$Ii <- lisa[, "Ii"]
 meuseSf$pval <- lisa[, "Pr(z != E(Ii))"]
 
@@ -144,8 +161,11 @@ table(meuseSf$cluster)
 
 
 ## -----------------------------------------------------------------------------
-tmap_mode("view")
-tm_shape(meuseSf) +
+#| label: meuse-lisa-map
+#| message: false
+tmap_mode("plot")
+tm_basemap("Esri.WorldGrayCanvas") +
+  tm_shape(meuseSf) +
   tm_symbols(
     fill = "cluster",
     fill.scale = tm_scale_categorical(
@@ -164,6 +184,7 @@ tm_shape(meuseSf) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: meuse-local-i-map
 ggplot(meuseSf) +
   geom_sf(aes(color = Ii), size = 2.5) +
   scale_color_gradient2(
@@ -174,6 +195,8 @@ ggplot(meuseSf) +
   labs(title = "Local Moran's I: log lead, Meuse River")
 
 
-## ----eval=FALSE---------------------------------------------------------------
+## -----------------------------------------------------------------------------
+#| label: birds-load
+#| eval: false
 # birdsSf <- readRDS("../data/birdRichnessMexico.rds")
 

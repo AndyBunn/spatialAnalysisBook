@@ -2,7 +2,7 @@
 
 There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It can get deep pretty fast but we aren't going to go there. This is not a GIS-in-R book, and it is not a substitute for one.
 
-If you want the full treatment, two resources will serve you well. [Geocomputation with R](https://r.geocompx.org/) by Lovelace, Nowosad, and Muenchow is the best book I know on the subject and it's free online. The [Data Carpentries spatial curriculum](https://datacarpentry.org/r-raster-vector-geospatial/) covers the fundamentals in a hands-on workshop format. Work through either of those and you'll come out knowing a lot more than we need here.
+If you want the full treatment, two resources will serve you well. Geocomputation with R^[<https://r.geocompx.org/>] by Lovelace, Nowosad, and Muenchow is the best book I know on the subject and it's free online. The Data Carpentries spatial curriculum^[<https://datacarpentry.org/r-raster-vector-geospatial/>] covers the fundamentals in a hands-on workshop format. Work through either of those and you'll come out knowing a lot more than we need here.
 
 What we do need is a working vocabulary for two things: point data and raster data. Those are the main characters in this book. Polygons and lines show up occasionally but they aren't the focus.
 
@@ -12,7 +12,9 @@ We'll use four packages in this chapter. `tidyverse` [@R-tidyverse] for general 
 
 When you encounter a package that you haven't used you can install it. E.g., `install.packages("sf")`. You just have to do that once. Then you can load your packages with `library`.
 
-```{r, include=FALSE}
+```{r}
+#| label: packages
+#| include: false
 library(tidyverse)
 library(sf)
 library(terra)
@@ -26,6 +28,7 @@ The `sf` package handles vector data in R: points, lines, and polygons. We care 
 Let's look at a simple csv file.
 
 ```{r}
+#| label: ca-ozone-load
 californiaOzonePoints <- read_csv("data/californiaOzonePoints.csv")
 head(californiaOzonePoints)
 ```
@@ -33,6 +36,7 @@ head(californiaOzonePoints)
 That's just a plain data frame right now. It has coordinates in it, but R doesn't know they mean anything spatial yet. We will make this into a `sf` object by telling it:
 
 ```{r}
+#| label: ca-ozone-sf
 californiaOzonePointsSF <- st_as_sf(californiaOzonePoints, coords = c("longitude", "latitude"), crs = 4326)
 head(californiaOzonePointsSF)
 ```
@@ -42,6 +46,7 @@ The `coords` argument says which columns are the coordinates. The `crs = 4326` s
 Now R knows these are spatial points. You can plot them:
 
 ```{r}
+#| label: ca-ozone-plot
 plot(californiaOzonePointsSF)
 ```
 
@@ -62,6 +67,7 @@ The `.tif` format (GeoTIFF) is the most common way you'll encounter rasters in t
 The `terra` package handles rasters in R. Its main object is a `SpatRaster`.
 
 ```{r}
+#| label: ca-elevation-load
 californiaElevation <- rast("data/californiaElevation.tif")
 californiaElevation
 ```
@@ -69,6 +75,7 @@ californiaElevation
 That output tells you the essentials: dimensions (rows and columns), resolution (how big each cell is), extent (the geographic bounding box), and CRS. Check those before you do anything else with a new raster. Surprises in any of those fields will cause problems later.
 
 ```{r}
+#| label: ca-elevation-plot
 plot(californiaElevation)
 ```
 
@@ -79,6 +86,7 @@ A few things worth knowing about `terra` objects:
 **Raster math is cell-wise.** Operations apply to every cell at once, like working with a vector. No loops needed.
 
 ```{r}
+#| label: ca-elevation-feet
 californiaElevationFt <- californiaElevation * 3.281
 plot(californiaElevationFt)
 ```
@@ -88,6 +96,7 @@ plot(californiaElevationFt)
 We can plot the ozone stations on top of the elevation surface in one shot. Let's do that with `ggplot`.
 
 ```{r}
+#| label: ca-elevation-map
 ggplot() +
   geom_spatraster(data = californiaElevation) +
   scale_fill_terrain_c(name = "Elevation (m)") +
@@ -108,6 +117,7 @@ The monitoring stations cluster in the valleys and along the coast, which makes 
 **Extracting values at points.** You'll do this quite a bit: you have point observations and a raster surface, and you want to know the raster value at each point location. `terra::extract()` does it. The `terra::` prefix is intentional. `extract()` exists in other packages too, and if you've loaded `tidyverse`, there's a good chance the wrong one is sitting on top. Being explicit saves you a confusing error.
 
 ```{r}
+#| label: extract-elevation
 elevationAtOzonePoints <- terra::extract(californiaElevation, californiaOzonePointsSF)
 head(elevationAtOzonePoints)
 ```
@@ -117,6 +127,7 @@ A field ecologist records species observations at GPS points. You want to know t
 We could attach those to the ozone points
 
 ```{r}
+#| label: attach-elevation
 californiaOzonePointsSF <- californiaOzonePointsSF %>%
   add_column(elevation = elevationAtOzonePoints$elev)
 head(californiaOzonePointsSF)
@@ -125,6 +136,7 @@ head(californiaOzonePointsSF)
 And now we have a nice new data column that we can use any way we like. E.g.,
 
 ```{r}
+#| label: elevation-ozone-plot
 californiaOzonePointsSF %>%
   ggplot(mapping = aes(x = elevation, y = ozone)) +
   geom_point() +
@@ -144,6 +156,7 @@ The fix is to project your data onto a plane. For California, a sensible choice 
 For an `sf` object, use `st_transform()`:
 
 ```{r}
+#| label: ca-ozone-albers
 californiaOzonePointsAlbers <- st_transform(californiaOzonePointsSF, crs = 3310)
 californiaOzonePointsAlbers
 ```
@@ -151,6 +164,7 @@ californiaOzonePointsAlbers
 For a `SpatRaster`, use `project()`:
 
 ```{r}
+#| label: ca-elevation-albers
 californiaElevationAlbers <- project(californiaElevation, "EPSG:3310")
 californiaElevationAlbers
 ```

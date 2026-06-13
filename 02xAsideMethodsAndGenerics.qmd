@@ -17,30 +17,35 @@ In R, many common functions like `summary()`, `plot()`, and `print()` are *gener
 Let's run a linear model and use that as an example.
 
 ```{r}
+#| label: fit-lm
 fit <- lm(mpg ~ wt, data = mtcars)
 ```
 
 Everytime I run a linear model, I ask for a summary of it right away.
 
 ```{r}
+#| label: summary-fit
 summary(fit)
 ```
 
 Note all the stuff in there! Somehow R calculated that from the object called `fit`. Let's look at that object. `fit` is a `list` with a bunch of stuff in it that authors of the `lm` function think will be useful to you. Here is its structure.
 
 ```{r}
+#| label: str-fit
 str(fit)
 ```
 
 That list has 12 things in it including the coefficients, residuals, fitted values and a lot more. And you can reach right in and grab them. A fitted model is just a list, and you pull pieces out by name with the `$` operator, the same way you would with any list or data frame.
 
 ```{r}
+#| label: fit-coefficients
 fit$coefficients
 ```
 
 So the coefficients were sitting there all along. R also gives you a set of tidier accessor functions that do the same job:
 
 ```{r}
+#| label: coefficients-fit
 coefficients(fit)
 ```
 
@@ -49,12 +54,14 @@ Why bother with `coefficients()` when `fit$coefficients` already works? Because 
 Not everything you'd want is sitting in that list, though. The t-statistics, p-values, and $R^2$ you'd report for a linear model aren't stored anywhere. `summary()` computes them on the fly from what is there. Let's revisit.
 
 ```{r}
+#| label: summary-fit-revisit
 summary(fit)
 ```
 
 Ok. Check that out. We got a really nice formatted output that helps us interpret the linear model using the `summary` function. But note that the output of `summary(fit)` is really different than getting a summary of a numeric vector like the `mpg` in the `mtcars` data that went into the model.
 
 ```{r}
+#| label: summary-mpg
 summary(mtcars$mpg)
 ```
 
@@ -78,18 +85,21 @@ This system is called S3. It's the oldest and most common object system in R, an
 You can look under the hood:
 
 ```{r}
+#| label: class-fit
 class(fit)
 ```
 
 That tells you `fit` is of class `"lm"`. Now you can see all the methods that currently exist for summary in your environment. If you load more packages and you'll see more methods show up here.
 
 ```{r}
+#| label: methods-summary
 methods(summary)
 ```
 
 And if you want to see the actual code that runs when you call `summary(fit)`, use `getS3method`:
 
 ```{r}
+#| label: gets3method-summary-lm
 getS3method("summary", "lm")
 ```
 
@@ -109,6 +119,7 @@ Look that over. Try to find where the $R^2$ is calculated.
 You can look at the generic directly:
 
 ```{r}
+#| label: summary-generic
 summary
 ```
 

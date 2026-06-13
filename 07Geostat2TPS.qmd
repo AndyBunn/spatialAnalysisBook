@@ -42,7 +42,7 @@ The whole equation is saying: find the surface $f$ that fits the data reasonably
 
 TPS belongs to a broader family called **radial basis functions (RBFs)**. The "radial" part means the basis functions depend only on distance from each data point, similar in spirit to the distance weights in IDW. The difference is that TPS combines all these basis functions into a single global surface, whereas IDW makes each prediction locally from its nearest neighbors. That global character is why TPS avoids the bullseye problem: instead of each data point dominating its own neighborhood, TPS has to reconcile all the points simultaneously. The downside is that what happens in one corner of the domain can subtly influence every other corner.
 
-There is no toy example here the way there was for IDW. I can't walk through the TPS calculation by hand the way I walked through the weighted average. The matrix math involved is doable in principle but not particularly illuminating. For our purposes we will trust the implementation and focus on what the surface looks like and how it performs. If you want the gory details [this vignette](https://github.com/NCAR/fields/blob/master/fieldsVignette.pdf) by Ashton Wiens and Mitch Krock is excellent.
+There is no toy example here the way there was for IDW. I can't walk through the TPS calculation by hand the way I walked through the weighted average. The matrix math involved is doable in principle but not particularly illuminating. For our purposes we will trust the implementation and focus on what the surface looks like and how it performs. If you want the gory details, the `fields` package vignette by Ashton Wiens and Mitch Krock is excellent.^[<https://github.com/NCAR/fields/blob/master/fieldsVignette.pdf>]
 
 ## Application
 
