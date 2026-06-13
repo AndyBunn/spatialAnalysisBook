@@ -65,7 +65,7 @@ Note that `meuse.all` from `gstat` has 164 observations, nine more than the 155 
 
 ### Categorical variable codes
 
-**Soil type** (`soil`) — Dutch 1:50,000 soil map:
+**Soil type** (`soil`), Dutch 1:50,000 soil map:
 
 | Code | Name | Description |
 |---|---|---|
