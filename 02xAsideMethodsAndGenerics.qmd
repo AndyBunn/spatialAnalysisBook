@@ -2,7 +2,7 @@
 
 ## You’ve Come a Long Way in R
 
-In your journey through the curriculum, you’ve learned a lot of R. You can wrangle data, fit models, make plots, write functions, etc. But you might also be starting to wonder:  **What’s actually going on under the hood?**
+By this point, you’ve learned a lot of R. You can wrangle data, fit models, make plots, write functions, etc. But you might also be starting to wonder:  **What’s actually going on under the hood?**
 
 For example, how does `summary()` know what to do when you give it the output from `lm`? Or why does `plot()` sometimes give you a histogram and other times a scatterplot?
 

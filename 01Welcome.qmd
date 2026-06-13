@@ -62,6 +62,20 @@ One thing you will not find in this book is areal data analysis. Watersheds, lan
 
 :::
 
+## What You Should Know Beforehand
+
+This isn't a book for absolute beginners, and a few things will go more smoothly if you've seen them before. None of it is a hard prerequisite, but here's an honest accounting of what I'm assuming.
+
+**R basics.** You should be comfortable enough in R to read a data file, poke at a data frame, write a function, and not panic when something throws an error. You don't need to be an expert. If you can follow along and look things up when you're stuck, you're ready.
+
+**Some statistics.** We lean on the standard introductory toolkit throughout: correlation, standard errors, p-values, and linear models. You don't need to have aced a theory course, but the ideas should feel familiar rather than brand new. If "fit a linear model and look at the residuals" means nothing to you, a stats class first will make this book a lot more rewarding.
+
+**Matrix algebra (gently).** It comes up, mostly in the Asides, when I want to show what a method is actually doing under the hood. I keep it gentle and you do not need to bring any of it with you. If you've never multiplied two matrices, the main chapters will still work fine. The Asides are there if you want to look deeper, not a wall you have to climb.
+
+**GIS is helpful but not required.** If you've made a map in QGIS or ArcGIS, some of the spatial concepts will already make sense. If you haven't, no problem. We cover what you need as we go, and this isn't a GIS book anyway.
+
+One more thing about the code. We mostly use **tidyverse** syntax: `dplyr` for wrangling, `ggplot2` for plots, the pipe to chain it together. If that style is new to you, don't let it slow you down. There are loads and loads of free resources out there for learning it. The place to start is [tidyverse.org](https://www.tidyverse.org/), and from there [R for Data Science](https://r4ds.hadley.nz/)[@wickham2023r4ds] is the canonical free book.
+
 ## Setup
 
 The book is built around R, so you'll need a working R installation. The code here was written and tested with `r R.version.string`. The package versions used in each chapter are recorded in the References section, so if something breaks you have a fixed point to compare against. You should be reasonably up to date on your versions of R, RStudio, and relevant packages. If you're not sure, run:
