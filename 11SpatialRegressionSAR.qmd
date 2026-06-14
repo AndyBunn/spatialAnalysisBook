@@ -1,6 +1,7 @@
 # Spatial Regression: Lag and Error Models
 
 ```{r,echo=FALSE, include=FALSE}
+#| label: setup
 set.seed(130)
 ```
 
@@ -17,6 +18,7 @@ This module follows directly from the [Regression: GLS](10RegressionGLS.html) ch
 ## Packages
 
 ```{r, message=FALSE}
+#| label: packages
 library(spatialreg)
 library(spdep)
 library(sf)
@@ -29,27 +31,27 @@ library(tidyverse)
 
 Let's be concrete about what these models actually say.
 
-A note on notation before we dive in. In what follows, $y$ is a vector of $n$ response values (one per location), $X$ is the design matrix, $\beta$ is the vector of regression coefficients, and $W$ is the spatial weights matrix you already know from Moran's I and LISA. The operation $Wy$ computes a weighted average of $y$ at neighboring locations -- that is the spatial lag.
+A note on notation before we dive in. In what follows, $\mathbf{y}$ is a vector of $n$ response values (one per location), $\mathbf{X}$ is the design matrix, $\boldsymbol{\beta}$ is the vector of regression coefficients, and $\mathbf{W}$ is the spatial weights matrix you already know from Moran's I and LISA. The operation $\mathbf{W}\mathbf{y}$ computes a weighted average of $y$ at neighboring locations -- that is the spatial lag.
 
 You will also notice that the same Greek letters appear here with different meanings than they had in earlier chapters. In the kriging chapter, $\lambda$ was the vector of interpolation weights. Here it is a scalar measuring how strongly errors are correlated across neighbors. In the GLS chapter, $\rho$ appeared in the code as the parameter we used to generate autocorrelated errors. Here $\rho$ is the spatial autoregression coefficient on the response itself. This is not a conspiracy. Notation is there to serve the math, not to rule it, and the same letters get recycled constantly across fields, papers, and packages. Treat each symbol as local to what you are reading.
 
 **Spatial error model (SEM):**
 
-$$y = X\beta + u, \quad u = \lambda W u + \varepsilon$$
+$$\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \mathbf{u}, \quad \mathbf{u} = \lambda \mathbf{W} \mathbf{u} + \boldsymbol{\varepsilon}$$
 
-The residuals $u$ follow a spatial autoregressive process. A residual at location $i$ is a function of the residuals at its neighbors (via $\lambda W$) plus independent noise $\varepsilon$. The coefficient $\lambda$ (lambda) captures how strongly residuals are autocorrelated across neighbors. The coefficients $\beta$ have the same interpretation as in OLS: a one-unit increase in $x$ is associated with a $\beta_1$ change in $y$, on average, holding everything else constant.
+The residuals $\mathbf{u}$ follow a spatial autoregressive process. A residual at location $i$ is a function of the residuals at its neighbors (via $\lambda \mathbf{W}$) plus independent noise $\boldsymbol{\varepsilon}$. The coefficient $\lambda$ (lambda) captures how strongly residuals are autocorrelated across neighbors. The coefficients $\boldsymbol{\beta}$ have the same interpretation as in OLS: a one-unit increase in $x$ is associated with a $\beta_1$ change in $y$, on average, holding everything else constant.
 
 Ecologically, the SEM is the right choice when space is a nuisance. Your predictors don't capture all the spatial structure in $y$, so the leftovers are autocorrelated. Classic example: you're modeling tree growth as a function of soil nitrogen, but soil moisture, microclimate, and a dozen other unmeasured things also drive growth and are themselves spatially structured. The SEM absorbs that shared unmeasured spatial structure into the error term and gives you clean, valid inference on the nitrogen-growth relationship.
 
 **Spatial lag model (SLM):**
 
-$$y = \rho W y + X\beta + \varepsilon$$
+$$\mathbf{y} = \rho \mathbf{W} \mathbf{y} + \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}$$
 
-Now the response variable $y$ at each location appears on both sides of the equation. It is a function of $Wy$ -- the weighted average of $y$ at neighboring locations -- plus your predictors $X$ and independent noise $\varepsilon$. The coefficient $\rho$ (rho) is a scalar that captures how strongly $y$ at one location is pulled toward $y$ at its neighbors.
+Now the response variable $\mathbf{y}$ at each location appears on both sides of the equation. It is a function of $\mathbf{W}\mathbf{y}$ -- the weighted average of $y$ at neighboring locations -- plus your predictors $\mathbf{X}$ and independent noise $\boldsymbol{\varepsilon}$. The coefficient $\rho$ (rho) is a scalar that captures how strongly $y$ at one location is pulled toward $y$ at its neighbors.
 
-This is a fundamentally different claim from the SEM. The SLM says there is a spatial spillover process: $y$ at one location genuinely influences $y$ at neighboring locations. Classic examples are disease spread (infection rate in one area influences neighboring areas), invasive species dispersal (abundance at one site drives colonization of nearby sites), or any system where diffusion, movement, or social contagion is part of the process. If the biology or ecology predicts that kind of mechanism, the lag model is the one to reach for.
+This is a fundamentally different claim from the SEM. The SLM says there is a spatial spillover process: $y$ at one location influences $y$ at neighboring locations. Classic examples are disease spread (infection rate in one area influences neighboring areas), invasive species dispersal (abundance at one site drives colonization of nearby sites), or any system where diffusion, movement, or social contagion is part of the process. If the biology or ecology predicts that kind of mechanism, the lag model is the one to reach for.
 
-One important caution: the $\beta$ coefficients from the SLM are not total marginal effects. More on this below.
+One important caution: the $\boldsymbol{\beta}$ coefficients from the SLM are not total marginal effects. More on this below.
 
 ## Choosing Between Them: LM Tests
 
@@ -70,6 +72,7 @@ We will build simulated data following the same spirit as the GLS chapter: a res
 ### Data
 
 ```{r, message=FALSE, warning=FALSE}
+#| label: toy-data
 n <- 75
 easting <- runif(n, 0, 100)
 northing <- runif(n, 0, 100)
@@ -98,6 +101,7 @@ dat <- data.frame(easting, northing, y, x)
 We also need a k-nearest-neighbor weights matrix for the SAR models. Same approach as the LISA chapter.
 
 ```{r}
+#| label: toy-weights
 nbK8 <- knn2nb(knearneigh(points, k = 8))
 W <- nb2listw(nbK8, style = "W")
 ```
@@ -107,6 +111,7 @@ W <- nb2listw(nbK8, style = "W")
 Start with OLS.
 
 ```{r}
+#| label: toy-ols
 ols <- lm(y ~ x, data = dat)
 dat$olsResids <- residuals(ols)
 moran.test(dat$olsResids, W)
@@ -117,6 +122,7 @@ Moran's I is significantly positive on the OLS residuals. We know we have a prob
 ### LM Tests
 
 ```{r}
+#| label: toy-lmtests
 lm.RStests(ols, listw = W, test = "all")
 ```
 
@@ -125,6 +131,7 @@ Both RSerr and RSlag will be significant -- a spatial error process can produce 
 ### Spatial Error Model
 
 ```{r}
+#| label: toy-sem
 semFit <- errorsarlm(y ~ x, data = dat, listw = W)
 summary(semFit)
 ```
@@ -134,6 +141,7 @@ The coefficient table gives $\hat\beta_0$ and $\hat\beta_1$, interpreted exactly
 Check the residuals.
 
 ```{r}
+#| label: toy-sem-resids
 dat$semResids <- residuals(semFit)
 moran.test(dat$semResids, W)
 ```
@@ -145,6 +153,7 @@ Moran's I on the SEM residuals should be near zero. The spatial structure has be
 For comparison, fit the lag model on the same data.
 
 ```{r}
+#| label: toy-slm
 slmFit <- lagsarlm(y ~ x, data = dat, listw = W)
 summary(slmFit)
 ```
@@ -152,6 +161,7 @@ summary(slmFit)
 The lag model estimates $\rho$, the spatial autoregression of the response. Because the data were generated under an error process, this is the wrong model. It fits reasonably (the models are related) but the LM tests already pointed us elsewhere, and the AIC confirms it.
 
 ```{r}
+#| label: toy-aic
 AIC(semFit, slmFit)
 ```
 
@@ -164,6 +174,7 @@ Now let's run this on data we didn't build.
 The `birdRichnessMexico` dataset has 200 point locations across Mexico with bird species richness (`nSpecies`) and six WorldClim bioclimatic variables extracted at each location. Maps use `tmap` [@tmap2018]. Two predictors have strong ecological justification: mean annual precipitation (`map`) and temperature annual range (`tempRange`). Wetter areas support more species; thermally variable areas support fewer. That's the energy-water hypothesis and Rapoport's rule operating across the Mexican landscape.
 
 ```{r, message=FALSE}
+#| label: bird-data
 library(tmap)
 birdsSf <- readRDS("data/birdRichnessMexico.rds")
 coordsBirds <- st_coordinates(birdsSf)
@@ -175,7 +186,8 @@ WBirds <- nb2listw(nbBirds, style = "W")
 Map the richness surface first.
 
 ```{r}
-tmap_mode("view")
+#| label: bird-richness-map
+tmap_mode("plot")
 tm_shape(birdsSf) +
   tm_symbols(
     col = "nSpecies", palette = "viridis",
@@ -186,13 +198,15 @@ tm_shape(birdsSf) +
 ### OLS and Residual Check
 
 ```{r}
+#| label: bird-ols
 olsBirds <- lm(nSpecies ~ map + tempRange, data = birdsSf)
 summary(olsBirds)
 ```
 
-R² of 0.80. Both predictors are significant with the expected signs. Now check the residuals.
+$R^2$ of 0.80. Both predictors are significant with the expected signs. Now check the residuals.
 
 ```{r}
+#| label: bird-ols-moran
 birdsSf$ols_resids <- residuals(olsBirds)
 moran.test(birdsSf$ols_resids, WBirds)
 ```
@@ -200,6 +214,7 @@ moran.test(birdsSf$ols_resids, WBirds)
 Moran's I is 0.40, strongly significant. The model explains 80% of the variance but the residuals carry substantial spatial signal. Map them to see where the model is over- and under-predicting.
 
 ```{r}
+#| label: bird-resid-map
 tm_shape(birdsSf) +
   tm_symbols(
     col = "ols_resids",
@@ -215,6 +230,7 @@ The pattern is not random. There are regions where richness is consistently high
 ### LM Tests
 
 ```{r}
+#| label: bird-lmtests
 lm.RStests(olsBirds, listw = WBirds, test = "all")
 ```
 
@@ -223,6 +239,7 @@ Both RSerr and RSlag are significant. Go to the robust tests. adjRSerr is large 
 ### Spatial Error Model
 
 ```{r}
+#| label: bird-sem
 semBirds <- errorsarlm(nSpecies ~ map + tempRange,
   data = birdsSf, listw = WBirds
 )
@@ -232,6 +249,7 @@ summary(semBirds)
 Lambda is 0.72, highly significant. There is strong spatial autocorrelation in the errors above and beyond what precipitation and temperature range explain. Check the residuals.
 
 ```{r}
+#| label: bird-sem-moran
 birdsSf$sem_resids <- residuals(semBirds)
 moran.test(birdsSf$sem_resids, WBirds)
 ```
@@ -239,6 +257,7 @@ moran.test(birdsSf$sem_resids, WBirds)
 Moran's I drops to near zero. The spatial structure has been absorbed into lambda. Compare AIC.
 
 ```{r}
+#| label: bird-aic
 AIC(olsBirds, semBirds)
 ```
 
@@ -257,6 +276,7 @@ In an OLS or SEM, $\hat\beta_1 = 0.5$ means: a one-unit increase in $x$ is assoc
 In a SLM, a change in $x_i$ affects $y_i$ directly, but that change in $y_i$ then propagates to neighboring locations because their $y$ values depend on $y_i$ via the lag term. Those ripples feed back. The $\hat\beta_1$ from `lagsarlm` is only the direct local effect, before the spatial propagation plays out. The full marginal effect, including spillovers, requires computing impacts from the fitted model.
 
 ```{r}
+#| label: slm-impacts
 impacts(slmFit, listw = W, R = 500)
 ```
 
@@ -270,17 +290,18 @@ They are often interchangeable in practice for the spatial error case.
 
 GLS uses a variogram, a continuous function of distance, to model the error correlation structure. It captures the range, sill, and nugget of the spatial dependence and is very flexible. SAR models use a discrete neighbor structure: you define who counts as a neighbor and the autocorrelation operates only among neighbors. GLS tends to work better when you have a clear distance-decay structure and a reasonable sample size to fit the variogram. SAR works better when your data are naturally defined by adjacency or neighborhood (watershed catchments, habitat patches, gridded climate data) and when you want to lean on the weights matrix you have already built for exploratory work like LISA.
 
-The spatial lag model has no real GLS equivalent. If the biology or ecology predicts a spillover or diffusion process, fit the lag model. Just be careful with the coefficients.
+The spatial lag model has no direct GLS equivalent. If the biology or ecology predicts a spillover or diffusion process, fit the lag model. Just be careful with the coefficients.
 
 ## Wrapping Up
 
-GLS and SAR are both corrections to the same problem: OLS residuals that carry spatial signal the model hasn't explained. Which one you reach for depends on your data and your question. For most field-based environmental science, GLS is the workhorse. It's flexible, connects directly to the variogram, and the output is easy to interpret. SAR is worth knowing when the spatial structure is better described by a neighbor graph than a continuous distance decay, or when there's a credible spillover process in the response itself. That's a real mechanism sometimes -- think about how disease spreads, or how animal behavior in one patch influences neighboring patches. But for lead in floodplain soil, space is probably just a proxy for flood exposure. Use GLS and sleep well.
+GLS and SAR are both corrections to the same problem: OLS residuals that carry spatial signal the model hasn't explained. Which one you reach for depends on your data and your question. For most field-based environmental science, GLS is the workhorse. It's flexible, connects directly to the variogram, and the output is easy to interpret. SAR is worth knowing when the spatial structure is better described by a neighbor graph than a continuous distance decay, or when there's a credible spillover process in the response itself. Sometimes that mechanism is at work -- think about how disease spreads, or how animal behavior in one patch influences neighboring patches. But for lead in floodplain soil, space is probably just a proxy for flood exposure. Use GLS and sleep well.
 
 ## Exercises
 
 The Meuse River data contains several candidate predictors for soil lead contamination. `river_dist_m` is the distance from the river channel in meters and `ffreq` is a flooding frequency class (a factor with three levels: 1 = most frequent, 3 = least frequent). Both are plausible drivers of lead deposition: proximity to the channel means exposure to recent flood sediment, and flooding frequency determines how much sediment accumulates.
 
 ```{r, eval=FALSE}
+#| label: exercise-data
 meuse2 <- readRDS("data/meuse2.Rds")
 meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
 meuseSf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)
