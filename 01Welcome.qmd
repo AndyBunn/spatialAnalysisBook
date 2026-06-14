@@ -64,7 +64,7 @@ One thing you will not find in this book is areal data analysis. Watersheds, lan
 
 ## What You Should Know Beforehand
 
-This isn't a book for absolute beginners, and a few things will go more smoothly if you've seen them before. None of it is a hard prerequisite, but here's an honest accounting of what I'm assuming.
+This isn't a book for absolute beginners, and a few things will go more smoothly if you've seen them before. None of it is a hard prerequisite, but here's a plain accounting of what I'm assuming.
 
 **R basics.** You should be comfortable enough in R to read a data file, poke at a data frame, write a function, and not panic when something throws an error. You don't need to be an expert. If you can follow along and look things up when you're stuck, you're ready.
 

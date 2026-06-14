@@ -1,5 +1,7 @@
 # Spatial Data in R: A Quick Orientation
 
+## Big Idea
+
 There is a lot to know about spatial data in R. A lot. Object classes, coordinate reference systems, projections, spatial joins, raster math, vector operations. It can get deep pretty fast but we aren't going to go there. This is not a GIS-in-R book, and it is not a substitute for one.
 
 If you want the full treatment, two resources will serve you well. Geocomputation with R^[<https://r.geocompx.org/>] by Lovelace, Nowosad, and Muenchow is the best book I know on the subject and it's free online. The Data Carpentries spatial curriculum^[<https://datacarpentry.org/r-raster-vector-geospatial/>] covers the fundamentals in a hands-on workshop format. Work through either of those and you'll come out knowing a lot more than we need here.
@@ -8,13 +10,15 @@ What we do need is a working vocabulary for two things: point data and raster da
 
 So that's the plan for this chapter. Quick introduction to `sf` for points. Quick introduction to `terra` for rasters. Then we move on.
 
-We'll use four packages in this chapter. `tidyverse` [@R-tidyverse] for general data wrangling, `sf` [@R-sf] for vector spatial data, `terra` [@R-terra], and `tidyterra` [@R-tidyterra] for rasters. You'll see these same packages throughout the book. Full citations are in the [References](12References.html) chapter at the back.
+## Packages
+
+We'll use four packages in this chapter. `tidyverse` [@R-tidyverse] for general data wrangling, `sf` [@R-sf] for vector spatial data, `terra` [@R-terra], and `tidyterra` [@R-tidyterra] for rasters. You'll see these same packages throughout the book. Full citations are in the [References](13References.html) chapter at the back.
 
 When you encounter a package that you haven't used you can install it. E.g., `install.packages("sf")`. You just have to do that once. Then you can load your packages with `library`.
 
 ```{r}
 #| label: packages
-#| include: false
+#| message: false
 library(tidyverse)
 library(sf)
 library(terra)

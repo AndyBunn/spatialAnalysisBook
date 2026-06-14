@@ -103,6 +103,7 @@ The full WorldCover legend has a few additional classes (snow/ice, mangroves, mo
 ### Maps
 
 ```{r, message=FALSE, warning=FALSE}
+#| label: meuse-grid-maps
 #| fig-width: 10
 #| fig-height: 12
 library(tidyverse)
