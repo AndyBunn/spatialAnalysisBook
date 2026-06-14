@@ -138,15 +138,15 @@ plot(leadVar,
 #| label: toy-data
 #| fig-width: 5
 #| fig-height: 5
-foo <- data.frame(
+toyDat <- data.frame(
   x = c(1, 3, 1, 4, 5),
   y = c(5, 4, 3, 5, 1),
   z = c(100, 105, 105, 100, 115)
 )
-foo
+toyDat
 
 toyPlot <- ggplot() +
-  geom_point(data = foo, aes(x = x, y = y, size = z)) +
+  geom_point(data = toyDat, aes(x = x, y = y, size = z)) +
   lims(x = c(0, 6), y = c(0, 6)) +
   coord_equal() +
   theme_minimal()
@@ -168,7 +168,7 @@ toyPlot +
 
 ## ----echo=FALSE---------------------------------------------------------------
 #| label: toy-distances
-d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
+d2s0 <- as.matrix(dist(cbind(c(toyDat$x, 2), c(toyDat$y, 4))))[1:5, 6]
 
 
 ## ----echo=FALSE---------------------------------------------------------------
@@ -181,7 +181,7 @@ g <- sphGamma(d2s0)
 
 ## ----echo=FALSE---------------------------------------------------------------
 #| label: toy-gamma
-dMat <- as.matrix(dist(cbind(foo$x, foo$y)))
+dMat <- as.matrix(dist(cbind(toyDat$x, toyDat$y)))
 G <- sphGamma(dMat)
 diag(G) <- 0
 
@@ -189,7 +189,7 @@ diag(G) <- 0
 ## ----echo=FALSE---------------------------------------------------------------
 #| label: toy-lambda
 lambda <- solve(G) %*% g
-zhat <- sum(lambda[, 1] * foo$z)
+zhat <- sum(lambda[, 1] * toyDat$z)
 
 
 ## ----echo=FALSE---------------------------------------------------------------

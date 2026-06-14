@@ -9,6 +9,7 @@ Standard OLS regression assumes that the errors are independent. With spatial da
 You'll want to install the packages below. We are going to fit a linear model using GLS as opposed to ordinary least squares and thus need `nlme`[@R-nlme] as well as some of our other spatial standards: `gstat`[@R-gstat], `spdep`[@R-spdep], `ncf`[@R-ncf], and `automap`[@R-automap]. As always, `tidyverse`[@R-tidyverse] for data wrangling.
 
 ```{r, message=FALSE}
+#| label: packages
 library(automap)
 library(gstat)
 library(nlme)
@@ -41,7 +42,7 @@ In general, here is a good approach when dealing with spatial data in a regressi
 ## GLS and OLS
 That four-step workflow makes GLS sound straightforward in outline. It helps to understand why GLS fixes what OLS gets wrong.
 
-We have all been taught OLS. OLS is a **method** for estimating the unknown parameters in a linear regression model, e.g., the intercept ($\beta_0$) and slope ($\beta_1$) of $y = \beta_0 + \beta_1 x$. It works by finding the values that minimize the sum of squared errors. When the assumptions are met (errors are independent, equal variance, normal) the OLS estimators are optimal, often called BLUE: Best Linear Unbiased Estimators. OLS has a nice property that it can be taught without matrix algebra and connects naturally to ideas like correlation that most of us learn first in intro stats.
+We have all been taught OLS. OLS is a method for estimating the unknown parameters in a linear regression model, e.g., the intercept ($\beta_0$) and slope ($\beta_1$) of $y = \beta_0 + \beta_1 x$. It works by finding the values that minimize the sum of squared errors. When the assumptions are met (errors are independent, equal variance, normal) the OLS estimators are optimal, often called BLUE: Best Linear Unbiased Estimators. OLS has a nice property that it can be taught without matrix algebra and connects naturally to ideas like correlation that most of us learn first in intro stats.
 
 Here is the problem with autocorrelated errors. OLS treats every observation as carrying the same amount of independent information. But when errors are spatially autocorrelated, nearby observations share information: they are not fully independent. A positive residual at one location is likely to be accompanied by positive residuals nearby, not because of anything $x$ is doing, but because of unmeasured spatial structure in the system. OLS ignores this and effectively overcounts the information in the data. The practical consequence is that standard errors on the coefficient estimates tend to be underestimated when residuals are positively autocorrelated at short distances, which means t-statistics get inflated and p-values get too small. The coefficients themselves ($\hat\beta_0$, $\hat\beta_1$) may still be unbiased, but they are inefficiently estimated and any inference from the standard errors is suspect.
 
@@ -56,10 +57,12 @@ Here is our goal: We will create a variable `y` that is a function of `x` but wi
 First, I'm going to make some autocorrelated noise $\epsilon$. This bit of code is not for the faint of heart. You can hum your way through it and know that at the end the variable $\epsilon$ will be spatially autocorrelated. If you want to follow along: we are making a variable $\epsilon$ that has spatial autocorrelation $\rho$ in the form $\epsilon = \rho W + e$ where $W$ is a weights matrix following an inverse distance weights process and $e$ is random noise ($N(0,1)$). We make `n` random points following complete spatial randomness (using `runif`) and then do some calculations to determine how each point is linked to others based on their distances (`dnearneigh` and `nbdists`). Based on the distances we make a weights matrix following IDW with power `p`. We get the spatial autocorrelation generating operator for $\rho$ via the weights matrix and then multiply by some white noise (`rnorm`) to get $\epsilon$. The details on this last step involve some matrix inversions that we don't need to unpack.
 
 ```{r,echo=FALSE}
+#| label: setup
 set.seed(3515) # 234 #104
 ```
 
 ```{r,message=FALSE, warning=FALSE}
+#| label: make-epsilon
 # We will do n points
 n <- 75
 
@@ -89,6 +92,7 @@ epsilon <- scale(epsilon[, 1])[, 1]
 OK, by great magic we now have a variable that is from random spatial points but has spatially autocorrelated values (that follow an IDW process). If you want, you can imagine that $\epsilon$ is a variable in nature that is spatially autocorrelated that we didn't measure (e.g., maybe soil moisture availability following the tree example above). How intense is the spatial autocorrelation?
 
 ```{r}
+#| label: epsilon-correlogram
 epsilonCorrelog <- spline.correlog(
   x = easting, y = northing,
   z = epsilon, resamp = 50, quiet = TRUE
@@ -101,6 +105,7 @@ We are going to use $\epsilon$ as the error term in a model. I'll use the terms 
 We'll now make `x` and then $y=\beta_0 + \beta_1(x) + \epsilon$. We will run a linear model and look at the residuals with a correlogram.
 
 ```{r}
+#| label: make-xy
 # Generate x as noise.
 x <- rnorm(n)
 # Generate y as a function of x and epsilon
@@ -115,6 +120,7 @@ dat <- data.frame(easting, northing, y, x)
 
 So in our thought experiment here are the data. The independent variable `x`:
 ```{r}
+#| label: plot-x
 ggplot(data = dat, mapping = aes(
   x = easting, y = northing,
   size = x, fill = x
@@ -128,6 +134,7 @@ ggplot(data = dat, mapping = aes(
 
 And the dependent variable `y`:
 ```{r}
+#| label: plot-y
 ggplot(data = dat, mapping = aes(
   x = easting, y = northing,
   size = y, fill = y
@@ -145,16 +152,34 @@ Following our imagined example above we have a dependent variable `y` (tree grow
 We will start by assuming `epsilon` follows an iid process (e.g., $N(0,1)$) and we will fit a model with uncorrelated errors. Here we use `gls` but this gives the same result as `lm` would because `gls` assumes iid errors unless told otherwise.
 
 ```{r}
+#| label: gls-naive
 # Fit a model using gls
 glsNaive <- gls(y ~ x, dat)
 summary(glsNaive)
 ```
 
-We fit a linear model of the form $y=\beta_0 + \beta_1x$ using GLS and got estimates for the intercept ($\hat\beta_0$) and slope ($\hat\beta_1$). We assumed that the error term was uncorrelated. Looking at summary, we can see the estimate of the slope ($\hat\beta_1$) is `r round(summary(glsNaive)$tTable[2,1],3)` and significantly different from zero. The important thing to wrap your head around here is that we just fit GLS with uncorrelated errors, meaning it's essentially identical to OLS. Compare the above to the more familiar `summary(lm(y~x,data=dat))`.
+We fit a linear model of the form $y=\beta_0 + \beta_1x$ using GLS and got estimates for the intercept ($\hat\beta_0$) and slope ($\hat\beta_1$). We assumed that the error term was uncorrelated. Looking at summary, we can see the estimate of the slope ($\hat\beta_1$) is `r round(summary(glsNaive)$tTable[2,1],3)` and significantly different from zero. The important thing to wrap your head around here is that we just fit GLS with uncorrelated errors, meaning it's essentially identical to OLS. Compare the above to the more familiar `summary(lm(y~x,data=dat))`. The coefficients, standard errors, and t-statistics match. But the two summaries are laid out differently, and if you came up on `lm` the `gls` version will look a little foreign at first.
+
+::: {.callout-note}
+
+## Reading a gls summary
+
+The coefficients table is the part you already know: an estimate, a standard error, a t-value, and a p-value for each term, tested the same way `lm` tests them. Everything around it is dressed differently.
+
+The header says `Generalized least squares fit by REML` where `lm` would say `Call`. That tells you the estimation method, and it is the same REML from the callout above. Just under it you get AIC, BIC, and the log-likelihood printed by default, because a model fit by likelihood hands you those for free. With `lm` you'd call `AIC()` yourself.
+
+Two things from the `lm` summary are missing on purpose. There is no $R^2$ and no overall F-statistic. $R^2$ is built on splitting the total sum of squares into an explained part and a residual part, and that split only behaves once you assume iid errors. Weight the observations by a covariance structure and the tidy decomposition falls apart, so `nlme` declines to print a number that would mislead you. If you go looking for $R^2$ and can't find it, that's why. Use AIC for comparison instead.
+
+A few smaller cosmetic shifts. The coefficient columns are spelled `Value`, `Std.Error`, `t-value`, and `p-value`, and there are no significance stars. The residual five-number summary is labeled `Standardized residuals`, since these are normalized by the fitted covariance. And `gls` prints a `Correlation:` block by default that `lm` hides unless asked. Watch out: that block is the correlation among the coefficient estimates, not the spatial correlation of the residuals. Different thing.
+
+When we add a correlation structure in a moment, the summary will grow one more block reporting the estimated range and nugget. That block is the whole reason we are here, and the naive model above doesn't have it.
+
+:::
 
 Since these data are spatial, the key for us is to look at the residuals and see if they are autocorrelated. Let's map them first.
 
 ```{r}
+#| label: naive-resids-map
 # Add residuals to dat
 dat$glsNaiveResids <- residuals(glsNaive, type = "normalized")
 ggplot(data = dat, mapping = aes(
@@ -170,6 +195,7 @@ ggplot(data = dat, mapping = aes(
 From the map, the residuals look aggressively non-random. Positive values are near positive values and negative ones near negative values. Let's quantify that with a correlogram.
 
 ```{r}
+#| label: naive-resids-correlogram
 # Test them for spatial autocorrelation using a correlogram.
 residsI <- spline.correlog(
   x = dat$easting, y = dat$northing,
@@ -205,6 +231,7 @@ The families available in `gls` roughly match the theoretical variogram models w
 Here we'll cheat a little and use `autofitVariogram` to get a model suggestion rather than go through the fitting process by hand with `variogram`, `vgm`, and `fit.variogram` from `gstat`.
 
 ```{r}
+#| label: resid-variogram
 datSF <- dat %>% st_as_sf(coords = c("easting", "northing"))
 # A variogram of the residuals
 plot(autofitVariogram(glsNaiveResids ~ 1, input_data = datSF, model = c("Gau", "Sph", "Exp")))
@@ -215,12 +242,13 @@ Look at which theoretical model `autofitVariogram` chose. Here is a frustrating 
 We'll use the chosen model family as the `type` argument to `corSpatial` below. One important thing to understand: we are not passing the variogram parameter estimates (the range, nugget, sill) into `corSpatial`. The `type` argument just specifies the functional form of the correlation structure. The actual parameter values are estimated by `gls` itself during model fitting. The variogram step tells us what shape to use; `gls` figures out the scale.
 
 ```{r}
+#| label: gls-updated
 csSpatial <- corSpatial(form = ~ easting + northing, nugget = TRUE, type = "spherical")
 glsUpdated <- update(glsNaive, correlation = csSpatial)
 summary(glsUpdated)
 ```
 
-We can then use `update` to re-fit the model with the new correlation structure. Note that this is the same as fitting a new model via `gls(model = y~x, data = dat, correlation = csSpatial)` but `update` is a cleaner way of making sure the model specification stays identical for the sake of comparison.
+Notice we didn't call `gls` from scratch. We used `update`, which is a generic (the [methods and generics aside](02xAsideMethodsAndGenerics.html) lists it among the common ones) that takes a fitted model, digs out the call that produced it, swaps in whatever you name, and re-fits. So `update(glsNaive, correlation = csSpatial)` reaches back to the original `gls(y ~ x, dat)`, bolts on the correlation argument, and runs it again. The result is the same as typing `gls(y ~ x, data = dat, correlation = csSpatial)` by hand. The advantage is that you don't retype the formula and the data, which is exactly where a slip would creep in and leave you comparing two models that differ by more than the one thing you meant to change.
 
 
 ::: {.callout-note}
@@ -230,9 +258,10 @@ A word of warning before you get too comfortable. The optimizer that `gls` uses 
 :::
 
 
-This is interesting. We will interpret more below but note that the slope coefficient is different from `glsNaive` to `glsUpdated`. Let's look at the spatial structure of the residuals from `glsUpdated`.
+This is interesting. The summary now carries the extra block we promised: a `Correlation Structure` section reporting the range and nugget that `gls` estimated for the spherical model. Those are the parameter values the variogram only suggested the shape of. We will interpret more below but note that the slope coefficient is different from `glsNaive` to `glsUpdated`. Let's look at the spatial structure of the residuals from `glsUpdated`.
 
 ```{r}
+#| label: gls-resids-map
 # add the residuals to the spatial dat object
 dat$glsResids <- residuals(glsUpdated, type = "normalized")
 # Map the residuals from gls
@@ -249,6 +278,7 @@ ggplot(data = dat, mapping = aes(
 They don't look to be autocorrelated. But we should test them:
 
 ```{r}
+#| label: gls-resids-correlogram
 residsI <- spline.correlog(
   x = dat$easting, y = dat$northing,
   z = dat$glsResids, resamp = 50, quiet = TRUE
@@ -261,13 +291,13 @@ And the correlogram shows that they are clean -- autocorrelation has been accoun
 ### Interpretation
 So what's the big deal? We started with a model that showed `x` as a significant predictor of `y`. We ended up, after much wailing and rending of garments, with a model that showed `x` as a significant predictor of `y`. Is it a better model? Was it worth the trouble? Let's consider a few things.
 
-1. The GLS model with the correlated residuals has a lower AIC than the naive uncorrelated model (`r round(AIC(glsUpdated),0)` vs. `r round(AIC(glsNaive),0)`). AIC penalizes model complexity, so a lower AIC means the GLS model is explaining more of the variance in `y` without just adding parameters to do it. It is a  better fit, not just a more complicated one.
+1. The GLS model with the correlated residuals has a lower AIC than the naive uncorrelated model (`r round(AIC(glsUpdated),0)` vs. `r round(AIC(glsNaive),0)`). AIC penalizes model complexity, so a lower AIC means the GLS model is explaining more of the variance in `y` without just adding parameters to do it. It is a better fit, not just a more complicated one.
 
 2. The original function we used to make $y$ was $y=\beta_0 + \beta_1x + \epsilon$ where $\beta_0$ = `r B0` and $\beta_1$ = `r B1`. Both GLS models got the intercept right (`r round(coef(glsUpdated)[1],2)` for `glsUpdated` and `r round(coef(glsNaive)[1],2)` for `glsNaive`). But the GLS model with the correlated residuals does a better job of recovering the true slope (`r round(coef(glsUpdated)[2],2)` vs `r round(coef(glsNaive)[2],2)`).
 
 You might notice that the naive slope (`r round(coef(glsNaive)[2],2)`) is further from the truth (0.5) than the GLS slope (`r round(coef(glsUpdated)[2],2)`). Earlier we said OLS is unbiased even with autocorrelated errors -- so why did the coefficient move? Unbiased means that if you ran this simulation thousands of times, the average OLS estimate would center on 0.5. GLS would also center on 0.5, but with less spread around it. That's what inefficiency means: not a systematic pull away from the truth, but more variability from sample to sample. In this particular random draw, OLS overshot and GLS happened to land closer. In a different draw it could go the other way. The advantage of GLS is not that it always wins in any single sample, but that its estimates are less variable across samples and, crucially, its standard errors are actually valid.
 
-The scenario where OLS can be truly biased (not just inefficient) is worth flagging: if $x$ is correlated with the spatial structure of $\epsilon$, meaning an important spatially-structured variable was omitted from the model. In that case the spatial autocorrelation in the residuals is partly confounded with the effect of $x$ and OLS will systematically misestimate the slope. In our simulation $x$ is purely random noise with no spatial structure, so this doesn't apply. But in real data, where your predictor often covaries with geography, it can.
+The scenario where OLS can be truly biased (not just inefficient) is worth flagging: if $x$ is correlated with the spatial structure of $\epsilon$, meaning an important spatially-structured variable was omitted from the model. In that case the spatial autocorrelation in the residuals is partly confounded with the effect of $x$ and OLS will systematically misestimate the slope. In our simulation $x$ is purely random noise with no spatial structure, so this doesn't apply. But with field data, where your predictor often covaries with geography, it can.
 
 3. The standard error on $\beta_1$ is lower in the model with correlated residuals than in the naive model (`r round(summary(glsUpdated)$tTable[2,2],4)` vs `r round(summary(glsNaive)$tTable[2,2],4)`). This might seem backwards: you might expect that accounting for autocorrelation would widen the uncertainty rather than narrow it. The direction of the change actually depends on the spatial configuration of the data and the pattern of autocorrelation. What's happening here is that by correctly partitioning the variance into a regression component and a spatial correlation component, GLS estimates $\beta_1$ more efficiently. The naive OLS model was attributing some of the spatially structured noise to the slope, which inflated the apparent uncertainty. GLS separates those two sources and gets a cleaner estimate of each.
 
@@ -277,7 +307,7 @@ Finally, we did it right, and that should be satisfying. What would have happene
 
 GLS is OLS with one additional ingredient: a model for the error correlation structure. The slopes are still there, the interpretation is still the same, but the standard errors now reflect how the data are actually distributed in space rather than assuming independence that doesn't exist. That's the whole point.
 
-In practice, the most common outcome is what you saw here: the coefficients don't move much, but the standard errors get corrected, the AIC improves, and you can make your inferential claims without the nagging worry that your p-values are artifacts of spatial structure. Sometimes the coefficients do shift, usually when a predictor covaries with the spatial autocorrelation in the residuals. When that happens, GLS isn't just tidying up your errors. Rather, it's telling you something about the model itself.
+In practice, the most common outcome is what you saw here: the coefficients don't move much, but the standard errors get corrected, the AIC improves, and you can make your inferential claims without the nagging worry that your p-values are artifacts of spatial structure. Sometimes the coefficients do shift, usually when a predictor covaries with the spatial autocorrelation in the residuals. When that happens, GLS is doing more than tidying up your errors. It's telling you something about the model itself.
 
 The next chapter takes this further. GLS treats spatial autocorrelation as a nuisance in the residuals. SAR models ask whether the spatial structure might be in the response itself, not just the errors, and fit accordingly.
 

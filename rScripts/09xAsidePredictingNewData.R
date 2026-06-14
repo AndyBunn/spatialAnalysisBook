@@ -1,8 +1,10 @@
 ## ----message=FALSE------------------------------------------------------------
+#| label: packages
 library(tidyverse)
 
 
 ## -----------------------------------------------------------------------------
+#| label: simulate-data
 set.seed(42)
 n <- 50
 b0 <- 4
@@ -13,16 +15,19 @@ originalDat$y <- b0 + b1 * originalDat$x1 + b2 * originalDat$x2 + originalDat$ep
 
 
 ## -----------------------------------------------------------------------------
+#| label: fit-lm
 lm1 <- lm(y ~ x1 + x2, data = originalDat)
 summary(lm1)
 
 
 ## -----------------------------------------------------------------------------
+#| label: new-data
 newDat <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
 head(newDat)
 
 
 ## -----------------------------------------------------------------------------
+#| label: predict-new
 newDat$yhat <- predict(object = lm1, newdata = newDat)
 head(newDat)
 

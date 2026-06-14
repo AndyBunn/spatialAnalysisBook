@@ -94,24 +94,35 @@ Now that we have the information we need on the algorithm, let's do a quick and 
 Here is a small data set of five points. We have spatial coordinates ($x$ and $y$) and some measured variable ($z$).
 ```{r}
 #| label: toy-data
+#| fig-width: 5
+#| fig-height: 5
 toyDat <- data.frame(
   x = c(1, 3, 1, 4, 5),
   y = c(5, 4, 3, 5, 1),
   z = c(100, 105, 105, 100, 115)
 )
 toyDat
-p1 <- toyDat %>% ggplot() +
+toyPlot <- toyDat %>% ggplot() +
   geom_point(aes(x = x, y = y, size = z)) +
-  lims(x = c(0, 6), y = c(0, 6))
-p1
+  lims(x = c(0, 6), y = c(0, 6)) +
+  coord_equal() +
+  theme_minimal()
+toyPlot
 ```
 
 Let's imagine a point $x=2$ and $y=4$ where we don't know $z$.
 
 ```{r}
 #| label: toy-unknown-point
-p1 + geom_point(aes(x = 2, y = 4), color = "red", size = 10, shape = 0) +
-  geom_point(aes(x = 2, y = 4), color = "red", size = 6, shape = 63)
+#| fig-width: 5
+#| fig-height: 5
+toyPlot +
+  # crosshair reticle marking the location we want to predict
+  annotate("segment", x = 1.4, xend = 2.6, y = 4, yend = 4, color = "#21908C", linewidth = 0.6) +
+  annotate("segment", x = 2, xend = 2, y = 3.4, yend = 4.6, color = "#21908C", linewidth = 0.6) +
+  annotate("point", x = 2, y = 4, shape = 1, size = 13, color = "#21908C", stroke = 1) +
+  annotate("point", x = 2, y = 4, shape = 21, fill = "#21908C", color = "white", size = 2.5, stroke = 0.6) +
+  annotate("text", x = 2.55, y = 4.6, label = "s[0]", parse = TRUE, color = "#21908C", size = 5, hjust = 0, fontface = "italic")
 ```
 
 ### IDW
@@ -174,7 +185,7 @@ w <- d2s0^-p
 zhatS0 <- sum(w * toyDat$z) / sum(w)
 zhatS0
 # add it to the plot
-p1 + geom_point(aes(x = 2, y = 4, size = zhatS0))
+toyPlot + geom_point(aes(x = 2, y = 4, size = zhatS0))
 ```
 
 You can see how we interpolated (estimated) one point using inverse distance weighting. And you could imagine then how we'd do that for any point we could imagine.

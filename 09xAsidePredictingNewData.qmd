@@ -6,6 +6,7 @@ This is likely review for most of you, so roll your eyes as needed. The idea is 
 We'll use `tidyverse`[@R-tidyverse] for data wrangling.
 
 ```{r, message=FALSE}
+#| label: packages
 library(tidyverse)
 ```
 
@@ -14,6 +15,7 @@ library(tidyverse)
 Here we create a `data.frame` called `originalDat` with three variables: `x1` and `x2` are `n` draws from a normal distribution ($N(0,1)$) and `y` is a function of `x1` and `x2` following a linear model with coefficients `b0`, `b1`, and `b2` plus some noise (`epsilon`) drawn from $N(0,2)$.
 
 ```{r}
+#| label: simulate-data
 set.seed(42)
 n <- 50
 b0 <- 4
@@ -26,6 +28,7 @@ originalDat$y <- b0 + b1 * originalDat$x1 + b2 * originalDat$x2 + originalDat$ep
 We fit a linear model with `lm`:
 
 ```{r}
+#| label: fit-lm
 lm1 <- lm(y ~ x1 + x2, data = originalDat)
 summary(lm1)
 ```
@@ -39,6 +42,7 @@ See the [Understanding Methods and Generics in R aside](02xAsideMethodsAndGeneri
 Let's imagine a new data set with `x1` and `x2` but no observed `y`:
 
 ```{r}
+#| label: new-data
 newDat <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
 head(newDat)
 ```
@@ -46,6 +50,7 @@ head(newDat)
 We pass `newDat` to `predict` via the `newdata` argument. The predicted values go into a new column `yhat` -- the hat signaling that these are estimates, not observations.
 
 ```{r}
+#| label: predict-new
 newDat$yhat <- predict(object = lm1, newdata = newDat)
 head(newDat)
 ```

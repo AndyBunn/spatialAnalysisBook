@@ -1,4 +1,5 @@
 ## ----message=FALSE------------------------------------------------------------
+#| label: packages
 library(automap)
 library(gstat)
 library(nlme)
@@ -8,10 +9,12 @@ library(tidyverse)
 
 
 ## ----echo=FALSE---------------------------------------------------------------
+#| label: setup
 set.seed(3515) # 234 #104
 
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
+#| label: make-epsilon
 # We will do n points
 n <- 75
 
@@ -39,6 +42,7 @@ epsilon <- scale(epsilon[, 1])[, 1]
 
 
 ## -----------------------------------------------------------------------------
+#| label: epsilon-correlogram
 epsilonCorrelog <- spline.correlog(
   x = easting, y = northing,
   z = epsilon, resamp = 50, quiet = TRUE
@@ -47,6 +51,7 @@ plot(epsilonCorrelog, xlim = c(0, max(dist(points)) / 3))
 
 
 ## -----------------------------------------------------------------------------
+#| label: make-xy
 # Generate x as noise.
 x <- rnorm(n)
 # Generate y as a function of x and epsilon
@@ -60,6 +65,7 @@ dat <- data.frame(easting, northing, y, x)
 
 
 ## -----------------------------------------------------------------------------
+#| label: plot-x
 ggplot(data = dat, mapping = aes(
   x = easting, y = northing,
   size = x, fill = x
@@ -72,6 +78,7 @@ ggplot(data = dat, mapping = aes(
 
 
 ## -----------------------------------------------------------------------------
+#| label: plot-y
 ggplot(data = dat, mapping = aes(
   x = easting, y = northing,
   size = y, fill = y
@@ -84,12 +91,14 @@ ggplot(data = dat, mapping = aes(
 
 
 ## -----------------------------------------------------------------------------
+#| label: gls-naive
 # Fit a model using gls
 glsNaive <- gls(y ~ x, dat)
 summary(glsNaive)
 
 
 ## -----------------------------------------------------------------------------
+#| label: naive-resids-map
 # Add residuals to dat
 dat$glsNaiveResids <- residuals(glsNaive, type = "normalized")
 ggplot(data = dat, mapping = aes(
@@ -103,6 +112,7 @@ ggplot(data = dat, mapping = aes(
 
 
 ## -----------------------------------------------------------------------------
+#| label: naive-resids-correlogram
 # Test them for spatial autocorrelation using a correlogram.
 residsI <- spline.correlog(
   x = dat$easting, y = dat$northing,
@@ -112,18 +122,21 @@ plot(residsI, xlim = c(0, max(dist(points)) / 3))
 
 
 ## -----------------------------------------------------------------------------
+#| label: resid-variogram
 datSF <- dat %>% st_as_sf(coords = c("easting", "northing"))
 # A variogram of the residuals
 plot(autofitVariogram(glsNaiveResids ~ 1, input_data = datSF, model = c("Gau", "Sph", "Exp")))
 
 
 ## -----------------------------------------------------------------------------
+#| label: gls-updated
 csSpatial <- corSpatial(form = ~ easting + northing, nugget = TRUE, type = "spherical")
 glsUpdated <- update(glsNaive, correlation = csSpatial)
 summary(glsUpdated)
 
 
 ## -----------------------------------------------------------------------------
+#| label: gls-resids-map
 # add the residuals to the spatial dat object
 dat$glsResids <- residuals(glsUpdated, type = "normalized")
 # Map the residuals from gls
@@ -138,6 +151,7 @@ ggplot(data = dat, mapping = aes(
 
 
 ## -----------------------------------------------------------------------------
+#| label: gls-resids-correlogram
 residsI <- spline.correlog(
   x = dat$easting, y = dat$northing,
   z = dat$glsResids, resamp = 50, quiet = TRUE
