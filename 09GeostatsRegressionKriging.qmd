@@ -202,7 +202,7 @@ pOls <- ggplot() +
 pResid <- ggplot() +
   geom_spatraster(data = leadResidRast, mapping = aes(fill = krigedResid)) +
   scale_fill_gradient2(
-    low = "blue", mid = "white", high = "red",
+    low = "darkblue", mid = "white", high = "darkred",
     midpoint = 0, na.value = "transparent"
   ) +
   labs(title = "Kriged residuals", fill = "resid") +
