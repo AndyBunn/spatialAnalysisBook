@@ -1,4 +1,5 @@
 ## -----------------------------------------------------------------------------
+#| label: algebra-coefs
 x <- mtcars$wt
 y <- mtcars$mpg
 
@@ -8,27 +9,32 @@ c(intercept = beta0, slope = beta1)
 
 
 ## -----------------------------------------------------------------------------
+#| label: algebra-lm-check
 # Same thing with lm()
 coef(lm(mpg ~ wt, data = mtcars))
 
 
 ## -----------------------------------------------------------------------------
+#| label: matrix-setup
 X <- as.matrix(mtcars$wt)
 X <- cbind(1, X) # prepend a column of ones for the intercept
 y <- as.matrix(mtcars$mpg)
 
 
 ## -----------------------------------------------------------------------------
+#| label: matrix-solve
 beta <- solve(t(X) %*% X) %*% t(X) %*% y
 beta
 
 
 ## -----------------------------------------------------------------------------
+#| label: matrix-lm-check
 # And again, verify with lm()
 coef(lm(mpg ~ wt, data = mtcars))
 
 
 ## -----------------------------------------------------------------------------
+#| label: gls-identity-check
 # OLS (from above)
 betaOls <- solve(t(X) %*% X) %*% t(X) %*% y
 

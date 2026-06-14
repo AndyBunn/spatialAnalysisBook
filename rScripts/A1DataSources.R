@@ -1,4 +1,5 @@
 ## ----message=FALSE, warning=FALSE---------------------------------------------
+#| label: meuse-grid-maps
 #| fig-width: 10
 #| fig-height: 12
 library(tidyverse)

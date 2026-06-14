@@ -1,8 +1,10 @@
 ## ----echo=FALSE, include=FALSE------------------------------------------------
+#| label: setup
 set.seed(130)
 
 
 ## ----message=FALSE------------------------------------------------------------
+#| label: packages
 library(spatialreg)
 library(spdep)
 library(sf)
@@ -10,6 +12,7 @@ library(tidyverse)
 
 
 ## ----message=FALSE, warning=FALSE---------------------------------------------
+#| label: toy-data
 n <- 75
 easting <- runif(n, 0, 100)
 northing <- runif(n, 0, 100)
@@ -36,40 +39,48 @@ dat <- data.frame(easting, northing, y, x)
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-weights
 nbK8 <- knn2nb(knearneigh(points, k = 8))
 W <- nb2listw(nbK8, style = "W")
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-ols
 ols <- lm(y ~ x, data = dat)
 dat$olsResids <- residuals(ols)
 moran.test(dat$olsResids, W)
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-lmtests
 lm.RStests(ols, listw = W, test = "all")
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-sem
 semFit <- errorsarlm(y ~ x, data = dat, listw = W)
 summary(semFit)
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-sem-resids
 dat$semResids <- residuals(semFit)
 moran.test(dat$semResids, W)
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-slm
 slmFit <- lagsarlm(y ~ x, data = dat, listw = W)
 summary(slmFit)
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-aic
 AIC(semFit, slmFit)
 
 
 ## ----message=FALSE------------------------------------------------------------
+#| label: bird-data
 library(tmap)
 birdsSf <- readRDS("../data/birdRichnessMexico.rds")
 coordsBirds <- st_coordinates(birdsSf)
@@ -79,7 +90,8 @@ WBirds <- nb2listw(nbBirds, style = "W")
 
 
 ## -----------------------------------------------------------------------------
-tmap_mode("view")
+#| label: bird-richness-map
+tmap_mode("plot")
 tm_shape(birdsSf) +
   tm_symbols(
     col = "nSpecies", palette = "viridis",
@@ -88,16 +100,19 @@ tm_shape(birdsSf) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: bird-ols
 olsBirds <- lm(nSpecies ~ map + tempRange, data = birdsSf)
 summary(olsBirds)
 
 
 ## -----------------------------------------------------------------------------
+#| label: bird-ols-moran
 birdsSf$ols_resids <- residuals(olsBirds)
 moran.test(birdsSf$ols_resids, WBirds)
 
 
 ## -----------------------------------------------------------------------------
+#| label: bird-resid-map
 tm_shape(birdsSf) +
   tm_symbols(
     col = "ols_resids",
@@ -109,10 +124,12 @@ tm_shape(birdsSf) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: bird-lmtests
 lm.RStests(olsBirds, listw = WBirds, test = "all")
 
 
 ## -----------------------------------------------------------------------------
+#| label: bird-sem
 semBirds <- errorsarlm(nSpecies ~ map + tempRange,
   data = birdsSf, listw = WBirds
 )
@@ -120,19 +137,23 @@ summary(semBirds)
 
 
 ## -----------------------------------------------------------------------------
+#| label: bird-sem-moran
 birdsSf$sem_resids <- residuals(semBirds)
 moran.test(birdsSf$sem_resids, WBirds)
 
 
 ## -----------------------------------------------------------------------------
+#| label: bird-aic
 AIC(olsBirds, semBirds)
 
 
 ## -----------------------------------------------------------------------------
+#| label: slm-impacts
 impacts(slmFit, listw = W, R = 500)
 
 
 ## ----eval=FALSE---------------------------------------------------------------
+#| label: exercise-data
 # meuse2 <- readRDS("../data/meuse2.Rds")
 # meuse.grid2 <- readRDS("../data/meuse.grid2.Rds")
 # meuseSf <- st_as_sf(meuse2, coords = c("x", "y"), crs = 28992)

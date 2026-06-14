@@ -1,6 +1,6 @@
 ## -----------------------------------------------------------------------------
 #| label: packages
-#| include: false
+#| message: false
 library(tidyverse)
 library(sf)
 library(terra)
