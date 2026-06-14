@@ -1,8 +1,10 @@
 ## ----echo=FALSE---------------------------------------------------------------
+#| label: setup
 set.seed(184)
 
 
 ## ----message=FALSE------------------------------------------------------------
+#| label: packages
 library(gstat)
 library(fields)
 library(ggplot2)
@@ -10,10 +12,12 @@ library(ggrepel)
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-data
 dat <- data.frame(x = c(2, 3, 9, 6, 5), y = c(2, 7, 9, 5, 3), z = c(3, 4, 2, 4, 6))
 
 
 ## -----------------------------------------------------------------------------
+#| label: toy-map
 dat2 <- rbind(dat, data.frame(x = 5, y = 5, z = "?"))
 dat2$lbls <- paste("(", dat2$x, ",", dat2$y, ") z=", dat2$z, sep = "")
 dat2$cols <- factor(c(rep("black", 5), "purple"))
@@ -28,6 +32,7 @@ ggplot(data = dat2, mapping = aes(x = x, y = y, col = cols, label = lbls)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: covariance-functions
 spher.covar <- function(dist, nugget, sill, range) {
   sigma <- sill + nugget
   covar <- matrix(0, nrow = nrow(dist), ncol = ncol(dist))
@@ -78,11 +83,13 @@ gauss.covar <- function(dist, nugget, sill, range) {
 
 
 ## -----------------------------------------------------------------------------
+#| label: distances
 dmat <- round(rdist(cbind(dat$x, dat$y)), digits = 4) # distances among observed points
 dvec <- round(rdist(cbind(dat$x, dat$y), cbind(5, 5)), digits = 4) # distances to prediction location
 
 
 ## -----------------------------------------------------------------------------
+#| label: covariance-matrix
 vmod <- "Gau"
 nugget <- 2.5
 sill <- 7.5
@@ -93,22 +100,25 @@ k <- gauss.covar(dvec, nugget, sill, range) # covariance vector to prediction lo
 
 
 ## -----------------------------------------------------------------------------
+#| label: simple-kriging
 wts.sk <- solve(K) %*% k
 est.sk <- sum(wts.sk * (dat$z - mean(dat$z))) + mean(dat$z)
 var.sk <- (sill + nugget) - t(k) %*% solve(K) %*% k
 
 
 ## -----------------------------------------------------------------------------
-K <- cbind(K, rep(1, nrow(K)))
-K <- rbind(K, c(rep(1, ncol(K) - 1), 0))
-k <- c(k, 1)
+#| label: ordinary-kriging
+K.ok <- cbind(K, rep(1, nrow(K)))
+K.ok <- rbind(K.ok, c(rep(1, ncol(K.ok) - 1), 0))
+k.ok <- c(k, 1)
 
-wts.ok <- solve(K) %*% k
+wts.ok <- solve(K.ok) %*% k.ok
 est.ok <- sum(wts.ok[-length(wts.ok)] * dat$z) # drop the Lagrange multiplier from the sum
-var.ok <- (sill + nugget) - t(k) %*% solve(K) %*% k
+var.ok <- (sill + nugget) - t(k.ok) %*% solve(K.ok) %*% k.ok
 
 
 ## -----------------------------------------------------------------------------
+#| label: gstat-check
 dat.vgram <- vgm(model = vmod, psill = sill, nugget = nugget, range = range)
 
 est2.sk <- krige(z ~ 1, ~ x + y,
@@ -135,6 +145,7 @@ res.df
 
 
 ## -----------------------------------------------------------------------------
+#| label: sk-result-map
 dat3 <- dat2
 dat3$lbls <- paste("(", dat3$x, ",", dat3$y, ") z=", dat3$z,
   ", wt=", c(round(wts.sk, 2)[, 1], ""),
@@ -159,6 +170,7 @@ ggplot(data = dat3, mapping = aes(x = x, y = y, col = cols, label = lbls)) +
 
 
 ## -----------------------------------------------------------------------------
+#| label: ok-result-map
 dat3$lbls[6] <- paste("(5,5) z=", round(est.ok, 3),
   ", var=", round(sqrt(var.ok), 3),
   sep = ""

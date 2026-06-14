@@ -2,6 +2,7 @@
 
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+#| label: setup
 set.seed(184)
 ```
 
@@ -12,6 +13,7 @@ We often want to estimate phenomena at locations where we do not have measuremen
 The `gstat`[@R-gstat] package is your friend. And I'm going to plot in `ggplot` via `tidyverse`[@R-tidyverse] with `sf`[@R-sf], `terra`[@R-terra] and `tidyterra`[@R-tidyterra]. We'll also use `automap`[@R-automap] for automatic variogram fitting.
 
 ```{r, message=FALSE}
+#| label: packages
 library(sf)
 library(gstat)
 library(tidyverse)
@@ -24,7 +26,7 @@ library(automap)
 IDW is a deterministic interpolation method. That is, it relies on a specified mathematical formula that is not a function of the statistical relationship among the known points. This method has no error term associated with it and in fact isn't really geostatistical in a strict sense. Now, you might like to have no error in your estimation, but just because IDW doesn't spit out an error term doesn't mean that no error exists. A true geostatistical technique not only produces a prediction surface but also provides some measure of the accuracy of the predictions. Recall how the names in the IDW objects we calculated had a blank column (`var1.var`)? That's where the error surface will be in addition to the predictions (`var1.pred`) as we move forward with a probabilistic approach to interpolation called Kriging. 
 
 ::: {.callout-note}
-The method is named after Danie Krige, a South African mining engineer who developed  distance-weighted averaging to estimate gold grade distributions from borehole samples at the Witwatersrand reef complex in the 1950s.The Witwatersrand Basin is the world’s largest known gold repository. The French mathematician Georges Matheron later formalized the theoretical framework in 1960. So yes, kriging started as a way to find gold. The verb is "to krige" and you will see it both capitalized and not in the literature -- both are fine.
+The method is named after Danie Krige, a South African mining engineer who developed  distance-weighted averaging to estimate gold grade distributions from borehole samples at the Witwatersrand reef complex in the 1950s. The Witwatersrand Basin is the world’s largest known gold repository. The French mathematician Georges Matheron later formalized the theoretical framework in 1960. So yes, kriging started as a way to find gold. The verb is "to krige" and you will see it both capitalized and not in the literature -- both are fine.
 :::
 
 Kriging is a geostatistical method of interpolation that uses spatial autocorrelation, and it works best when there is strong autocorrelation in the data. When kriging we use the distance between sample points (and sometimes direction) to explain variation in a variable. We then fit a mathematical model to a specified number of points (or points within a certain distance) to determine the output value for each location. 
@@ -41,6 +43,7 @@ Fitting a variogram is also called structural analysis and it is where we calcul
 We will demonstrate a variogram with the Meuse River data. Here we load `meuse2` (the point measurements) and `meuse.grid2` (the prediction grid), make a new variable by logging the `lead` column and plot them. This is the same setup we used in the IDW chapter. See the [appendix](A1DataSources.qmd) for details on both datasets.
 
 ```{r}
+#| label: meuse-data
 # load
 meuse2 <- readRDS("data/meuse2.Rds")
 meuse.grid2 <- readRDS("data/meuse.grid2.Rds")
@@ -57,19 +60,20 @@ meuseGridSf <- st_as_sf(meuse.grid2,
 )
 meuseGridSf
 
-p1 <- ggplot(data = meuseSf) +
+ggplot(data = meuseSf) +
   geom_sf(aes(fill = logLead),
     size = 4,
     shape = 21, color = "white", alpha = 0.8
   ) +
   scale_fill_continuous(type = "viridis", name = "log(ppm)") +
-  labs(title = "Lead concentrations")
-p1
+  labs(title = "Lead concentrations") +
+  theme_minimal()
 ```
 
 We will use the `variogram` function in `gstat`. Look back at the autocorrelation module for review as needed.
 
 ```{r}
+#| label: lead-variogram
 leadVar <- variogram(logLead ~ 1, meuseSf)
 plot(leadVar,
   pch = 20, cex = 1.5, col = "black",
@@ -80,37 +84,96 @@ plot(leadVar,
 
 This is the sample, or empirical, semivariogram. We interpret it as measurements that are closer together (left on the x-axis) have similar values (low values of $\gamma$). As we move to pairs further apart (right on the x-axis) the semivariogram increases; values are more dissimilar and thus have a higher value of $\gamma$. Our next job is going to be to fit a model to the points on the variogram. Before we do that, let's appreciate the three terms for describing the variogram.
 
-  ![](assets/Variogram.gif)
+```{r}
+#| label: variogram-anatomy
+#| echo: false
+#| fig-width: 7
+#| fig-height: 5
+
+# a schematic spherical variogram to label the three terms
+nugget <- 0.2
+psill <- 0.8 # the partial sill, sill minus nugget
+sill <- nugget + psill
+rng <- 10
+
+sphSchematic <- function(d) {
+  ifelse(d < rng,
+    nugget + psill * (1.5 * (d / rng) - 0.5 * (d / rng)^3),
+    sill
+  )
+}
+
+vgCurve <- data.frame(d = seq(0, 18, length.out = 400))
+vgCurve$gamma <- sphSchematic(vgCurve$d)
+
+ggplot(vgCurve, aes(d, gamma)) +
+  # reference lines for sill, nugget, and range
+  geom_hline(yintercept = sill, linetype = "dashed", color = "grey55") +
+  geom_hline(yintercept = nugget, linetype = "dashed", color = "grey55") +
+  geom_vline(xintercept = rng, linetype = "dashed", color = "grey55") +
+  # the model curve and the nugget intercept
+  geom_line(linewidth = 1.3, color = "#440154") +
+  annotate("point", x = 0, y = nugget, color = "#440154", size = 3) +
+  # brackets for nugget and partial sill, parked in the flat region
+  annotate("segment",
+    x = 15.5, xend = 15.5, y = 0, yend = nugget,
+    arrow = arrow(ends = "both", length = unit(0.07, "in")), color = "grey30"
+  ) +
+  annotate("segment",
+    x = 15.5, xend = 15.5, y = nugget, yend = sill,
+    arrow = arrow(ends = "both", length = unit(0.07, "in")), color = "grey30"
+  ) +
+  # labels
+  annotate("text", x = 16, y = nugget / 2, label = "nugget", hjust = 0, size = 4) +
+  annotate("text", x = 16, y = (nugget + sill) / 2, label = "partial\nsill", hjust = 0, size = 4) +
+  annotate("text", x = 0.3, y = sill + 0.05, label = "sill", hjust = 0, size = 4) +
+  annotate("text", x = rng + 0.3, y = 0.05, label = "range", hjust = 0, size = 4) +
+  scale_x_continuous(breaks = NULL, expand = expansion(mult = c(0.01, 0.12))) +
+  scale_y_continuous(breaks = NULL, limits = c(0, sill * 1.15)) +
+  labs(
+    x = "Distance", y = expression("Semivariance (" * gamma * ")"),
+    title = "Anatomy of a variogram"
+  ) +
+  theme_minimal()
+```
 
 * The **range** is the distance beyond which the data are no longer correlated.
 * The **sill** is the variance of the variable.
 * The **nugget** is the autocorrelation at very small scales. The nugget represents independent error, measurement error and/or micro-scale variation at fine spatial scales. In a continuous variable we would expect that the nugget effect will be zero because at distance zero the values will be the same. However some variables can change in an abrupt manner and so in very short distance there is a difference.
+* The **partial sill** is the height the curve climbs from the nugget up to the sill, so it captures just the spatially structured part of the variance, the share that autocorrelation actually explains. As far as I can tell gstat is the only place anyone insists on naming it, but here we are, dutifully calling it `psill`.
 
 If there is no structure (no correlation) and the variable is therefore a purely random variable, the variogram will be flat with a nugget effect.
 
 ## Variogram Model
 
-After plotting the **sample** variogram we can then fit a statistical **model** to the points. The model is a continuous estimate of $\gamma$ as a function of distance: $\hat{\gamma}=f(d)$.  
+After plotting the sample variogram we can then fit a statistical model to the points. The model is a continuous estimate of $\gamma$ as a function of distance: $\hat{\gamma}=f(d)$.  
 
 We will fit two different functions, a spherical model and an exponential model. The text has descriptions of the various functions. In practice, we tend to look at the general shape of the plot and then choose a mathematical model that fits.
 
-Note that `gstat` uses the partial sill (`psill`) which is the sill minus the nugget. Just to be confusing. Thanks `gstat`.
-
+The code below hands `vgm` a set of starting guesses for the partial sill, range, and nugget. Why guess at all? Because fitting a variogram model isn't a one-shot calculation. `fit.variogram` uses weighted least squares to nudge the three parameters around until the model curve sits as close as it can to the empirical points, and like any iterative optimizer it has to start somewhere. We read those starting values straight off the empirical plot: the height where the points level off is roughly the sill, the distance where they flatten is roughly the range, and where the curve would meet the y-axis is roughly the nugget. Give the algorithm a sensible place to begin and it takes the fit from there.
 
 ```{r}
+#| label: spherical-fit
 # note our initial estimates for the partial sill, range, and nugget.
-sph.model <- vgm(psill = 0.5, model = "Sph", range = 750, nugget = 0.05)
-sph.fit <- fit.variogram(object = leadVar, model = sph.model)
-sph.fit # look at the fitted values
+sphericalModel <- vgm(psill = 0.5, model = "Sph", range = 750, nugget = 0.05)
+sphericalFit <- fit.variogram(object = leadVar, model = sphericalModel)
+sphericalFit # look at the fitted values
+```
+
+This is a terrible table to look at, but it only has a few numbers in it. There are two rows because `gstat` treats the nugget and the spherical part as two separate model components stacked together. The first row, `Nug`, is the nugget: its `psill` entry (`r round(sphericalFit[1,2],2)`) is the nugget value and its `range` is fixed at zero because a nugget has no spatial extent. The second row, `Sph`, is the spherical part: its `psill` (`r round(sphericalFit[2,2],2)`) is the partial sill and its `range` (`r round(sphericalFit[2,3],0)` meters) is the range. Add the two `psill` values together and you have the sill. It took me a long time to be able to parse this `gstat` output but it sort of makes sense after a while I guess.
+
+Let's look at it.
+
+```{r}
 plot(leadVar,
-  model = sph.fit, pch = 20, cex = 1.5, col = "black",
+  model = sphericalFit, pch = 20, cex = 1.5, col = "black",
   ylab = expression("Semivariance (" * gamma * ")"),
   xlab = "Distance (m)", main = "Lead concentrations (log(ppm))",
   sub = "Points: Empirical, Line: Spherical Model"
 )
 ```
 
-We now have a fitted, theoretical, variogram model to the data in the `sph.fit` object. This object took our estimates of the partial sill, range, and nugget and found the best fits from those estimates using non-linear regression. The final parameters are pretty close to our estimates from the plot. E.g., the fitted nugget is `r round(sph.fit[1,2],2)` and the range is `r round(sph.fit[2,3],2)`. If we gave initial estimates way outside the realm of possibility the function wouldn't be able to fit the model. But if the data are well behaved it converges on the best fit pretty easily. If you are too scared to estimate initial values in `vgm` the function will estimate them for you. See Details under `?fit.variogram` for how those are calculated. E.g., in this application if you try `sph.model <- vgm(model="Sph",nugget=TRUE)` the `fit.variogram` algorithm converges without initial estimates.
+We now have a fitted, theoretical, variogram model to the data in the `sphericalFit` object. This object took our estimates of the partial sill, range, and nugget and found the best fits from those estimates using non-linear regression. The final parameters are pretty close to our estimates from the plot. E.g., the fitted nugget is `r round(sphericalFit[1,2],2)` and the range is `r round(sphericalFit[2,3],2)`. If we gave initial estimates way outside the realm of possibility the function wouldn't be able to fit the model. But if the data are well behaved it converges on the best fit pretty easily. If you are too scared to estimate initial values in `vgm` the function will estimate them for you. See Details under `?fit.variogram` for how those are calculated. E.g., in this application if you try `sphericalModel <- vgm(model="Sph",nugget=TRUE)` the `fit.variogram` algorithm converges without initial estimates.
 
 The actual function for the spherical model is:
 
@@ -118,14 +181,15 @@ $$\hat{\gamma}(d)= b + C_0 \left(1.5\left(\frac{d}{r}\right) - 0.5 \left(\frac{d
 
 where $b$ is the nugget, $C_0$ is the partial sill, $d$ is the distance, and $r$ is the range. Note the $r^3$ in the denominator of the second term, not $r$. The cubic term is what gives the spherical model its characteristic shape: it rises steeply at short distances and flattens out as it approaches the sill at distance $r$, after which $\hat{\gamma}$ is constant.
 
-The spherical model above is very commonly used and has nice theoretical properties, using all three classic parameters of the variogram. We could, if we liked, fit some other models -- an exponential model would fit well here too. 
+The spherical model above is very commonly used and has nice theoretical properties, using all three classic parameters of the variogram. We could, if we liked, fit some other models. An exponential model would fit well here too. 
 
 ```{r}
+#| label: exponential-fit
 # note our initial estimates for the sill, range, and nugget
-exp.model <- vgm(psill = 0.5, model = "Exp", range = 750, nugget = 0.05)
-exp.fit <- fit.variogram(object = leadVar, model = exp.model)
+exponentialModel <- vgm(psill = 0.5, model = "Exp", range = 750, nugget = 0.05)
+exponentialFit <- fit.variogram(object = leadVar, model = exponentialModel)
 plot(leadVar,
-  model = exp.fit, pch = 20, cex = 1.5, col = "black",
+  model = exponentialFit, pch = 20, cex = 1.5, col = "black",
   ylab = expression("Semivariance (" * gamma * ")"),
   xlab = "Distance (m)", main = "Lead concentrations (log(ppm))",
   sub = "Points: Empirical, Line: Exponential Model"
@@ -150,25 +214,37 @@ Like we did with IDW, let's walk through this calculation with a contrived examp
 ### Data
 Here is a small data set of five points. We have spatial coordinates ($x$ and $y$) and some measured variable ($z$).
 ```{r}
+#| label: toy-data
+#| fig-width: 5
+#| fig-height: 5
 foo <- data.frame(
   x = c(1, 3, 1, 4, 5),
   y = c(5, 4, 3, 5, 1),
   z = c(100, 105, 105, 100, 115)
 )
 foo
-p2 <- ggplot() +
+
+toyPlot <- ggplot() +
   geom_point(data = foo, aes(x = x, y = y, size = z)) +
-  lims(x = c(0, 6), y = c(0, 6))
-p2
+  lims(x = c(0, 6), y = c(0, 6)) +
+  coord_equal() +
+  theme_minimal()
+toyPlot
 ```
 
-Let's imagine a point $x=2$ and $y=4$ where we don't know $z$.
+Let's imagine a point $x=2$ and $y=4$ where we don't know $z$ and add that to the plot.
 
 ```{r}
-p2 <- p2 +
-  geom_point(aes(x = 2, y = 4), color = "red", size = 10, shape = 0) +
-  geom_point(aes(x = 2, y = 4), color = "red", size = 6, shape = 63)
-p2
+#| label: toy-unknown-point
+#| fig-width: 5
+#| fig-height: 5
+toyPlot +
+  # crosshair reticle marking the location we want to predict
+  annotate("segment", x = 1.4, xend = 2.6, y = 4, yend = 4, color = "#21908C", linewidth = 0.6) +
+  annotate("segment", x = 2, xend = 2, y = 3.4, yend = 4.6, color = "#21908C", linewidth = 0.6) +
+  annotate("point", x = 2, y = 4, shape = 1, size = 13, color = "#21908C", stroke = 1) +
+  annotate("point", x = 2, y = 4, shape = 21, fill = "#21908C", color = "white", size = 2.5, stroke = 0.6) +
+  annotate("text", x = 2.55, y = 4.6, label = "s[0]", parse = TRUE, color = "#21908C", size = 5, hjust = 0, fontface = "italic")
 ```
 
 ### Interpolate with Kriging
@@ -176,6 +252,7 @@ We are now going to use kriging as a way to get an estimate of that point with a
 
 The Euclidean distance to our unknown point from each of the known points is a vector: 
 ```{r,echo=FALSE}
+#| label: toy-distances
 d2s0 <- as.matrix(dist(cbind(c(foo$x, 2), c(foo$y, 4))))[1:5, 6]
 ```
 
@@ -195,6 +272,7 @@ $$\hat{\gamma}(d) = 10\left(1.5\left(\frac{d}{6}\right) - 0.5\left(\frac{d}{6}\r
 First we can calculate $g$ for the point we want to interpolate by plugging each distance $d_i$ into the variogram model:
 
 ```{r,echo=FALSE}
+#| label: toy-g
 sphGamma <- function(d, psill = 10, range = 6) {
   psill * (1.5 * (d / range) - 0.5 * (d / range)^3)
 }
@@ -224,6 +302,7 @@ $$\mathbf{d} = \left[\begin{array}
 We apply the same spherical variogram model to the distances between all measured points to get $\Gamma$:
 
 ```{r,echo=FALSE}
+#| label: toy-gamma
 dMat <- as.matrix(dist(cbind(foo$x, foo$y)))
 G <- sphGamma(dMat)
 diag(G) <- 0
@@ -238,9 +317,10 @@ $$\mathbf{\Gamma} = \left[\begin{array}
 5 & 9.952 & 7.929 & 9.110 & 8.685
 \end{array}\right]$$
 
-We now need the inverse of $\Gamma$. Inverting a matrix bigger than say 2x2 is not something I want to do by hand. Inverting a 5x5 matrix by hand would take me all day and I'd definitely screw it up. If you can't recall how to invert a matrix, Khan Academy has a helpful walkthrough. In R you can use the `solve` function (or `ginv` in the `MASS` package) to invert a matrix.
+We now need the inverse of $\Gamma$. Inverting a matrix bigger than say 2x2 is not something I want to do by hand. Inverting a 5x5 matrix by hand would take me all day and I'd definitely screw it up. If you can't recall how to invert a matrix, any linear algebra text will walk you through it. In R you can use the `solve` function (or `ginv` in the `MASS` package) to invert a matrix.
 
 ```{r,echo=FALSE}
+#| label: toy-lambda
 lambda <- solve(G) %*% g
 zhat <- sum(lambda[, 1] * foo$z)
 ```
@@ -268,6 +348,7 @@ $$\mathbf{\lambda_i} = \left[\begin{array}
 You'll notice that points 4 and 5 have negative weights. With IDW, every point gets a positive weight that simply shrinks with distance. Kriging is more sophisticated: it considers the spatial structure among all the measured points at once. Points 4 and 5 are far from the prediction location, so their semivariances in $g$ are large and their influence on the prediction is already small. But they're also located in a part of the space that the closer points (1, 2, and 3) already "cover" informationally. The kriging system figures out that including points 4 and 5 with even a small positive weight would introduce a slight bias, so it assigns them tiny negative weights to correct for that. This is sometimes called a screening effect. The weights are small and don't change the estimate much, and it isn't a sign that something went wrong.
 
 ```{r,echo=FALSE}
+#| label: toy-prediction
 0.2626 * (100) + 0.4985 * (105) + 0.2652 * (105) - 0.0165 * (100) - 0.0353 * (115)
 ```
 
@@ -280,6 +361,7 @@ The matrix notation can be sort of tedious but hopefully you've gotten the idea:
 This will look a lot like what we did with IDW but we will use `krige` instead. And `krige` wants a fitted variogram model to be passed in. So, using the variogram from above we can do this.
 
 ```{r}
+#| label: lead-krige
 leadVar <- variogram(logLead ~ 1, meuseSf)
 # with initial gueses at the parameters psill, range, and nugget
 leadModel <- vgm(psill = 0.6, model = "Sph", range = 750, nugget = 0.05)
@@ -301,6 +383,7 @@ Here is the prediction surface. Note how we specify what `attribute` we want to 
 
 I'll use the little function from the IDW chapter to get a `rast` object from the `sf` object. Remember, this is one of the reasons to write a function in the first place -- define it once, reuse it across chapters.
 ```{r}
+#| label: lead-krige-surface
 sf2Rast <- function(sfObject, variableIndex = 1) {
   # coerce sf to a data.frame
   dfObject <- data.frame(st_coordinates(sfObject),
@@ -330,6 +413,7 @@ ggplot() +
 Now let's look at the variance around those predictions. Note we take the square root of `var1.var` to get the uncertainty in the same units as `var1.pred`.
 
 ```{r}
+#| label: lead-krige-variance
 leadKrigeSf$var1.var.sqrt <- sqrt(leadKrigeSf$var1.var)
 
 leadKrigeRast <- sf2Rast(leadKrigeSf, variableIndex = 4)
@@ -343,7 +427,7 @@ ggplot() +
   theme_minimal()
 ```
 
-Look at the spatial pattern in that variance surface. Uncertainty is lowest near the measured points and highest at the edges of the study area where observations are sparse or absent. Compare this to the locations of your sample points in `meuseSf` and you should see the correspondence pretty clearly. This is one of the most useful things kriging gives you: not just a prediction surface, but a map of where you should trust that surface and where you should be skeptical. IDW (and TPS) will happily interpolate across a data gap without telling you it's doing so. The variance in Kriging helps flags weak areas of the surface.
+Look at the spatial pattern in that variance surface. Uncertainty is lowest near the measured points and highest at the edges of the study area where observations are sparse or absent. Compare this to the locations of your sample points in `meuseSf` and you should see the correspondence pretty clearly. This is one of the most useful things kriging gives you: not just a prediction surface, but a map of where you should trust that surface and where you should be skeptical. IDW (and TPS) will happily interpolate across a data gap without telling you it's doing so. The variance in kriging helps flag weak areas of the surface.
 
 ## Uncertainty
 The variance surface is more than just a map of sample density, though sample density is a big driver of it. The variogram models we've been fitting (spherical, exponential, and others) are more than pretty lines we use to get a continuous estimate of $\hat{\gamma}$ as a function of distance. They have some of the same properties as statistical distributions do in probability theory. In particular, variograms are empirical estimates of the covariance of Gaussian processes. Because the model variogram gives the mean squared difference between values based on their location, we can use it to derive the uncertainty around each prediction. The variance at any prediction location is a function of how well that location is "covered" by the surrounding observations, weighted by the fitted spatial covariance structure.
@@ -353,21 +437,23 @@ What this means practically is that kriging variance increases when (a) the pred
 The underlying theory goes deeper than we will cover here. Diggle's "Model-based Geostatistics" will drag you through it if you want. Bivand's chapter has more on this too. I walk through it in the [Kriging Variance By Hand aside](08xAsideGeostatsKrigingVariance.html).
 
 ## Other Variogram Models
-Above I showed you the spherical and the exponential variogram models. Those are commonly used, as are the Gaussian and the Mattern models. But there are many other options -- a whole slew, actually, most of which I've never used. Look at this:
+Above I showed you the spherical and the exponential variogram models. Those are commonly used, as are the Gaussian and the Matérn models. But there are many other options -- a whole slew, actually, most of which I've never used. Look at this:
 
 ```{r}
+#| label: vgm-table
 vgm()
 ```
 
 `gstat` knows 20 different possible curves you can fit to your data. E.g.,
 
 ```{r}
+#| label: show-vgms
 #| fig-width: 9
 #| fig-height: 4
 show.vgms(models = c("Exp", "Mat", "Gau", "Sph"))
 ```
 
-The four models plotted above give you a sense of why the choice matters. The spherical model reaches the sill at a finite distance and stays there, which is appropriate when you believe the variable has a well-defined correlation length. The exponential model approaches the sill asymptotically, implying some small correlation at any distance, which suits variables that never fully decorrelate. The Gaussian model has an S-shaped approach to the sill and goes to zero slope at the origin, which implies a very smooth, continuous underlying process. The Mattern family includes both of those as special cases and is more flexible, at the cost of one extra parameter.
+The four models plotted above give you a sense of why the choice matters. The spherical model reaches the sill at a finite distance and stays there, which is appropriate when you believe the variable has a well-defined correlation length. The exponential model approaches the sill asymptotically, implying some small correlation at any distance, which suits variables that never fully decorrelate. The Gaussian model has an S-shaped approach to the sill and goes to zero slope at the origin, which implies a very smooth, continuous underlying process. The Matérn family includes both of those as special cases and is more flexible, at the cost of one extra parameter.
 
 In practice, a few things constrain which models are valid at all. The variogram must be non-negative everywhere, and it must produce a covariance matrix that is positive semi-definite (that is matrix-speak for "the variances this system produces can never come out negative."). That second condition is what makes the kriging system solvable and ensures the predicted variances come out non-negative. This is why you can't just draw any curve through the empirical variogram and call it a model. The parametric families in `gstat` all satisfy these conditions by construction, which is a good reason to stick with them rather than trying to invent your own.
 
@@ -389,13 +475,14 @@ You could spend a whole semester on kriging alone. Think of the pleasures involv
 The IDW chapter showed an example of using the built-in cross validation function. We can do the same with kriging. Instead of a straight call to `krige` we can call `krige.cv` for either k-fold or leave-one-out cross validation (LOOCV). It defaults to LOOCV so the predicted values are from the time they were left out the model.
 
 ```{r}
+#| label: lead-loocv
 leadKrigeLOOCVSf <- krige.cv(
   formula = logLead ~ 1,
   locations = meuseSf,
   model = leadFit, verbose = FALSE
 )
 leadKrigeLOOCVSf
-# CV R2 anbd RMSE
+# CV R2 and RMSE
 rsq <- cor(leadKrigeLOOCVSf$observed, leadKrigeLOOCVSf$var1.pred)^2
 rmse <- sqrt(mean((leadKrigeLOOCVSf$observed - leadKrigeLOOCVSf$var1.pred)^2))
 c(rsq = rsq, rmse = rmse)
@@ -410,13 +497,13 @@ You'll find it anyway, so let's get the cat out of the bag.
 Like other angry old men, I like to describe a bucolic youth spent milking at 4AM, walking to school in the snow, programming F77 in vi, and **doing all my GIS with Arc on the command line**. Kids these days like to do their geostatistics in ArcGIS by clicking "next, next, next, finish" and plotting their map without `ARCPLOT`. One of the many reasons I like using R is that you get to do things like fit variograms by hand the same way the pioneers did when they had to cross the prairie. But you can, if you like, automatically fit a variogram using the `automap` library which has a lot of nice wrappers for the `gstat` functions like `fit.variogram`.
 
 ```{r}
-library(automap)
+#| label: automap-variogram
 leadVar <- autofitVariogram(formula = logLead ~ 1, input_data = meuseSf)
 summary(leadVar)
 plot(leadVar)
 ```
 
-This automatically fits and plots a variogram like `fit.variogram` but instead of using user-supplied initial estimates for the model and the parameters, `autofitVariogram` makes these estimates based on the data and then calls `fit.variogram`. The automatic fitting above chose a spherical model like we did above but it tried all the models (exponential, Gaussian, Mattern, etc.) as part of the process.
+This automatically fits and plots a variogram like `fit.variogram` but instead of using user-supplied initial estimates for the model and the parameters, `autofitVariogram` makes these estimates based on the data and then calls `fit.variogram`. The automatic fitting above chose a spherical model like we did above but it tried all the models (exponential, Gaussian, Matérn, etc.) as part of the process.
 
 The biggest difference is that `autofitVariogram` does the bins quite differently than `gstat`'s default behavior with `variogram`. Instead of equal widths, `autofitVariogram` creates bins of unequal widths. It passes these as the `boundaries` argument to `variogram`. You can look at the code for details (`getAnywhere(autofitVariogram)`) but the spirit is to try to get more leverage on the shortest distances to help estimate the wiggliest part of the variogram curve, especially the nugget. I think it makes sense.
 
@@ -425,6 +512,7 @@ Note that this plot (which is invoked for objects of class `autofitVariogram`) p
 And just to complete the whole automation thing, you can automatically apply cross validation as well. Since `autoKrige.cv` calls `krige.cv` to do a lot of the work, it defaults to LOOCV as above.
 
 ```{r}
+#| label: automap-loocv
 leadAutoKrigeLOOCV <- autoKrige.cv(
   formula = logLead ~ 1, input_data = meuseSf,
   verbose = c(FALSE, FALSE)
@@ -440,13 +528,14 @@ Here we get a LOOCV R$^2$ of `r round(cor(leadAutoKrigeLOOCV$krige.cv_output$obs
 
 ## Wrapping Up
 
-Recall that IDW and TPS gave us a prediction surface with no uncertainty attached. Every grid cell got a number and that was that. Kriging gives us the same prediction surface, but also the variance surface we just looked at, and that second surface is where probability theory earns its keep. Imagine you're deciding where to put additional soil sampling stations to reduce uncertainty in your lead concentration map. With IDW you have no principled way to answer that question, because IDW has no model of uncertainty to begin with. With kriging, you look at the variance surface and put your next sample where the variance is highest. Or imagine you need to flag grid cells where the predicted lead concentration exceeds a regulatory threshold: with a variance surface you can attach a probability to that exceedance rather than just a point estimate. The deterministic methods we covered earlier are fast and intuitive, but they borrow nothing from probability theory, so there is no statistically grounded way to quantify how much you should trust the predictions. Kriging trades some of that simplicity for something genuinely useful: a map of your own ignorance.
+Recall that IDW and TPS gave us a prediction surface with no uncertainty attached. Every grid cell got a number and that was that. Kriging gives us the same prediction surface, but also the variance surface we just looked at, and that second surface is where probability theory earns its keep. Imagine you're deciding where to put additional soil sampling stations to reduce uncertainty in your lead concentration map. With IDW you have no principled way to answer that question, because IDW has no model of uncertainty to begin with. With kriging, you look at the variance surface and put your next sample where the variance is highest. Or imagine you need to flag grid cells where the predicted lead concentration exceeds a regulatory threshold: with a variance surface you can attach a probability to that exceedance rather than just a point estimate. The deterministic methods we covered earlier are fast and intuitive, but they borrow nothing from probability theory, so there is no statistically grounded way to quantify how much you should trust the predictions. Kriging trades some of that simplicity for something useful: a map of your own ignorance.
 
 ## Exercises
 
 Return to the California precipitation data from the IDW chapter. This time, krige the surface rather than use IDW.
 
 ```{r}
+#| label: exercise-data
 # precip point data
 prcpCA <- readRDS("data/prcpCA.rds")
 # empty grid to interpolate into
