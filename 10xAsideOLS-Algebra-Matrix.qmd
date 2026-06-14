@@ -2,7 +2,7 @@
 
 ## Why Are We Doing This?
 
-In the GLS chapter, we talk about how GLS and OLS are solving related but different problems. OLS minimizes the sum of squared errors. GLS minimizes those same distances but relative to the covariance matrix of the residuals which is how it accounts for autocorrelation. If you want to understand what GLS is actually doing differently, it helps to first get clear on what OLS is doing at all.
+In the GLS chapter, we talk about how GLS and OLS are solving related but different problems. OLS minimizes the sum of squared errors. GLS minimizes the same quantity, but weighted by the covariance matrix of the residuals, which is how it accounts for autocorrelation. If you want to understand what GLS is actually doing differently, it helps to first get clear on what OLS is doing at all.
 
 So that's what this aside is for. We'll derive the OLS solution first using algebra, then using matrix notation, and then implement both in R using `mtcars`. The matrix version matters because GLS is basically OLS with an extra matrix in the mix. Once you see that, the connection between the two methods becomes a lot more concrete.
 
@@ -31,6 +31,7 @@ $$\hat{\beta}_0 = \bar{y} - \hat{\beta}_1 \bar{X}$$
 That's it. That's what `lm()` is doing under the hood for a simple regression. Let's verify it in R using `mpg` as a function of `wt` from `mtcars`.
 
 ```{r}
+#| label: algebra-coefs
 x <- mtcars$wt
 y <- mtcars$mpg
 
@@ -40,6 +41,7 @@ c(intercept = beta0, slope = beta1)
 ```
 
 ```{r}
+#| label: algebra-lm-check
 # Same thing with lm()
 coef(lm(mpg ~ wt, data = mtcars))
 ```
@@ -70,12 +72,12 @@ $$\hat{\boldsymbol{\beta}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf
 
 That formula is the OLS solution. Everything that comes after it in the R code below is just implementing that one equation.
 
-
 ## Implementation in R
 
 Let's work through it with the same `mtcars` example. First, set up $\mathbf{X}$ and $\mathbf{y}$:
 
 ```{r}
+#| label: matrix-setup
 X <- as.matrix(mtcars$wt)
 X <- cbind(1, X) # prepend a column of ones for the intercept
 y <- as.matrix(mtcars$mpg)
@@ -84,11 +86,13 @@ y <- as.matrix(mtcars$mpg)
 Now apply the formula $\hat{\boldsymbol{\beta}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{y}$ directly. In R, `t()` is the transpose, `%*%` is matrix multiplication, and `solve()` inverts a matrix.
 
 ```{r}
+#| label: matrix-solve
 beta <- solve(t(X) %*% X) %*% t(X) %*% y
 beta
 ```
 
 ```{r}
+#| label: matrix-lm-check
 # And again, verify with lm()
 coef(lm(mpg ~ wt, data = mtcars))
 ```
@@ -114,6 +118,7 @@ Compare the two formulas. GLS is OLS with $\boldsymbol{\Sigma}^{-1}$ inserted in
 We can verify this in R. If we plug in the identity matrix for $\boldsymbol{\Sigma}$, GLS should return the same answer as OLS:
 
 ```{r}
+#| label: gls-identity-check
 # OLS (from above)
 betaOls <- solve(t(X) %*% X) %*% t(X) %*% y
 
@@ -127,4 +132,4 @@ cbind(OLS = betaOls, GLS = betaGls)
 
 Same numbers.
 
-One practical note worth keeping in mind. In real spatial analysis we do not know $\boldsymbol{\Sigma}$ ahead of time. We have to estimate its parameters (range, sill, nugget) from the data. That estimation uses maximum likelihood, which you have probably seen before: find the parameter values that make your observed data as probable as possible. The wrinkle with variance parameters is that plain ML is biased which means it tends to underestimate variance because it does not account for the degrees of freedom used up by estimating the fixed effects. REML (restricted maximum likelihood) fixes this by maximizing a likelihood that has been conditioned on the fixed effects first, which removes that bias and gives better estimates of the spatial covariance structure. That is why `gls()` uses REML by default. The $\hat{\boldsymbol{\beta}}_{GLS}$ formula above still applies; it just uses the estimated $\hat{\boldsymbol{\Sigma}}$ in place of the true one. The cost of REML is that you cannot compare models with different fixed effects using likelihood ratio tests -- for that you need to refit with `method="ML"`. The GLS chapter has more on when that matters.
+One practical note worth keeping in mind. In real spatial analysis we do not know $\boldsymbol{\Sigma}$ ahead of time. We have to estimate its parameters (range, sill, nugget) from the data. That estimation uses maximum likelihood, which you have probably seen before: find the parameter values that make your observed data as probable as possible. The wrinkle with variance parameters is that plain ML is biased: it tends to underestimate variance because it does not account for the degrees of freedom used up by estimating the fixed effects. REML (restricted maximum likelihood) fixes this by maximizing a likelihood that has been conditioned on the fixed effects first, which removes that bias and gives better estimates of the spatial covariance structure. That is why `gls()` uses REML by default. The $\hat{\boldsymbol{\beta}}_{GLS}$ formula above still applies; it just uses the estimated $\hat{\boldsymbol{\Sigma}}$ in place of the true one. The cost of REML is that you cannot compare models with different fixed effects using likelihood ratio tests -- for that you need to refit with `method="ML"`. The GLS chapter has more on when that matters.
